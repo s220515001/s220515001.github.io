@@ -2,107 +2,108 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>元素暗号 · 拼音转化学式加密工具</title>
-    <!-- 现代无emoji，纯SVG图标，高性能动效 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>元素密语 · 拼音化学式加密器</title>
+    <!-- 现代无emoji，全SVG图标，流畅动效，移动端优先 -->
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: #f1f5f9;
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f4f9fe;
+            font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Inter', sans-serif;
             min-height: 100vh;
-            padding: 2rem 1.5rem;
-            color: #0a2540;
+            padding: 1rem;
+            color: #1a3a4a;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
-
+        /* 主容器 */
         .app-container {
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* 极简科技风 header */
+        /* 头部紧凑适应 */
         .app-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 1.8rem;
+            padding: 0 0.5rem;
         }
 
         .app-header h1 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #1e5072, #2c7a5a);
+            font-size: 1.8rem;
+            font-weight: 650;
+            background: linear-gradient(135deg, #1f5e4a, #2a6f8f);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.2px;
         }
 
         .app-header p {
-            color: #4a6f8f;
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
+            color: #527a8c;
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
         }
 
-        /* 双列布局 卡片面板 */
+        /* 双列卡片布局，移动端自动堆叠 */
         .dashboard-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 1.8rem;
-            margin-bottom: 1.2rem;
+            gap: 1.2rem;
+            margin-bottom: 1rem;
         }
 
         .card {
             flex: 1;
-            min-width: 300px;
+            min-width: 280px;
             background: #ffffff;
             border-radius: 1.75rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
-            transition: all 0.25s ease;
-            border: 1px solid #e2edf2;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s;
+            border: 1px solid #dcebf2;
             overflow: hidden;
-            backdrop-filter: blur(0px);
         }
 
         .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.1);
-            border-color: #cbdde6;
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
         }
 
         .card-header {
-            padding: 1.4rem 1.6rem 0.6rem 1.6rem;
-            border-bottom: 2px solid #eef3f8;
+            padding: 1.2rem 1.2rem 0.5rem 1.2rem;
+            border-bottom: 2px solid #eff3f8;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .card-header svg {
-            width: 28px;
-            height: 28px;
-            stroke: #2a6f5c;
+            width: 26px;
+            height: 26px;
+            stroke: #2f7a64;
             stroke-width: 1.7;
             fill: none;
         }
 
         .card-header h2 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 600;
-            color: #1f4e6c;
+            color: #205c4a;
         }
 
         .card-body {
-            padding: 1.6rem;
+            padding: 1.2rem;
         }
 
+        /* 输入组 */
         .input-group {
-            margin-bottom: 1.4rem;
+            margin-bottom: 1.2rem;
         }
 
         label {
@@ -111,58 +112,61 @@
             align-items: center;
             gap: 6px;
             margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: #2c5a74;
+            font-size: 0.85rem;
+            color: #2c6b5a;
         }
 
         label svg {
             width: 18px;
             height: 18px;
-            stroke: #3f7e66;
+            stroke: #468b76;
         }
 
         textarea, input {
             width: 100%;
-            padding: 0.85rem 1rem;
+            padding: 0.8rem 1rem;
             font-size: 0.95rem;
             font-family: 'SF Mono', 'Fira Code', monospace;
-            background: #fafdfe;
-            border: 1.5px solid #dde7ed;
+            background: #fefefe;
+            border: 1.5px solid #dee9ef;
             border-radius: 1.2rem;
             transition: all 0.2s;
             resize: vertical;
-            color: #1a3a4f;
+            color: #1a4e3f;
+            line-height: 1.4;
         }
 
         textarea:focus, input:focus {
-            border-color: #3b8f7a;
+            border-color: #3b9b82;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 143, 122, 0.15);
-            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(59, 155, 130, 0.2);
+            background: white;
         }
 
+        /* 按钮组 - 触摸友好 */
         .action-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             margin-top: 12px;
-            align-items: center;
         }
 
         button {
-            background: #eaedf2;
+            background: #edf2f7;
             border: none;
             font-weight: 600;
-            padding: 0.65rem 1.3rem;
-            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2.2rem;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            color: #1f4e6c;
+            gap: 6px;
+            color: #1f5e4a;
             font-family: inherit;
+            touch-action: manipulation;
+            min-height: 44px;
         }
 
         button svg {
@@ -173,124 +177,159 @@
         }
 
         .btn-primary {
-            background: #1f5e4a;
+            background: #1f6e58;
             color: white;
-            box-shadow: 0 2px 6px rgba(31, 94, 74, 0.2);
+            box-shadow: 0 2px 6px rgba(31, 110, 88, 0.2);
         }
 
         .btn-primary svg {
             stroke: white;
         }
 
-        .btn-primary:hover {
-            background: #0f4a3a;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #f0f4f8;
-            border: 1px solid #cbdde6;
-        }
-
-        .btn-secondary:hover {
-            background: #e2e9f0;
+        .btn-primary:hover, .btn-primary:active {
+            background: #0e5946;
             transform: translateY(-1px);
         }
 
+        .btn-secondary {
+            background: #f0f5f9;
+            border: 1px solid #cfe0e8;
+        }
+
+        .btn-secondary:active {
+            background: #e3ecf2;
+            transform: scale(0.97);
+        }
+
+        /* 结果区域 + 复制按钮 */
         .result-area {
-            background: #f8fbfd;
+            background: #fafdfe;
             border-radius: 1.2rem;
-            padding: 1rem;
-            margin-top: 1.3rem;
-            border: 1px solid #e0edf2;
+            padding: 0.9rem;
+            margin-top: 1.2rem;
+            border: 1px solid #e2edf2;
             font-family: 'SF Mono', monospace;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             word-break: break-all;
             white-space: pre-wrap;
-            color: #155f4b;
+            color: #1a6b55;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 1rem;
+            gap: 0.6rem;
             flex-wrap: wrap;
         }
 
         .result-text {
             flex: 1;
             font-weight: 500;
+            line-height: 1.4;
         }
 
         .copy-btn {
-            background: none;
-            padding: 5px 10px;
-            color: #3b7b68;
+            background: #eef3f7;
+            padding: 0.3rem 0.8rem;
             border-radius: 2rem;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
+            min-height: 36px;
+            gap: 4px;
         }
 
         .copy-btn svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
 
-        .copy-btn:hover {
-            background: #e2ece8;
-        }
-
-        .toast-msg {
-            font-size: 0.7rem;
-            color: #3b8a72;
-            margin-left: 0.5rem;
-        }
-
-        hr {
-            margin: 1rem 0;
-            border: none;
-            border-top: 1px solid #e2edf2;
+        .copy-btn:active {
+            background: #dee8ef;
         }
 
         .info-note {
-            background: #eff6fa;
+            background: #eef4f8;
             border-radius: 1rem;
-            padding: 0.8rem;
-            font-size: 0.75rem;
-            color: #3f6b82;
+            padding: 0.7rem;
+            font-size: 0.7rem;
+            color: #3f6e7c;
             margin-top: 1rem;
         }
 
         footer {
             text-align: center;
-            margin-top: 2.2rem;
-            font-size: 0.75rem;
-            color: #5f8aa8;
+            margin-top: 1.8rem;
+            font-size: 0.7rem;
+            color: #6f98aa;
+            padding-bottom: 0.5rem;
         }
 
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* 动画 */
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .result-area {
-            animation: fadeSlide 0.25s ease-out;
+            animation: fadeSlideUp 0.2s ease;
         }
 
-        @media (max-width: 780px) {
-            body { padding: 1rem; }
-            .card-header h2 { font-size: 1.3rem; }
+        /* 移动端特别优化 */
+        @media (max-width: 640px) {
+            body {
+                padding: 0.75rem;
+            }
+            .app-header h1 {
+                font-size: 1.5rem;
+            }
+            .card-header h2 {
+                font-size: 1.25rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
+            button {
+                padding: 0.55rem 1rem;
+                font-size: 0.8rem;
+                min-height: 42px;
+            }
+            textarea {
+                font-size: 0.9rem;
+                padding: 0.7rem;
+            }
+            .result-text {
+                font-size: 0.8rem;
+            }
+            .info-note {
+                font-size: 0.65rem;
+            }
+        }
+
+        /* 大桌面优化 */
+        @media (min-width: 1200px) {
+            .card-body {
+                padding: 1.6rem;
+            }
+            button {
+                padding: 0.7rem 1.5rem;
+            }
         }
     </style>
-    <!-- 拼音转换库: pinyin-pro (高性能, 准确率99%+, 支持多音字/声调) -->
+    <!-- 高准确度拼音转换库 (pinyin-pro) 支持多音字 -->
     <script src="https://unpkg.com/pinyin-pro@3.25.0/dist/index.js"></script>
 </head>
 <body>
 <div class="app-container">
     <div class="app-header">
-        <h1>拼音化学式加密 · 元素暗号系统</h1>
-        <p>中文 ↔ 拼音 ↔ 化学式 + 随机伪装 | 完全可逆 & 精准还原</p>
+        <h1>拼音化学式加密 · 元素暗号</h1>
+        <p>中文 / 拼音 ⇄ 化学式密文 | 随机伪装 | 完全可逆 | 手机电脑通用</p>
     </div>
 
     <div class="dashboard-grid">
-        <!-- 加密卡片 -->
+        <!-- 加密面板 -->
         <div class="card">
             <div class="card-header">
                 <svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
@@ -298,7 +337,7 @@
                     <path d="M7 11V8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8V11" />
                     <circle cx="12" cy="16" r="1.5" fill="currentColor" />
                 </svg>
-                <h2>加密 · 密语生成</h2>
+                <h2>加密 · 生成化学密文</h2>
             </div>
             <div class="card-body">
                 <div class="input-group">
@@ -306,32 +345,32 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
                         中文原文 / 拼音
                     </label>
-                    <textarea id="plainInput" rows="3" placeholder="例如：你好世界 或者直接拼音 ni3 hao3 shi4 jie4"></textarea>
+                    <textarea id="plainInput" rows="3" placeholder="例如：你好世界  或者直接拼音 ni3 hao3 shi4 jie4"></textarea>
                     <div class="action-group">
                         <button id="convertToPinyinBtn" class="btn-secondary">
                             <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12L12 3L3 12M12 5v14"/></svg>
-                            中文 → 带调拼音
+                            中文→拼音
                         </button>
                         <button id="doEncryptBtn" class="btn-primary">
                             <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
-                            加密为化学密文
+                            加密为密文
                         </button>
                     </div>
                 </div>
                 <div class="result-area" id="encryptResultArea">
-                    <div class="result-text" id="encryptResultText">等待加密</div>
+                    <div class="result-text" id="encryptResultText">点击加密生成化学式</div>
                     <button class="copy-btn" id="copyEncryptBtn" style="display: none;">
                         <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         复制
                     </button>
                 </div>
                 <div class="info-note">
-                    💡 支持中英文混合，中文自动转拼音（带声调数字格式 1-4），拼音支持声调数字格式（如 xiao3）。加密时随机选择元素+伪装下标/括号，每次结果不同但可逆。
+                    自动识别中文并转带调拼音(如 ni3 hao3)；加密随机选择化学元素+随机下标/括号，每次结果不同但解密唯一。
                 </div>
             </div>
         </div>
 
-        <!-- 解密卡片 -->
+        <!-- 解密面板 -->
         <div class="card">
             <div class="card-header">
                 <svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
@@ -351,28 +390,28 @@
                     <div class="action-group">
                         <button id="doDecryptBtn" class="btn-primary">
                             <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12L12 3L3 12M12 5v14"/></svg>
-                            解密还原拼音
+                            解密还原
                         </button>
                     </div>
                 </div>
                 <div class="result-area" id="decryptResultArea">
-                    <div class="result-text" id="decryptResultText">等待解密</div>
+                    <div class="result-text" id="decryptResultText">输入密文后点击解密</div>
                     <button class="copy-btn" id="copyDecryptBtn" style="display: none;">
                         <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                         复制
                     </button>
                 </div>
                 <div class="info-note">
-                    🔄 密文自动滤除数字下标和括号，基于化学符号映射表精确还原拼音（带声调），完全可逆。
+                    自动过滤下标和括号，基于化学符映射表精准还原拼音(带数字声调)。完全兼容加密算法。
                 </div>
             </div>
         </div>
     </div>
-    <footer>⚛️ 元素映射表 | 拼音字母 ⇄ 化学符号 (Ag, Ar, Cm ...) + 声调编码(' "-) | 随机下标/括号伪装 | 高准确率中文拼音转换</footer>
+    <footer>元素映射表: 拼音字母 ⇄ 化学符号 (Ag, Ar, Cm...) + 声调符号(' " -)  |  随机伪装下标/括号 | 高准确中文转拼音</footer>
 </div>
 
 <script>
-    // ---------- 1. 核心映射表 (与原始C++一致) ----------
+    // ---------- 1. 核心加密映射 (与原C++严格一致) ----------
     const mapping = {
         'a': ['Ag', 'Ar'], 'b': ['B', 'Bh', 'Br'], 'c': ['C', 'Cd', 'Cr'],
         'd': ['Dy'], 'e': ['Er'], 'f': ['F', 'Fr'], 'g': ['Gd'],
@@ -384,7 +423,7 @@
     const toneToSym = {1: "'", 2: "\"", 3: "'\"", 4: "\"\"", 0: "-"};
     const symToTone = {"'": 1, "\"": 2, "'\"": 3, "\"\"": 4, "-": 0};
 
-    // 反向化学符号 -> 字母映射
+    // 反向化学符号 -> 字母
     const symbolToLetter = new Map();
     for (const [letter, symbols] of Object.entries(mapping)) {
         for (const sym of symbols) {
@@ -397,9 +436,8 @@
     function randInt(max) { return Math.floor(Math.random() * max); }
     function randomSubscript() { return String(randInt(3) + 1); }
 
-    // ---------- 加密伪装 ----------
+    // ---------- 加密伪装（完全复现原算法）----------
     function addFake(block) {
-        // 分离声调后缀
         let tonePart = "";
         let body = block;
         const toneChars = ["'", '"', '-'];
@@ -409,7 +447,6 @@
             tonePart = body.slice(pos);
             body = body.slice(0, pos);
         }
-        // 解析元素符号
         let elements = [];
         let i = 0;
         while (i < body.length) {
@@ -436,7 +473,7 @@
         const syllables = pinyinStr.trim().split(/\s+/);
         const encrypted = [];
         for (let syl of syllables) {
-            if (syl.length === 0) continue;
+            if (!syl.length) continue;
             let letters = "";
             let toneDigit = 0;
             let idx = 0;
@@ -454,14 +491,14 @@
                 if (!candidates) { chemSeq += "?"; continue; }
                 chemSeq += candidates[randInt(candidates.length)];
             }
-            const toneSymbol = toneToSym[toneDigit];
+            const toneSymbol = toneToSym[toneDigit] || "-";
             const raw = chemSeq + toneSymbol;
             encrypted.push(addFake(raw));
         }
         return encrypted.join(" ");
     }
 
-    // 清洗：去除所有数字、括号等非字母/空格/声调符号
+    // 解密：移除数值括号等
     function removeFake(s) {
         return s.replace(/[^a-zA-Z\s'\"\-]/g, '');
     }
@@ -472,7 +509,6 @@
         const syllables = [];
         for (let block of blocks) {
             if (block.length === 0) continue;
-            // 提取声调符号尾部
             let toneChars = [];
             let p = block.length;
             while (p > 0) {
@@ -485,7 +521,6 @@
             const toneSymStr = toneChars.join('');
             const toneDigit = symToTone[toneSymStr] ?? 0;
             const body = block.substring(0, p);
-            // 解析元素符号 -> 字母序列
             let letters = "";
             let i = 0;
             while (i < body.length) {
@@ -506,52 +541,43 @@
         return syllables.join(" ");
     }
 
-    // ---------- 中文转拼音 (核心新增高标准) ----------
-    // 使用 pinyin-pro 库，将中文转换为带声调数字的拼音串 (例如 ni3 hao3)
-    // 该库准确率99%+，支持多音字智能识别。
+    // ---------- 中文转拼音 (pinyin-pro 高准确率，数字声调格式) ----------
     function chineseToNumberedPinyin(chineseText) {
         if (!chineseText.trim()) return "";
         try {
-            // pinyin-pro 的 pinyin 方法默认返回带声调符号的拼音，我们转换成数字音调风格
-            // 使用 pattern: 'pinyinNum' 直接获取 ni3 hao3 格式 (数字后缀)
             if (window.pinyinPro && window.pinyinPro.pinyin) {
+                // pattern: 'pinyinNum' 返回 ni3 hao3 格式
                 const result = window.pinyinPro.pinyin(chineseText, { pattern: 'pinyinNum', toneType: 'num' });
-                // 结果类似 "ni3 hao3 shi4 jie4"
                 return result.trim();
             } else if (window.pinyin) {
-                // 兼容备用 (老式库 fallback)
-                const pinyinArr = window.pinyin(chineseText, { style: 'tone2', heteronym: false });
-                if (Array.isArray(pinyinArr)) {
-                    return pinyinArr.map(item => item[0]).join(' ');
-                }
+                // 后备旧方案
+                const arr = window.pinyin(chineseText, { style: 'tone2', heteronym: false });
+                if (Array.isArray(arr)) return arr.map(item => item[0]).join(' ');
                 return chineseText;
             } else {
-                console.warn("拼音库未完全加载, 返回原文");
+                console.warn("拼音库未完全加载, 直接返回原文");
                 return chineseText;
             }
         } catch(e) {
-            console.error("拼音转换出错", e);
+            console.error("拼音转换异常", e);
             return chineseText;
         }
     }
 
-    // 智能预处理：若输入包含中文，先行转为拼音（数字声调格式）；若已经是拼音格式则直接使用
+    // 智能预处理: 含中文则转拼音，否则保持
     function preparePinyin(inputStr) {
         const hasChinese = /[\u4e00-\u9fa5]/.test(inputStr);
         if (hasChinese) {
             return chineseToNumberedPinyin(inputStr);
-        } else {
-            // 已经包含字母+数字空格 直接返回
-            return inputStr.trim();
         }
+        return inputStr.trim();
     }
 
-    // ---------- UI逻辑 & 复制功能 ----------
-    // 显示加密结果并显示复制按钮
+    // ---------- UI 控制 (复制 & 显示) ----------
     function setEncryptResult(text) {
         const resultDiv = document.getElementById("encryptResultText");
         const copyBtn = document.getElementById("copyEncryptBtn");
-        if (!text) {
+        if (!text || text === "") {
             resultDiv.innerText = "暂无结果";
             copyBtn.style.display = "none";
             return;
@@ -572,48 +598,45 @@
         copyBtn.style.display = "inline-flex";
     }
 
-    // 复制通用方法
     async function copyToClipboard(text, btnElement) {
         if (!text) return;
         try {
             await navigator.clipboard.writeText(text);
-            const originalHtml = btnElement.innerHTML;
+            const originalHTML = btnElement.innerHTML;
             btnElement.innerHTML = `<svg viewBox="0 0 24 24" stroke="currentColor"><path d="M20 6L9 17L4 12"/></svg> 已复制`;
             setTimeout(() => {
-                btnElement.innerHTML = originalHtml;
+                btnElement.innerHTML = originalHTML;
             }, 1500);
         } catch (err) {
-            alert("复制失败, 可手动复制");
+            alert("手动复制即可");
         }
     }
 
-    // 加密流程: 先保证拼音格式 (中文自动转)
-    document.getElementById("doEncryptBtn").addEventListener("click", async () => {
+    // 加密按钮逻辑
+    document.getElementById("doEncryptBtn").addEventListener("click", () => {
         let rawInput = document.getElementById("plainInput").value;
         if (!rawInput.trim()) {
-            setEncryptResult("请输入文本内容");
+            setEncryptResult("请输入文本后再加密");
             return;
         }
-        // 转换为拼音格式 (数字声调)
         let pinyinReady = preparePinyin(rawInput);
         if (!pinyinReady) {
-            setEncryptResult("转换拼音失败，请检查输入");
+            setEncryptResult("拼音转换失败，请检查输入");
             return;
         }
-        // 执行加密算法
         try {
             const cipher = encrypt(pinyinReady);
             setEncryptResult(cipher);
         } catch(e) {
-            setEncryptResult("加密出错: " + e.message);
+            setEncryptResult("加密错误: " + e.message);
         }
     });
 
-    // 中文一键转拼音按钮 (用于预览)
+    // 中文转拼音按钮 (填充回文本框)
     document.getElementById("convertToPinyinBtn").addEventListener("click", () => {
         let rawInput = document.getElementById("plainInput").value;
         if (!rawInput.trim()) {
-            setEncryptResult("请先输入中文或拼音文本");
+            setEncryptResult("请先输入中文文本");
             return;
         }
         const hasChinese = /[\u4e00-\u9fa5]/.test(rawInput);
@@ -637,29 +660,31 @@
             const plainPinyin = decrypt(cipherText);
             setDecryptResult(plainPinyin);
         } catch(e) {
-            setDecryptResult("解密失败, 请检查密文格式: " + e.message);
+            setDecryptResult("解密失败: " + e.message);
         }
     });
 
-    // 复制按钮绑定
+    // 复制事件
     document.getElementById("copyEncryptBtn").addEventListener("click", () => {
         const text = document.getElementById("encryptResultText").innerText;
-        if (text && text !== "等待加密" && text !== "暂无结果") {
+        if (text && text !== "暂无结果" && text !== "点击加密生成化学式") {
             copyToClipboard(text, document.getElementById("copyEncryptBtn"));
         }
     });
     document.getElementById("copyDecryptBtn").addEventListener("click", () => {
         const text = document.getElementById("decryptResultText").innerText;
-        if (text && text !== "等待解密" && text !== "暂无结果") {
+        if (text && text !== "暂无结果" && text !== "输入密文后点击解密") {
             copyToClipboard(text, document.getElementById("copyDecryptBtn"));
         }
     });
 
-    // 初始示例默认值友好展示
+    // 设置演示示例，更友好
     document.getElementById("plainInput").value = "你好世界";
-    document.getElementById("cipherInput").value = "XeIArO'\"  PErNGd\"  YOU'\"  MgErN-";
-    setEncryptResult("点击「中文→拼音」或直接加密");
+    document.getElementById("cipherInput").value = "(Xe1IArO)'\"  PErNGd\"  YOU'\"  MgErN-";
+    setEncryptResult("点击「中文→拼音」预览，或直接加密");
     setDecryptResult("点击解密即可还原拼音");
+
+    // 移动端触摸优化: 避免300ms延迟 (已经通过meta实现)
 </script>
 </body>
 </html>
