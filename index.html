@@ -1,690 +1,340 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>元素密语 · 拼音化学式加密器</title>
-    <!-- 现代无emoji，全SVG图标，流畅动效，移动端优先 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>不规则动词 · 原型-过去式 (直角手绘风格)</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            background: #f4f9fe;
-            font-family: system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Inter', sans-serif;
-            min-height: 100vh;
-            padding: 1rem;
-            color: #1a3a4a;
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1.2rem;
         }
-
-        /* 主容器 */
-        .app-container {
+        .container {
             max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* 头部紧凑适应 */
-        .app-header {
-            text-align: center;
-            margin-bottom: 1.8rem;
-            padding: 0 0.5rem;
-        }
-
-        .app-header h1 {
-            font-size: 1.8rem;
-            font-weight: 650;
-            background: linear-gradient(135deg, #1f5e4a, #2a6f8f);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            letter-spacing: -0.2px;
-        }
-
-        .app-header p {
-            color: #527a8c;
-            margin-top: 0.4rem;
-            font-size: 0.85rem;
-        }
-
-        /* 双列卡片布局，移动端自动堆叠 */
-        .dashboard-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.2rem;
-            margin-bottom: 1rem;
-        }
-
-        .card {
-            flex: 1;
-            min-width: 280px;
-            background: #ffffff;
-            border-radius: 1.75rem;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s;
-            border: 1px solid #dcebf2;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-header {
-            padding: 1.2rem 1.2rem 0.5rem 1.2rem;
-            border-bottom: 2px solid #eff3f8;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .card-header svg {
-            width: 26px;
-            height: 26px;
-            stroke: #2f7a64;
-            stroke-width: 1.7;
-            fill: none;
-        }
-
-        .card-header h2 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #205c4a;
-        }
-
-        .card-body {
-            padding: 1.2rem;
-        }
-
-        /* 输入组 */
-        .input-group {
-            margin-bottom: 1.2rem;
-        }
-
-        label {
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-            color: #2c6b5a;
-        }
-
-        label svg {
-            width: 18px;
-            height: 18px;
-            stroke: #468b76;
-        }
-
-        textarea, input {
             width: 100%;
-            padding: 0.8rem 1rem;
-            font-size: 0.95rem;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            background: #fefefe;
-            border: 1.5px solid #dee9ef;
-            border-radius: 1.2rem;
-            transition: all 0.2s;
-            resize: vertical;
-            color: #1a4e3f;
-            line-height: 1.4;
-        }
-
-        textarea:focus, input:focus {
-            border-color: #3b9b82;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(59, 155, 130, 0.2);
             background: white;
+            border: 2px solid #1a1f2b;
+            border-radius: 0;
+            padding: 1.8rem 1.5rem 1.8rem 1.5rem;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.05);
         }
 
-        /* 按钮组 - 触摸友好 */
-        .action-group {
+        h1 {
+            font-weight: 500;
+            font-size: 2rem;
+            letter-spacing: -0.2px;
+            color: #111;
+            border-left: 6px solid #1e3a5f;
+            padding-left: 1rem;
+            margin-bottom: 0.1rem;
+        }
+        .sub {
+            color: #2c3e4f;
+            font-size: 0.95rem;
+            border-bottom: 1px dashed #94a3b8;
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.8rem;
+            padding-left: 1.2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 2px solid #1a1f2b;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1.5px solid #1a1f2b;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+        th {
+            background: #e8edf4;
+            color: #0b1a2a;
+            font-weight: 600;
+            text-align: left;
+            border-bottom: 2px solid #1a1f2b;
+        }
+        th:first-child { width: 16%; }
+        th:nth-child(2) { width: 42%; }
+        th:nth-child(3) { width: 42%; }
+
+        .rule-cell {
+            background: #f0f4fa;
+            font-weight: 500;
+            border-right: 2px solid #1a1f2b;
+        }
+        .rule-badge {
+            display: inline-block;
+            background: #1e3a5f;
+            color: white;
+            font-weight: 600;
+            padding: 0.05rem 0.6rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.3px;
+            margin-right: 0.4rem;
+            border: 1px solid #0b1a2a;
+        }
+        .rule-desc {
+            font-weight: 500;
+            color: #0b1a2a;
+        }
+        .small-note {
+            font-size: 0.7rem;
+            color: #3e5a70;
+            font-weight: 400;
+            margin-left: 0.2rem;
+        }
+
+        .verb-pair {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 12px;
+            gap: 0.3rem 1rem;
+            align-items: center;
         }
-
-        button {
-            background: #edf2f7;
-            border: none;
-            font-weight: 600;
-            padding: 0.6rem 1.2rem;
-            border-radius: 2.2rem;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        .pair-item {
+            background: #f9fbfd;
+            border: 1.5px solid #1a1f2b;
+            padding: 0.05rem 0.7rem 0.05rem 0.7rem;
+            font-size: 0.9rem;
+            color: #0b1a2a;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            color: #1f5e4a;
-            font-family: inherit;
-            touch-action: manipulation;
-            min-height: 44px;
+            white-space: nowrap;
+            border-radius: 0;
         }
-
-        button svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
+        .pair-item .hyphen {
+            color: #3e5a70;
+            margin: 0 0.1rem;
+            font-weight: 300;
         }
-
-        .btn-primary {
-            background: #1f6e58;
-            color: white;
-            box-shadow: 0 2px 6px rgba(31, 110, 88, 0.2);
-        }
-
-        .btn-primary svg {
-            stroke: white;
-        }
-
-        .btn-primary:hover, .btn-primary:active {
-            background: #0e5946;
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: #f0f5f9;
-            border: 1px solid #cfe0e8;
-        }
-
-        .btn-secondary:active {
-            background: #e3ecf2;
-            transform: scale(0.97);
-        }
-
-        /* 结果区域 + 复制按钮 */
-        .result-area {
-            background: #fafdfe;
-            border-radius: 1.2rem;
-            padding: 0.9rem;
-            margin-top: 1.2rem;
-            border: 1px solid #e2edf2;
-            font-family: 'SF Mono', monospace;
-            font-size: 0.88rem;
-            word-break: break-all;
-            white-space: pre-wrap;
-            color: #1a6b55;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-        }
-
-        .result-text {
-            flex: 1;
+        .pair-item .past {
             font-weight: 500;
-            line-height: 1.4;
+            color: #1a3d5c;
         }
 
-        .copy-btn {
-            background: #eef3f7;
-            padding: 0.3rem 0.8rem;
-            border-radius: 2rem;
-            font-size: 0.7rem;
-            min-height: 36px;
-            gap: 4px;
-        }
-
-        .copy-btn svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .copy-btn:active {
-            background: #dee8ef;
-        }
-
-        .info-note {
-            background: #eef4f8;
-            border-radius: 1rem;
-            padding: 0.7rem;
-            font-size: 0.7rem;
-            color: #3f6e7c;
-            margin-top: 1rem;
-        }
-
-        footer {
-            text-align: center;
+        .footer-note {
             margin-top: 1.8rem;
-            font-size: 0.7rem;
-            color: #6f98aa;
-            padding-bottom: 0.5rem;
+            background: #f0f4fa;
+            padding: 0.5rem 1.5rem;
+            display: inline-block;
+            font-size: 0.85rem;
+            color: #1e2a36;
+            border: 2px solid #1a1f2b;
+            border-radius: 0;
         }
 
-        /* 动画 */
-        @keyframes fadeSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-area {
-            animation: fadeSlideUp 0.2s ease;
-        }
-
-        /* 移动端特别优化 */
-        @media (max-width: 640px) {
-            body {
-                padding: 0.75rem;
-            }
-            .app-header h1 {
-                font-size: 1.5rem;
-            }
-            .card-header h2 {
-                font-size: 1.25rem;
-            }
-            .card-body {
-                padding: 1rem;
-            }
-            button {
-                padding: 0.55rem 1rem;
-                font-size: 0.8rem;
-                min-height: 42px;
-            }
-            textarea {
-                font-size: 0.9rem;
-                padding: 0.7rem;
-            }
-            .result-text {
-                font-size: 0.8rem;
-            }
-            .info-note {
-                font-size: 0.65rem;
-            }
-        }
-
-        /* 大桌面优化 */
-        @media (min-width: 1200px) {
-            .card-body {
-                padding: 1.6rem;
-            }
-            button {
-                padding: 0.7rem 1.5rem;
-            }
+        @media (max-width: 800px) {
+            .container { padding: 1rem 0.8rem; }
+            th, td { padding: 5px 4px; font-size: 0.75rem; }
+            .pair-item { font-size: 0.7rem; padding: 0.02rem 0.4rem; }
+            .rule-badge { font-size: 0.55rem; padding: 0.02rem 0.4rem; }
+            h1 { font-size: 1.5rem; }
         }
     </style>
-    <!-- 高准确度拼音转换库 (pinyin-pro) 支持多音字 -->
-    <script src="https://unpkg.com/pinyin-pro@3.25.0/dist/index.js"></script>
 </head>
 <body>
-<div class="app-container">
-    <div class="app-header">
-        <h1>拼音化学式加密 · 元素暗号</h1>
-        <p>中文 / 拼音 ⇄ 化学式密文 | 随机伪装 | 完全可逆 | 手机电脑通用</p>
-    </div>
+<div class="container">
+    <h1>不规则动词 · 原型-过去式</h1>
+    <div class="sub">九规则分类 · 原表100词 · 直角边框</div>
 
-    <div class="dashboard-grid">
-        <!-- 加密面板 -->
-        <div class="card">
-            <div class="card-header">
-                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                    <rect x="5" y="11" width="14" height="11" rx="2" />
-                    <path d="M7 11V8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8V11" />
-                    <circle cx="12" cy="16" r="1.5" fill="currentColor" />
-                </svg>
-                <h2>加密 · 生成化学密文</h2>
-            </div>
-            <div class="card-body">
-                <div class="input-group">
-                    <label>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-                        中文原文 / 拼音
-                    </label>
-                    <textarea id="plainInput" rows="3" placeholder="例如：你好世界  或者直接拼音 ni3 hao3 shi4 jie4"></textarea>
-                    <div class="action-group">
-                        <button id="convertToPinyinBtn" class="btn-secondary">
-                            <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12L12 3L3 12M12 5v14"/></svg>
-                            中文→拼音
-                        </button>
-                        <button id="doEncryptBtn" class="btn-primary">
-                            <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
-                            加密为密文
-                        </button>
+    <table>
+        <thead>
+            <tr>
+                <th>规则</th>
+                <th>原型 - 过去式</th>
+                <th>原型 - 过去式</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 规则一：过去时和原型一样 -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">1</span><span class="rule-desc">原形 = 过去</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">beat <span class="hyphen">-</span> beat</span>
+                        <span class="pair-item">cost <span class="hyphen">-</span> cost</span>
+                        <span class="pair-item">cut <span class="hyphen">-</span> cut</span>
+                        <span class="pair-item">hit <span class="hyphen">-</span> hit</span>
+                        <span class="pair-item">hurt <span class="hyphen">-</span> hurt</span>
+                        <span class="pair-item">let <span class="hyphen">-</span> let</span>
+                        <span class="pair-item">put <span class="hyphen">-</span> put</span>
+                        <span class="pair-item">read <span class="hyphen">-</span> read</span>
+                        <span class="pair-item">set <span class="hyphen">-</span> set</span>
+                        <span class="pair-item">shut <span class="hyphen">-</span> shut</span>
+                        <span class="pair-item">spread <span class="hyphen">-</span> spread</span>
                     </div>
-                </div>
-                <div class="result-area" id="encryptResultArea">
-                    <div class="result-text" id="encryptResultText">点击加密生成化学式</div>
-                    <button class="copy-btn" id="copyEncryptBtn" style="display: none;">
-                        <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        复制
-                    </button>
-                </div>
-                <div class="info-note">
-                    自动识别中文并转带调拼音(如 ni3 hao3)；加密随机选择化学元素+随机下标/括号，每次结果不同但解密唯一。
-                </div>
-            </div>
-        </div>
+                </td>
+            </tr>
+            <!-- 规则二：变 i 为 a -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">2</span><span class="rule-desc">i - a</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">begin <span class="hyphen">-</span> began</span>
+                        <span class="pair-item">drink <span class="hyphen">-</span> drank</span>
+                        <span class="pair-item">ring <span class="hyphen">-</span> rang</span>
+                        <span class="pair-item">sing <span class="hyphen">-</span> sang</span>
+                        <span class="pair-item">sit <span class="hyphen">-</span> sat</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则三：变 i 为 o -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">3</span><span class="rule-desc">i - o</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">drive <span class="hyphen">-</span> drove</span>
+                        <span class="pair-item">ride <span class="hyphen">-</span> rode</span>
+                        <span class="pair-item">rise <span class="hyphen">-</span> rose</span>
+                        <span class="pair-item">write <span class="hyphen">-</span> wrote</span>
+                        <span class="pair-item">win <span class="hyphen">-</span> won</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则四：变 ow/aw 为 ew -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">4</span><span class="rule-desc">ow/aw - ew</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">blow <span class="hyphen">-</span> blew</span>
+                        <span class="pair-item">draw <span class="hyphen">-</span> drew</span>
+                        <span class="pair-item">fly <span class="hyphen">-</span> flew</span>
+                        <span class="pair-item">grow <span class="hyphen">-</span> grew</span>
+                        <span class="pair-item">know <span class="hyphen">-</span> knew</span>
+                        <span class="pair-item">throw <span class="hyphen">-</span> threw</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则五：中间去 e 词尾加 t -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">5</span><span class="rule-desc">去 e 加 t</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">sleep <span class="hyphen">-</span> slept</span>
+                        <span class="pair-item">sweep <span class="hyphen">-</span> swept</span>
+                        <span class="pair-item">keep <span class="hyphen">-</span> kept</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则六：词尾 d 变为 t -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">6</span><span class="rule-desc">d - t</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">build <span class="hyphen">-</span> built</span>
+                        <span class="pair-item">lend <span class="hyphen">-</span> lent</span>
+                        <span class="pair-item">send <span class="hyphen">-</span> sent</span>
+                        <span class="pair-item">spend <span class="hyphen">-</span> spent</span>
+                        <span class="pair-item">mean <span class="hyphen">-</span> meant</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则七：过去时以 OUGHT / AUGHT 结尾 -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">7</span><span class="rule-desc">-ought / -aught</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">bring <span class="hyphen">-</span> brought</span>
+                        <span class="pair-item">buy <span class="hyphen">-</span> bought</span>
+                        <span class="pair-item">fight <span class="hyphen">-</span> fought</span>
+                        <span class="pair-item">teach <span class="hyphen">-</span> taught</span>
+                        <span class="pair-item">catch <span class="hyphen">-</span> caught</span>
+                        <span class="pair-item">think <span class="hyphen">-</span> thought</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则八：be 动词 -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">8</span><span class="rule-desc">be 动词</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">be (am, is, are) <span class="hyphen">-</span> was, were</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- 规则九：其他 (原表剩余58词) -->
+            <tr>
+                <td class="rule-cell"><span class="rule-badge">9</span><span class="rule-desc">其他</span> <span class="small-note">(58)</span></td>
+                <td colspan="2">
+                    <div class="verb-pair">
+                        <span class="pair-item">awake <span class="hyphen">-</span> awoke</span>
+                        <span class="pair-item">bear <span class="hyphen">-</span> bore</span>
+                        <span class="pair-item">become <span class="hyphen">-</span> became</span>
+                        <span class="pair-item">bleed <span class="hyphen">-</span> bled</span>
+                        <span class="pair-item">break <span class="hyphen">-</span> broke</span>
+                        <span class="pair-item">burn <span class="hyphen">-</span> burnt / burned</span>
+                        <span class="pair-item">choose <span class="hyphen">-</span> chose</span>
+                        <span class="pair-item">come <span class="hyphen">-</span> came</span>
+                        <span class="pair-item">deal <span class="hyphen">-</span> dealt</span>
+                        <span class="pair-item">dig <span class="hyphen">-</span> dug</span>
+                        <span class="pair-item">do <span class="hyphen">-</span> did</span>
+                        <span class="pair-item">dream <span class="hyphen">-</span> dreamt / dreamed</span>
+                        <span class="pair-item">eat <span class="hyphen">-</span> ate</span>
+                        <span class="pair-item">fall <span class="hyphen">-</span> fell</span>
+                        <span class="pair-item">feed <span class="hyphen">-</span> fed</span>
+                        <span class="pair-item">feel <span class="hyphen">-</span> felt</span>
+                        <span class="pair-item">find <span class="hyphen">-</span> found</span>
+                        <span class="pair-item">forget <span class="hyphen">-</span> forgot</span>
+                        <span class="pair-item">freeze <span class="hyphen">-</span> froze</span>
+                        <span class="pair-item">get <span class="hyphen">-</span> got</span>
+                        <span class="pair-item">give <span class="hyphen">-</span> gave</span>
+                        <span class="pair-item">go <span class="hyphen">-</span> went</span>
+                        <span class="pair-item">grow <span class="hyphen">-</span> grew</span>
+                        <span class="pair-item">hang <span class="hyphen">-</span> hung</span>
+                        <span class="pair-item">have <span class="hyphen">-</span> had</span>
+                        <span class="pair-item">hear <span class="hyphen">-</span> heard</span>
+                        <span class="pair-item">hide <span class="hyphen">-</span> hid</span>
+                        <span class="pair-item">hold <span class="hyphen">-</span> held</span>
+                        <span class="pair-item">lay <span class="hyphen">-</span> laid</span>
+                        <span class="pair-item">lead <span class="hyphen">-</span> led</span>
+                        <span class="pair-item">learn <span class="hyphen">-</span> learnt / learned</span>
+                        <span class="pair-item">leave <span class="hyphen">-</span> left</span>
+                        <span class="pair-item">lie <span class="hyphen">-</span> lay</span>
+                        <span class="pair-item">light <span class="hyphen">-</span> lit / lighted</span>
+                        <span class="pair-item">lose <span class="hyphen">-</span> lost</span>
+                        <span class="pair-item">make <span class="hyphen">-</span> made</span>
+                        <span class="pair-item">meet <span class="hyphen">-</span> met</span>
+                        <span class="pair-item">mistake <span class="hyphen">-</span> mistook</span>
+                        <span class="pair-item">pay <span class="hyphen">-</span> paid</span>
+                        <span class="pair-item">run <span class="hyphen">-</span> ran</span>
+                        <span class="pair-item">say <span class="hyphen">-</span> said</span>
+                        <span class="pair-item">see <span class="hyphen">-</span> saw</span>
+                        <span class="pair-item">sell <span class="hyphen">-</span> sold</span>
+                        <span class="pair-item">shake <span class="hyphen">-</span> shook</span>
+                        <span class="pair-item">shine <span class="hyphen">-</span> shone</span>
+                        <span class="pair-item">shoot <span class="hyphen">-</span> shot</span>
+                        <span class="pair-item">smell <span class="hyphen">-</span> smelt / smelled</span>
+                        <span class="pair-item">speak <span class="hyphen">-</span> spoke</span>
+                        <span class="pair-item">speed <span class="hyphen">-</span> sped / speeded</span>
+                        <span class="pair-item">spell <span class="hyphen">-</span> spelt / spelled</span>
+                        <span class="pair-item">stand <span class="hyphen">-</span> stood</span>
+                        <span class="pair-item">steal <span class="hyphen">-</span> stole</span>
+                        <span class="pair-item">stick <span class="hyphen">-</span> stuck</span>
+                        <span class="pair-item">swim <span class="hyphen">-</span> swam</span>
+                        <span class="pair-item">take <span class="hyphen">-</span> took</span>
+                        <span class="pair-item">tell <span class="hyphen">-</span> told</span>
+                        <span class="pair-item">understand <span class="hyphen">-</span> understood</span>
+                        <span class="pair-item">wake <span class="hyphen">-</span> woke</span>
+                        <span class="pair-item">wear <span class="hyphen">-</span> wore</span>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
-        <!-- 解密面板 -->
-        <div class="card">
-            <div class="card-header">
-                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
-                    <rect x="5" y="11" width="14" height="11" rx="2" />
-                    <path d="M8 11V8C8 5.79 9.79 4 12 4C14.21 4 16 5.79 16 8V11" />
-                    <path d="M12 16V14M15 19L12 16L9 19" />
-                </svg>
-                <h2>解密 · 化学式→拼音</h2>
-            </div>
-            <div class="card-body">
-                <div class="input-group">
-                    <label>
-                        <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        化学式密文
-                    </label>
-                    <textarea id="cipherInput" rows="3" placeholder="例：(Xe1IArO)'&quot;  PErNGd&quot;  YOU'&quot;  MgErN-"></textarea>
-                    <div class="action-group">
-                        <button id="doDecryptBtn" class="btn-primary">
-                            <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M21 12L12 3L3 12M12 5v14"/></svg>
-                            解密还原
-                        </button>
-                    </div>
-                </div>
-                <div class="result-area" id="decryptResultArea">
-                    <div class="result-text" id="decryptResultText">输入密文后点击解密</div>
-                    <button class="copy-btn" id="copyDecryptBtn" style="display: none;">
-                        <svg viewBox="0 0 24 24" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        复制
-                    </button>
-                </div>
-                <div class="info-note">
-                    自动过滤下标和括号，基于化学符映射表精准还原拼音(带数字声调)。完全兼容加密算法。
-                </div>
-            </div>
-        </div>
+    <div class="footer-note">
+        // 共100个不规则动词 · 原型-过去式对照 · 直角边框
     </div>
-    <footer>元素映射表: 拼音字母 ⇄ 化学符号 (Ag, Ar, Cm...) + 声调符号(' " -)  |  随机伪装下标/括号 | 高准确中文转拼音</footer>
 </div>
-
-<script>
-    // ---------- 1. 核心加密映射 (与原C++严格一致) ----------
-    const mapping = {
-        'a': ['Ag', 'Ar'], 'b': ['B', 'Bh', 'Br'], 'c': ['C', 'Cd', 'Cr'],
-        'd': ['Dy'], 'e': ['Er'], 'f': ['F', 'Fr'], 'g': ['Gd'],
-        'h': ['H', 'Hg'], 'i': ['I', 'Ir'], 'j': ['Cm'], 'k': ['K', 'Kr'],
-        'l': ['Lr'], 'm': ['Md', 'Mg'], 'n': ['N', 'Nd', 'Nh'], 'o': ['O', 'Og'],
-        'p': ['P', 'Pd', 'Pr'], 'q': ['Cf'], 'r': ['Rg', 'Rh'], 's': ['S', 'Sg', 'Sr'],
-        't': ['Th'], 'u': ['U'], 'v': ['V'], 'w': ['W'], 'x': ['Xe'], 'y': ['Y'], 'z': ['Zr']
-    };
-    const toneToSym = {1: "'", 2: "\"", 3: "'\"", 4: "\"\"", 0: "-"};
-    const symToTone = {"'": 1, "\"": 2, "'\"": 3, "\"\"": 4, "-": 0};
-
-    // 反向化学符号 -> 字母
-    const symbolToLetter = new Map();
-    for (const [letter, symbols] of Object.entries(mapping)) {
-        for (const sym of symbols) {
-            symbolToLetter.set(sym, letter);
-        }
-    }
-    const validSymbolsSet = new Set(symbolToLetter.keys());
-
-    // 辅助随机
-    function randInt(max) { return Math.floor(Math.random() * max); }
-    function randomSubscript() { return String(randInt(3) + 1); }
-
-    // ---------- 加密伪装（完全复现原算法）----------
-    function addFake(block) {
-        let tonePart = "";
-        let body = block;
-        const toneChars = ["'", '"', '-'];
-        let pos = body.length;
-        while (pos > 0 && toneChars.includes(body[pos-1])) pos--;
-        if (pos < body.length) {
-            tonePart = body.slice(pos);
-            body = body.slice(0, pos);
-        }
-        let elements = [];
-        let i = 0;
-        while (i < body.length) {
-            if (i+1 < body.length && validSymbolsSet.has(body.substr(i,2))) {
-                elements.push(body.substr(i,2));
-                i += 2;
-            } else if (validSymbolsSet.has(body.substr(i,1))) {
-                elements.push(body.substr(i,1));
-                i += 1;
-            } else { i++; }
-        }
-        let newBody = "";
-        for (let elem of elements) {
-            newBody += elem;
-            if (Math.random() < 0.5) newBody += randomSubscript();
-        }
-        const r = Math.random() * 100;
-        if (r < 30) newBody = "(" + newBody + ")";
-        else if (r < 40) newBody = "[" + newBody + "]";
-        return newBody + tonePart;
-    }
-
-    function encrypt(pinyinStr) {
-        const syllables = pinyinStr.trim().split(/\s+/);
-        const encrypted = [];
-        for (let syl of syllables) {
-            if (!syl.length) continue;
-            let letters = "";
-            let toneDigit = 0;
-            let idx = 0;
-            while (idx < syl.length && /[a-zA-Z]/.test(syl[idx])) {
-                letters += syl[idx];
-                idx++;
-            }
-            if (idx < syl.length && /[0-9]/.test(syl[idx])) {
-                toneDigit = parseInt(syl[idx], 10);
-            }
-            let chemSeq = "";
-            for (let ch of letters) {
-                const low = ch.toLowerCase();
-                const candidates = mapping[low];
-                if (!candidates) { chemSeq += "?"; continue; }
-                chemSeq += candidates[randInt(candidates.length)];
-            }
-            const toneSymbol = toneToSym[toneDigit] || "-";
-            const raw = chemSeq + toneSymbol;
-            encrypted.push(addFake(raw));
-        }
-        return encrypted.join(" ");
-    }
-
-    // 解密：移除数值括号等
-    function removeFake(s) {
-        return s.replace(/[^a-zA-Z\s'\"\-]/g, '');
-    }
-
-    function decrypt(cipherStr) {
-        const cleaned = removeFake(cipherStr);
-        const blocks = cleaned.trim().split(/\s+/);
-        const syllables = [];
-        for (let block of blocks) {
-            if (block.length === 0) continue;
-            let toneChars = [];
-            let p = block.length;
-            while (p > 0) {
-                const ch = block[p-1];
-                if (ch === "'" || ch === '"' || ch === '-') {
-                    toneChars.unshift(ch);
-                    p--;
-                } else break;
-            }
-            const toneSymStr = toneChars.join('');
-            const toneDigit = symToTone[toneSymStr] ?? 0;
-            const body = block.substring(0, p);
-            let letters = "";
-            let i = 0;
-            while (i < body.length) {
-                if (i+1 < body.length && validSymbolsSet.has(body.substr(i,2))) {
-                    const sym = body.substr(i,2);
-                    letters += symbolToLetter.get(sym);
-                    i += 2;
-                } else if (validSymbolsSet.has(body.substr(i,1))) {
-                    const sym = body.substr(i,1);
-                    letters += symbolToLetter.get(sym);
-                    i += 1;
-                } else {
-                    i++;
-                }
-            }
-            syllables.push(letters + toneDigit);
-        }
-        return syllables.join(" ");
-    }
-
-    // ---------- 中文转拼音 (pinyin-pro 高准确率，数字声调格式) ----------
-    function chineseToNumberedPinyin(chineseText) {
-        if (!chineseText.trim()) return "";
-        try {
-            if (window.pinyinPro && window.pinyinPro.pinyin) {
-                // pattern: 'pinyinNum' 返回 ni3 hao3 格式
-                const result = window.pinyinPro.pinyin(chineseText, { pattern: 'pinyinNum', toneType: 'num' });
-                return result.trim();
-            } else if (window.pinyin) {
-                // 后备旧方案
-                const arr = window.pinyin(chineseText, { style: 'tone2', heteronym: false });
-                if (Array.isArray(arr)) return arr.map(item => item[0]).join(' ');
-                return chineseText;
-            } else {
-                console.warn("拼音库未完全加载, 直接返回原文");
-                return chineseText;
-            }
-        } catch(e) {
-            console.error("拼音转换异常", e);
-            return chineseText;
-        }
-    }
-
-    // 智能预处理: 含中文则转拼音，否则保持
-    function preparePinyin(inputStr) {
-        const hasChinese = /[\u4e00-\u9fa5]/.test(inputStr);
-        if (hasChinese) {
-            return chineseToNumberedPinyin(inputStr);
-        }
-        return inputStr.trim();
-    }
-
-    // ---------- UI 控制 (复制 & 显示) ----------
-    function setEncryptResult(text) {
-        const resultDiv = document.getElementById("encryptResultText");
-        const copyBtn = document.getElementById("copyEncryptBtn");
-        if (!text || text === "") {
-            resultDiv.innerText = "暂无结果";
-            copyBtn.style.display = "none";
-            return;
-        }
-        resultDiv.innerText = text;
-        copyBtn.style.display = "inline-flex";
-    }
-
-    function setDecryptResult(text) {
-        const resultDiv = document.getElementById("decryptResultText");
-        const copyBtn = document.getElementById("copyDecryptBtn");
-        if (!text) {
-            resultDiv.innerText = "暂无结果";
-            copyBtn.style.display = "none";
-            return;
-        }
-        resultDiv.innerText = text;
-        copyBtn.style.display = "inline-flex";
-    }
-
-    async function copyToClipboard(text, btnElement) {
-        if (!text) return;
-        try {
-            await navigator.clipboard.writeText(text);
-            const originalHTML = btnElement.innerHTML;
-            btnElement.innerHTML = `<svg viewBox="0 0 24 24" stroke="currentColor"><path d="M20 6L9 17L4 12"/></svg> 已复制`;
-            setTimeout(() => {
-                btnElement.innerHTML = originalHTML;
-            }, 1500);
-        } catch (err) {
-            alert("手动复制即可");
-        }
-    }
-
-    // 加密按钮逻辑
-    document.getElementById("doEncryptBtn").addEventListener("click", () => {
-        let rawInput = document.getElementById("plainInput").value;
-        if (!rawInput.trim()) {
-            setEncryptResult("请输入文本后再加密");
-            return;
-        }
-        let pinyinReady = preparePinyin(rawInput);
-        if (!pinyinReady) {
-            setEncryptResult("拼音转换失败，请检查输入");
-            return;
-        }
-        try {
-            const cipher = encrypt(pinyinReady);
-            setEncryptResult(cipher);
-        } catch(e) {
-            setEncryptResult("加密错误: " + e.message);
-        }
-    });
-
-    // 中文转拼音按钮 (填充回文本框)
-    document.getElementById("convertToPinyinBtn").addEventListener("click", () => {
-        let rawInput = document.getElementById("plainInput").value;
-        if (!rawInput.trim()) {
-            setEncryptResult("请先输入中文文本");
-            return;
-        }
-        const hasChinese = /[\u4e00-\u9fa5]/.test(rawInput);
-        if (hasChinese) {
-            const pinyinStr = chineseToNumberedPinyin(rawInput);
-            document.getElementById("plainInput").value = pinyinStr;
-            setEncryptResult("已转换为拼音: " + pinyinStr);
-        } else {
-            setEncryptResult("当前已是拼音格式，可直接加密");
-        }
-    });
-
-    // 解密
-    document.getElementById("doDecryptBtn").addEventListener("click", () => {
-        const cipherText = document.getElementById("cipherInput").value;
-        if (!cipherText.trim()) {
-            setDecryptResult("请输入化学式密文");
-            return;
-        }
-        try {
-            const plainPinyin = decrypt(cipherText);
-            setDecryptResult(plainPinyin);
-        } catch(e) {
-            setDecryptResult("解密失败: " + e.message);
-        }
-    });
-
-    // 复制事件
-    document.getElementById("copyEncryptBtn").addEventListener("click", () => {
-        const text = document.getElementById("encryptResultText").innerText;
-        if (text && text !== "暂无结果" && text !== "点击加密生成化学式") {
-            copyToClipboard(text, document.getElementById("copyEncryptBtn"));
-        }
-    });
-    document.getElementById("copyDecryptBtn").addEventListener("click", () => {
-        const text = document.getElementById("decryptResultText").innerText;
-        if (text && text !== "暂无结果" && text !== "输入密文后点击解密") {
-            copyToClipboard(text, document.getElementById("copyDecryptBtn"));
-        }
-    });
-
-    // 设置演示示例，更友好
-    document.getElementById("plainInput").value = "你好世界";
-    document.getElementById("cipherInput").value = "(Xe1IArO)'\"  PErNGd\"  YOU'\"  MgErN-";
-    setEncryptResult("点击「中文→拼音」预览，或直接加密");
-    setDecryptResult("点击解密即可还原拼音");
-
-    // 移动端触摸优化: 避免300ms延迟 (已经通过meta实现)
-</script>
 </body>
 </html>
