@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none; /* 避免拖拽时选中文本 */
+            user-select: none;
         }
 
         body {
@@ -20,7 +20,6 @@
             transition: background 0.2s ease;
         }
 
-        /* 动态光晕 */
         body::before {
             content: '';
             position: fixed;
@@ -34,7 +33,6 @@
             z-index: 0;
         }
 
-        /* 浅色模式适配 */
         body.light {
             background: linear-gradient(145deg, #f0f4fe, #e9eef8);
         }
@@ -50,7 +48,6 @@
             padding: 1rem 1.5rem 2rem;
         }
 
-        /* --- 顶部导航栏 --- */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -122,7 +119,6 @@
             cursor: pointer;
         }
 
-        /* 工具行 */
         .tools-strip {
             display: flex;
             flex-wrap: wrap;
@@ -147,7 +143,6 @@
             background: rgba(60, 80, 110, 0.8);
         }
 
-        /* 网格容器 */
         .sites-grid {
             display: grid;
             gap: 1.5rem;
@@ -155,7 +150,6 @@
             transition: all 0.2s;
             margin-bottom: 2rem;
         }
-        /* 动态列数 class 控制 */
         .grid-cols-small { grid-template-columns: repeat(auto-fill, minmax(110px, 130px)); }
         .grid-cols-medium { grid-template-columns: repeat(auto-fill, minmax(130px, 150px)); }
         .grid-cols-large { grid-template-columns: repeat(auto-fill, minmax(150px, 170px)); }
@@ -194,7 +188,6 @@
         }
         .site-name { font-size: 0.85rem; font-weight: 500; background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 40px; color: #f0f3fc; }
 
-        /* 模态框通用 */
         .modal-glass {
             position: fixed;
             top: 0; left: 0;
@@ -223,7 +216,6 @@
             border: 1px solid rgba(255,255,255,0.3);
             color: white;
         }
-        /* 侧边菜单抽屉 */
         .side-drawer {
             position: fixed;
             top: 0;
@@ -290,14 +282,10 @@
         </div>
     </div>
 
-    <!-- 常用工具条 -->
     <div class="tools-strip" id="toolsStrip"></div>
-
-    <!-- 动态网格 -->
     <div class="sites-grid" id="sitesGrid"></div>
 </div>
 
-<!-- 侧边快捷菜单栏（书签/最近/导入导出/引擎切换） -->
 <div class="side-drawer" id="sideDrawer">
     <div class="drawer-header">快捷中心 <span id="closeDrawer" style="cursor:pointer;">✕</span></div>
     <div class="drawer-section">
@@ -320,7 +308,6 @@
     </div>
 </div>
 
-<!-- 设置面板（个性化） -->
 <div class="modal-glass" id="settingsModal">
     <div class="modal-content">
         <h3>✨ 个性化设置</h3>
@@ -338,14 +325,13 @@
     </div>
 </div>
 
-<!-- 工具浮层简单示例（动态生成内容） -->
 <div class="modal-glass" id="toolModal">
     <div class="modal-content" id="toolModalContent" style="max-width: 500px;"></div>
 </div>
 
 <script>
-    // ----- 全局数据 -----
-    let defaultSites = [
+    // ----- 稳定的默认数据 -----
+    const DEFAULT_SITES = [
         { id: "d1", name: "抖音", url: "https://www.douyin.com", domain: "douyin.com" },
         { id: "d2", name: "B站", url: "https://www.bilibili.com", domain: "bilibili.com" },
         { id: "d3", name: "快手", url: "https://www.kuaishou.com", domain: "kuaishou.com" },
@@ -353,9 +339,25 @@
         { id: "d5", name: "百度AI", url: "https://chat.baidu.com", domain: "chat.baidu.com" },
         { id: "game", name: "鱼吃鱼游戏", url: "FEF.html", domain: "", isGame: true }
     ];
-    let userBookmarks = []; // {name, url, id}
-    let currentCards = [];   // 合并显示顺序
-    let recentSites = [];     // 最多6
+    
+    // 安全解析 localStorage 数据
+    function safeGetItem(key, defaultValue, isArray = true) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return defaultValue;
+            const parsed = JSON.parse(raw);
+            // 简单校验：如果是期望数组但解析后不是数组，返回默认值
+            if (isArray && !Array.isArray(parsed)) return defaultValue;
+            return parsed;
+        } catch (e) {
+            console.warn(`读取 ${key} 失败，使用默认值`, e);
+            return defaultValue;
+        }
+    }
+
+    let userBookmarks = [];
+    let currentCards = [];
+    let recentSites = [];
     let searchHistory = [];
     let currentEngine = { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=" };
     const engines = [
@@ -363,87 +365,136 @@
         { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=" },
         { id: "baidu", name: "百度", url: "https://www.baidu.com/s?wd=" }
     ];
-    // 配置存储
+    
     let settings = { gridCols: "medium", cardSize: "comfort", bgTheme: "system", showName: true, iconMode: "both" };
     let dragSrcIndex = null;
 
-    // 辅助: 保存所有数据
+    // 保存所有数据（带异常保护）
     function saveAllData() {
-        localStorage.setItem("userBookmarks", JSON.stringify(userBookmarks));
-        localStorage.setItem("currentCardsOrder", JSON.stringify(currentCards.map(c => c.id)));
-        localStorage.setItem("recentSites", JSON.stringify(recentSites));
-        localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
-        localStorage.setItem("settings", JSON.stringify(settings));
-        localStorage.setItem("engine", JSON.stringify(currentEngine));
+        try {
+            localStorage.setItem("userBookmarks", JSON.stringify(userBookmarks));
+            localStorage.setItem("currentCardsOrder", JSON.stringify(currentCards.map(c => c.id)));
+            localStorage.setItem("recentSites", JSON.stringify(recentSites));
+            localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
+            localStorage.setItem("settings", JSON.stringify(settings));
+            localStorage.setItem("engine", JSON.stringify(currentEngine));
+        } catch(e) { console.warn("保存数据失败", e); }
     }
+    
+    // 加载所有数据，失败时回退到默认值
     function loadAllData() {
-        let book = localStorage.getItem("userBookmarks");
-        if(book) userBookmarks = JSON.parse(book);
-        let order = localStorage.getItem("currentCardsOrder");
-        let savedRecent = localStorage.getItem("recentSites");
-        if(savedRecent) recentSites = JSON.parse(savedRecent);
-        let savedHistory = localStorage.getItem("searchHistory");
-        if(savedHistory) searchHistory = JSON.parse(savedHistory);
-        let savedSet = localStorage.getItem("settings");
-        if(savedSet) settings = JSON.parse(savedSet);
-        let eng = localStorage.getItem("engine");
-        if(eng) currentEngine = JSON.parse(eng);
-        buildCardList(order);
+        // 书签
+        userBookmarks = safeGetItem("userBookmarks", [], true);
+        // 确保每个书签都有 id 和必要字段
+        userBookmarks = userBookmarks.filter(b => b && typeof b === 'object').map(b => ({ ...b, id: b.id || Date.now() + Math.random() }));
+        
+        // 最近访问
+        recentSites = safeGetItem("recentSites", [], true);
+        // 搜索历史
+        searchHistory = safeGetItem("searchHistory", [], true);
+        // 设置
+        const savedSettings = safeGetItem("settings", null, false);
+        if (savedSettings && typeof savedSettings === 'object') settings = { ...settings, ...savedSettings };
+        // 搜索引擎
+        const savedEngine = safeGetItem("engine", null, false);
+        if (savedEngine && savedEngine.id && savedEngine.url) currentEngine = savedEngine;
+        
+        // 读取顺序，但必须先构建卡片列表（依赖于 default+书签）
+        const savedOrder = safeGetItem("currentCardsOrder", [], true);
+        buildCardList(savedOrder);
     }
+    
+    // 构建卡片列表（合并默认站点+书签，并应用保存的顺序）
     function buildCardList(savedOrder) {
-        let allItems = [...defaultSites.map(s => ({ ...s, isBookmark: false })), ...userBookmarks.map(b => ({ ...b, isBookmark: true, domain: b.url, id: b.id }))];
-        if(savedOrder && savedOrder.length) {
+        // 合并数据：默认站点 + 书签（书签可能重复添加，但 id 不同不影响）
+        let allItems = [
+            ...DEFAULT_SITES.map(s => ({ ...s, isBookmark: false })),
+            ...userBookmarks.map(b => ({ ...b, isBookmark: true, domain: b.domain || (b.url ? new URL(b.url).hostname.replace('www.', '') : '') }))
+        ];
+        
+        // 去重保障（如果因某些原因出现同名同url但不同id，保留即可）
+        if (savedOrder && savedOrder.length) {
             let ordered = [];
-            savedOrder.forEach(id => { let found = allItems.find(i => i.id == id); if(found) ordered.push(found); });
-            allItems.forEach(i => { if(!ordered.find(o=>o.id==i.id)) ordered.push(i); });
+            savedOrder.forEach(id => {
+                let found = allItems.find(i => i.id == id);
+                if (found) ordered.push(found);
+            });
+            // 补全未在顺序中的项（例如新添加的书签或默认站点）
+            allItems.forEach(i => {
+                if (!ordered.find(o => o.id == i.id)) ordered.push(i);
+            });
             currentCards = ordered;
         } else {
-            currentCards = allItems;
+            currentCards = [...allItems];
         }
+        
+        // 极端情况：如果 currentCards 为空（理论上不可能，但防御）
+        if (!currentCards.length) currentCards = [...DEFAULT_SITES.map(s => ({ ...s, isBookmark: false }))];
+        
         renderGrid();
     }
+    
     function addRecent(url, name) {
+        if (!url) return;
         let exists = recentSites.find(r => r.url === url);
-        if(!exists) recentSites.unshift({ url, name, time: Date.now() });
-        else { recentSites = recentSites.filter(r=>r.url!==url); recentSites.unshift({url,name}); }
-        if(recentSites.length > 8) recentSites.pop();
-        saveAllData(); renderRecent();
+        if (!exists) recentSites.unshift({ url, name, time: Date.now() });
+        else {
+            recentSites = recentSites.filter(r => r.url !== url);
+            recentSites.unshift({ url, name });
+        }
+        if (recentSites.length > 8) recentSites.pop();
+        saveAllData();
+        renderRecent();
     }
+    
     function addSearchHistory(word) {
-        if(!word.trim()) return;
-        searchHistory = searchHistory.filter(w=>w!==word);
+        if (!word || !word.trim()) return;
+        word = word.trim();
+        searchHistory = searchHistory.filter(w => w !== word);
         searchHistory.unshift(word);
-        if(searchHistory.length>10) searchHistory.pop();
-        saveAllData(); renderSearchHistory();
+        if (searchHistory.length > 10) searchHistory.pop();
+        saveAllData();
+        renderSearchHistory();
     }
-    // 渲染主网格 (支持拖拽/右键)
+    
     function renderGrid() {
         const grid = document.getElementById('sitesGrid');
-        if(!grid) return;
+        if (!grid) return;
         let colClass = `grid-cols-${settings.gridCols}`;
         grid.className = `sites-grid ${colClass}`;
         grid.innerHTML = '';
+        
         currentCards.forEach((card, idx) => {
             const cardDiv = document.createElement('div');
             cardDiv.className = `site-card ${settings.cardSize === 'compact' ? 'compact-card' : (settings.cardSize === 'comfort' ? '' : 'comfort-card')}`;
-            if(settings.iconMode === 'icon') cardDiv.classList.add('icon-only');
+            if (settings.iconMode === 'icon') cardDiv.classList.add('icon-only');
             cardDiv.draggable = true;
             cardDiv.setAttribute('data-index', idx);
             let iconUrl = card.domain ? `https://api.iowen.cn/favicon/${card.domain}` : '';
-            let firstChar = card.name.charAt(0);
+            let firstChar = card.name ? card.name.charAt(0) : '?';
             cardDiv.innerHTML = `
                 <div class="site-icon"><img src="${iconUrl}" onerror="this.style.display='none'; this.nextSibling.style.display='flex';" style="display:block;"><div class="fallback-letter" style="display:none;">${firstChar}</div></div>
-                ${settings.showName ? `<div class="site-name">${card.name}</div>` : ''}
+                ${settings.showName ? `<div class="site-name">${escapeHtml(card.name)}</div>` : ''}
             `;
-            cardDiv.addEventListener('click', (e) => { e.stopPropagation(); window.open(card.url, '_blank'); addRecent(card.url, card.name); });
+            cardDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (card.url) {
+                    window.open(card.url, '_blank');
+                    addRecent(card.url, card.name);
+                } else {
+                    toastMsg("无效链接");
+                }
+            });
             cardDiv.addEventListener('dragstart', (e) => { dragSrcIndex = idx; e.dataTransfer.effectAllowed = 'move'; });
             cardDiv.addEventListener('dragover', (e) => e.preventDefault());
             cardDiv.addEventListener('drop', (e) => {
-                e.preventDefault(); if(dragSrcIndex !== null && dragSrcIndex !== idx) {
+                e.preventDefault();
+                if (dragSrcIndex !== null && dragSrcIndex !== idx) {
                     let moved = currentCards[dragSrcIndex];
-                    currentCards.splice(dragSrcIndex,1);
-                    currentCards.splice(idx,0,moved);
-                    saveAllData(); renderGrid();
+                    currentCards.splice(dragSrcIndex, 1);
+                    currentCards.splice(idx, 0, moved);
+                    saveAllData();
+                    renderGrid();
                 }
                 dragSrcIndex = null;
             });
@@ -454,6 +505,9 @@
             grid.appendChild(cardDiv);
         });
     }
+    
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, function(m){ if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
+    
     function showContextMenu(card, idx, x, y) {
         let menu = document.getElementById('contextMenu');
         if(menu) menu.remove();
@@ -467,22 +521,77 @@
             btn.addEventListener('click', () => {
                 if(btn.dataset.act === 'open') window.open(card.url);
                 if(btn.dataset.act === 'newtab') window.open(card.url,'_blank');
-                if(btn.dataset.act === 'edit') { let newName = prompt('编辑名称',card.name); if(newName) { card.name=newName; saveAllData(); renderGrid(); } }
-                if(btn.dataset.act === 'delete') { if(card.isBookmark) { userBookmarks = userBookmarks.filter(b=>b.id!==card.id); } else { alert("基础网站暂不支持删除，可添加到收藏后隐藏"); } buildCardList(null); saveAllData(); }
-                if(btn.dataset.act === 'bookmark') { if(!userBookmarks.find(b=>b.url===card.url)) { let newB = { id: Date.now()+Math.random(), name: card.name, url: card.url, domain: card.domain }; userBookmarks.push(newB); saveAllData(); buildCardList(null); toastMsg("已添加到书签"); } else toastMsg("已在书签中"); }
+                if(btn.dataset.act === 'edit') { let newName = prompt('编辑名称',card.name); if(newName && newName.trim()){ card.name=newName.trim(); saveAllData(); renderGrid(); } }
+                if(btn.dataset.act === 'delete') {
+                    if(card.isBookmark) {
+                        userBookmarks = userBookmarks.filter(b=>b.id!==card.id);
+                        saveAllData();
+                        buildCardList(null);
+                        renderBookmarks();
+                        toastMsg("已删除书签");
+                    } else {
+                        toastMsg("基础网站不可删除，可隐藏或添加书签替代");
+                    }
+                }
+                if(btn.dataset.act === 'bookmark') {
+                    if(!userBookmarks.find(b=>b.url===card.url)) {
+                        let newB = { id: Date.now()+Math.random(), name: card.name, url: card.url, domain: card.domain };
+                        userBookmarks.push(newB);
+                        saveAllData();
+                        buildCardList(null);
+                        renderBookmarks();
+                        toastMsg("已添加到书签");
+                    } else toastMsg("已在书签中");
+                }
                 div.remove();
             });
         });
         setTimeout(() => { if(div) div.remove(); }, 5000);
     }
-    function renderRecent() { let html = ''; recentSites.forEach(r=>{ html+=`<div class="recent-item"><span>${r.name}</span><button class="small-btn" data-url="${r.url}">打开</button></div>`; }); document.getElementById('recentList').innerHTML = html||'暂无'; document.querySelectorAll('.recent-item button').forEach(btn=>btn.addEventListener('click',()=>window.open(btn.dataset.url)));}
-    function renderBookmarks() { let html = ''; userBookmarks.forEach(b=>{ html+=`<div class="bookmark-item"><span>${b.name}</span><div><button class="small-btn" data-url="${b.url}">打开</button><button class="small-btn" data-id="${b.id}" style="background:#c2410c;">删</button></div></div>`; }); document.getElementById('bookmarkList').innerHTML = html||'暂无书签'; document.querySelectorAll('.bookmark-item button[data-url]').forEach(btn=>btn.addEventListener('click',()=>window.open(btn.dataset.url))); document.querySelectorAll('.bookmark-item button[data-id]').forEach(btn=>btn.addEventListener('click',()=>{ userBookmarks = userBookmarks.filter(b=>b.id!=btn.dataset.id); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("已删除"); }));}
-    function renderSearchHistory(){ let histDiv = document.getElementById('searchHistoryList'); histDiv.innerHTML = searchHistory.map(w=>`<div style="cursor:pointer;margin:4px 0;" class="history-word">🔍 ${w}</div>`).join('')||'暂无'; document.querySelectorAll('.history-word').forEach(el=>el.addEventListener('click',()=>{ document.getElementById('quickSearchInput').value=el.innerText.slice(2); performQuickSearch(); }));}
-    function toastMsg(msg){ let t = document.getElementById('toast'); if(!t){ let div=document.createElement('div'); div.id='toast'; div.className='toast-msg'; document.body.appendChild(div); t=div;} t.innerText=msg; t.style.opacity=1; setTimeout(()=>t.style.opacity=0,1800);}
-    function performQuickSearch(){ let q = document.getElementById('quickSearchInput').value; if(!q) return; addSearchHistory(q); window.open(currentEngine.url+encodeURIComponent(q), '_blank'); }
-    // 工具入口实现
+    
+    function renderRecent() {
+        let container = document.getElementById('recentList');
+        if(!container) return;
+        let html = '';
+        recentSites.forEach(r=>{ html+=`<div class="recent-item"><span>${escapeHtml(r.name)}</span><button class="small-btn" data-url="${r.url}">打开</button></div>`; });
+        container.innerHTML = html || '暂无';
+        document.querySelectorAll('#recentList .small-btn').forEach(btn=>btn.addEventListener('click',()=>window.open(btn.dataset.url)));
+    }
+    
+    function renderBookmarks() {
+        let container = document.getElementById('bookmarkList');
+        if(!container) return;
+        let html = '';
+        userBookmarks.forEach(b=>{ html+=`<div class="bookmark-item"><span>${escapeHtml(b.name)}</span><div><button class="small-btn" data-url="${b.url}">打开</button><button class="small-btn" data-id="${b.id}" style="background:#c2410c;">删</button></div></div>`; });
+        container.innerHTML = html || '暂无书签';
+        document.querySelectorAll('#bookmarkList .small-btn[data-url]').forEach(btn=>btn.addEventListener('click',()=>window.open(btn.dataset.url)));
+        document.querySelectorAll('#bookmarkList .small-btn[data-id]').forEach(btn=>btn.addEventListener('click',()=>{ userBookmarks = userBookmarks.filter(b=>b.id!=btn.dataset.id); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("已删除"); }));
+    }
+    
+    function renderSearchHistory() {
+        let histDiv = document.getElementById('searchHistoryList');
+        if(!histDiv) return;
+        histDiv.innerHTML = searchHistory.map(w=>`<div style="cursor:pointer;margin:4px 0;" class="history-word">🔍 ${escapeHtml(w)}</div>`).join('')||'暂无';
+        document.querySelectorAll('.history-word').forEach(el=>el.addEventListener('click',()=>{ document.getElementById('quickSearchInput').value=el.innerText.slice(2); performQuickSearch(); }));
+    }
+    
+    function toastMsg(msg) {
+        let t = document.getElementById('toast');
+        if(!t){ let div=document.createElement('div'); div.id='toast'; div.className='toast-msg'; document.body.appendChild(div); t=div;}
+        t.innerText=msg; t.style.opacity=1;
+        setTimeout(()=>t.style.opacity=0, 1800);
+    }
+    
+    function performQuickSearch() {
+        let q = document.getElementById('quickSearchInput').value;
+        if(!q.trim()) return;
+        addSearchHistory(q);
+        window.open(currentEngine.url + encodeURIComponent(q.trim()), '_blank');
+    }
+    
     const tools = [{name:"📅 日历", id:"calendar"},{name:"🧮 计算器", id:"calc"},{name:"🌤️ 天气", id:"weather"},{name:"🔢 单位换算", id:"unit"},{name:"✅ 待办", id:"todo"},{name:"🌐 翻译", id:"translate"},{name:"📱 二维码生成", id:"qrcode"},{name:"🔑 随机密码", id:"pwd"}];
-    function openToolModal(toolId){
+    
+    function openToolModal(toolId) {
         let modal = document.getElementById('toolModal'); let content = document.getElementById('toolModalContent');
         if(toolId === 'calendar') content.innerHTML = `<h3>日历参考</h3><div>${new Date().toDateString()}</div><div style="margin-top:20px;"><button class="small-btn" onclick="closeModal()">关闭</button></div>`;
         else if(toolId === 'calc') content.innerHTML = `<h3>简单计算器</h3><input id="calcA" placeholder="数字"> <select id="calcOp"><option>+</option><option>-</option><option>*</option><option>/</option></select> <input id="calcB"><button class="small-btn" onclick="document.getElementById('calcRes').innerText=eval(document.getElementById('calcA').value+document.getElementById('calcOp').value+document.getElementById('calcB').value)">=</button><div id="calcRes"></div><button class="small-btn" onclick="closeModal()">关闭</button>`;
@@ -496,30 +605,89 @@
         window.closeModal = ()=> modal.classList.remove('active');
         document.querySelectorAll('#toolModalContent button').forEach(btn=>{ if(btn.onclick) return; btn.addEventListener('click',function(){if(this.innerText==='关闭') modal.classList.remove('active');}); });
     }
-    function buildTools() { let strip = document.getElementById('toolsStrip'); strip.innerHTML = tools.map(t=>`<div class="tool-card" data-tool="${t.id}">${t.name}</div>`).join(''); document.querySelectorAll('.tool-card').forEach(el=>el.addEventListener('click',()=>openToolModal(el.dataset.tool))); }
-    // 引擎切换+抽屉
-    function renderDrawerEngine(){ let box = document.getElementById('drawerEngineList'); box.innerHTML = ''; engines.forEach(e=>{ let btn = document.createElement('button'); btn.className='small-btn'; btn.innerText=e.name; if(currentEngine.id===e.id) btn.style.background='#4c9aff'; btn.onclick=()=>{currentEngine=e;saveAllData();toastMsg(`引擎切换为${e.name}`);renderDrawerEngine();}; box.appendChild(btn); }); }
-    // 初始化UI、事件监听
-    function init(){
-        loadAllData(); buildTools(); renderGrid(); renderRecent(); renderBookmarks(); renderSearchHistory(); renderDrawerEngine();
+    
+    function buildTools() {
+        let strip = document.getElementById('toolsStrip');
+        if(!strip) return;
+        strip.innerHTML = tools.map(t=>`<div class="tool-card" data-tool="${t.id}">${t.name}</div>`).join('');
+        document.querySelectorAll('.tool-card').forEach(el=>el.addEventListener('click',()=>openToolModal(el.dataset.tool)));
+    }
+    
+    function renderDrawerEngine() {
+        let box = document.getElementById('drawerEngineList');
+        if(!box) return;
+        box.innerHTML = '';
+        engines.forEach(e=>{ let btn = document.createElement('button'); btn.className='small-btn'; btn.innerText=e.name; if(currentEngine.id===e.id) btn.style.background='#4c9aff'; btn.onclick=()=>{currentEngine=e;saveAllData();toastMsg(`引擎切换为${e.name}`);renderDrawerEngine();}; box.appendChild(btn); });
+    }
+    
+    function applyThemeFromSettings() {
+        let theme = settings.bgTheme;
+        if(theme === 'light') document.body.classList.add('light');
+        else if(theme === 'dark') document.body.classList.remove('light');
+        else {
+            if(window.matchMedia('(prefers-color-scheme: light)').matches) document.body.classList.add('light');
+            else document.body.classList.remove('light');
+        }
+    }
+    
+    function init() {
+        loadAllData();
+        buildTools();
+        renderRecent();
+        renderBookmarks();
+        renderSearchHistory();
+        renderDrawerEngine();
+        applyThemeFromSettings();
+        
         document.getElementById('menuToggle').addEventListener('click',()=>document.getElementById('sideDrawer').classList.add('open'));
         document.getElementById('closeDrawer').addEventListener('click',()=>document.getElementById('sideDrawer').classList.remove('open'));
-        document.getElementById('openSettingsBtn').addEventListener('click',()=>document.getElementById('settingsModal').classList.add('active'));
-        document.getElementById('closeSettingsBtn').addEventListener('click',()=>{ settings.gridCols = document.getElementById('gridColsSelect').value; settings.cardSize = document.getElementById('cardSizeSelect').value; settings.showName = document.getElementById('showNameToggle').checked; settings.iconMode = document.getElementById('iconModeSelect').value; let theme = document.getElementById('bgThemeSelect').value; if(theme==='dark') document.body.classList.remove('light'); else if(theme==='light') document.body.classList.add('light'); else { if(window.matchMedia('(prefers-color-scheme: light)').matches) document.body.classList.add('light'); else document.body.classList.remove('light'); } saveAllData(); renderGrid(); document.getElementById('settingsModal').classList.remove('active'); toastMsg("设置已应用"); });
-        document.getElementById('themeToggleBtn').addEventListener('click',()=>{ document.body.classList.toggle('light'); settings.bgTheme = document.body.classList.contains('light')?'light':'dark'; saveAllData(); });
+        document.getElementById('openSettingsBtn').addEventListener('click',()=>{
+            document.getElementById('gridColsSelect').value = settings.gridCols;
+            document.getElementById('cardSizeSelect').value = settings.cardSize;
+            document.getElementById('showNameToggle').checked = settings.showName;
+            document.getElementById('iconModeSelect').value = settings.iconMode;
+            document.getElementById('bgThemeSelect').value = settings.bgTheme;
+            document.getElementById('settingsModal').classList.add('active');
+        });
+        document.getElementById('closeSettingsBtn').addEventListener('click',()=>{
+            settings.gridCols = document.getElementById('gridColsSelect').value;
+            settings.cardSize = document.getElementById('cardSizeSelect').value;
+            settings.showName = document.getElementById('showNameToggle').checked;
+            settings.iconMode = document.getElementById('iconModeSelect').value;
+            settings.bgTheme = document.getElementById('bgThemeSelect').value;
+            applyThemeFromSettings();
+            saveAllData();
+            renderGrid();
+            document.getElementById('settingsModal').classList.remove('active');
+            toastMsg("设置已应用");
+        });
+        document.getElementById('themeToggleBtn').addEventListener('click',()=>{
+            document.body.classList.toggle('light');
+            settings.bgTheme = document.body.classList.contains('light') ? 'light' : 'dark';
+            saveAllData();
+        });
         document.getElementById('quickSearchIcon').addEventListener('click',performQuickSearch);
         document.getElementById('quickSearchInput').addEventListener('keypress',e=>{if(e.key==='Enter')performQuickSearch();});
-        document.getElementById('addBookmarkBtn').addEventListener('click',()=>{ let name=prompt('网站名称'); let url=prompt('网址'); if(name&&url){ let newId=Date.now()+''; userBookmarks.push({id:newId,name,url}); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("收藏添加成功"); } });
+        document.getElementById('addBookmarkBtn').addEventListener('click',()=>{ let name=prompt('网站名称'); let url=prompt('网址'); if(name && url){ let newId=Date.now()+''; userBookmarks.push({id:newId,name,url}); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("收藏添加成功"); } });
         document.getElementById('exportBookmarks').addEventListener('click',()=>{ let dataStr=JSON.stringify(userBookmarks); let blob=new Blob([dataStr],{type:'application/json'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bookmarks.json'; a.click(); });
-        document.getElementById('importBookmarks').addEventListener('click',()=>{ let fileInput=document.getElementById('importFile'); fileInput.onchange=(e)=>{ let file=e.target.files[0]; let reader=new FileReader(); reader.onload=ev=>{ let imported=JSON.parse(ev.target.result); userBookmarks.push(...imported); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("导入完成"); }; reader.readAsText(file); }; fileInput.click(); });
+        document.getElementById('importBookmarks').addEventListener('click',()=>{ let fileInput=document.getElementById('importFile'); fileInput.onchange=(e)=>{ let file=e.target.files[0]; let reader=new FileReader(); reader.onload=ev=>{ try { let imported=JSON.parse(ev.target.result); if(Array.isArray(imported)) { userBookmarks.push(...imported); saveAllData(); buildCardList(null); renderBookmarks(); toastMsg("导入完成"); } else toastMsg("格式错误"); } catch(e){ toastMsg("解析失败"); } }; reader.readAsText(file); }; fileInput.click(); });
         document.getElementById('clearRecent').addEventListener('click',()=>{ recentSites=[]; saveAllData(); renderRecent(); });
         document.getElementById('logoRefresh').addEventListener('click',()=>location.reload());
         window.addEventListener('keydown',(e)=>{ if(e.key === '/' || (e.ctrlKey && e.key === 'k')){ e.preventDefault(); document.getElementById('quickSearchInput').focus(); } if(e.key === 'Escape'){ document.querySelectorAll('.modal-glass.active').forEach(m=>m.classList.remove('active')); document.getElementById('sideDrawer').classList.remove('open'); } });
-        // 语音搜索
+        
         let SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(SpeechRecognition){ let recog = new SpeechRecognition(); recog.lang='zh-CN'; document.getElementById('quickSearchInput').parentElement.insertAdjacentHTML('beforeend','<span id="micBtn" style="cursor:pointer;">🎤</span>'); document.getElementById('micBtn').addEventListener('click',()=>{ recog.start(); recog.onresult=(event)=>{ document.getElementById('quickSearchInput').value=event.results[0][0].transcript; performQuickSearch(); }; }); }
-        toastMsg("✨ 灵犀导航增强版 | 拖拽排序 / 右键菜单 / 快捷键 / 侧边栏");
+        if(SpeechRecognition){
+            let recog = new SpeechRecognition(); recog.lang='zh-CN';
+            let micSpan = document.createElement('span');
+            micSpan.id = "micBtn";
+            micSpan.style.cursor = "pointer";
+            micSpan.innerText = "🎤";
+            document.querySelector('.mini-search').appendChild(micSpan);
+            micSpan.addEventListener('click',()=>{ recog.start(); recog.onresult=(event)=>{ document.getElementById('quickSearchInput').value=event.results[0][0].transcript; performQuickSearch(); }; });
+        }
+        toastMsg("✨ 灵犀导航增强版 | 数据已加固，二次加载正常");
     }
+    
     init();
 </script>
 </body>
