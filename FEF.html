@@ -2,15 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>鱼吃鱼 · 深海生态 · 陷阱狩猎</title>
-  /* 移动端触摸优化 - 禁止页面滚动 */
-body {
-    touch-action: pan-y pinch-zoom; /* 允许垂直滚动但禁止水平滚动 */
-}
-canvas {
-    touch-action: none; /* canvas 上完全禁止滚动，避免拖拽时页面滑动 */
-}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>鱼吃鱼 · 深海生态 · 陷阱狩猎 · 移动端触控版</title>
     <style>
         :root {
             --ocean-top: #0a7eb5; --ocean-mid: #065a82; --ocean-deep: #023047;
@@ -19,28 +12,28 @@ canvas {
             --skill-bg: rgba(0, 0, 0, 0.55);
         }
         * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
-        body { background:#001a2e; overflow:hidden; font-family:'PingFang SC','Microsoft YaHei',sans-serif; height:100vh; width:100vw; position:fixed; inset:0; cursor:default; }
-        canvas { display:block; position:absolute; top:0; left:0; width:100%; height:100%; }
-        。menu-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,20,40,0.92); backdrop-filter:blur(12px); z-index:100; display:flex; align-items:center; justify-content:center; transition:opacity 0.4s; }
-        。menu-container { background:rgba(2,35,55,0.95); border-radius:24px; padding:30px 26px; border:2px solid rgba(255,255,255,0.2); max-width:440px; width:92%; color:#fff; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
-        。menu-title { font-size:32px; font-weight:900; letter-spacing:6px; margin-bottom:4px; background:linear-gradient(180deg,#a0e0ff,#5bc0be); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        。menu-subtitle { font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:22px; letter-spacing:3px; }
-        。difficulty-row { display:flex; justify-content:center; gap:10px; margin-bottom:20px; }
-        。diff-btn { background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.25); border-radius:10px; color:rgba(255,255,255,0.8); font-weight:700; padding:9px 20px; cursor:pointer; transition:0.2s; letter-spacing:2px; font-size:14px; }
-        。diff-btn.active { background:#4dff88; border-color:#4dff88; color:#002a1e; font-weight:900; box-shadow:0 0 16px rgba(77,255,136,0.3); }
-        。settings-section { background:rgba(0,0,0,0.25); border-radius:14px; padding:14px 16px; margin-bottom:20px; text-align:left; }
-        。setting-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:13px; color:rgba(255,255,255,0.9); }
-        。toggle-switch { position:relative; width:44px; height:24px; background:rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; transition:0.2s; }
-        。toggle-switch.active { background:#4dff88; }
-        。toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:0.2s; }
-        。toggle-switch.active::after { left:23px; }
-        。start-btn { background:linear-gradient(135deg,#f0c060,#e0a830); border:none; border-radius:14px; padding:15px 30px; font-size:18px; font-weight:900; color:#002a1e; cursor:pointer; letter-spacing:4px; width:100%; transition:0.2s; box-shadow:0 8px 24px rgba(240,192,96,0.25); }
-        。start-btn:hover { background:linear-gradient(135deg,#ffd78a,#f0c060); transform:translateY(-1px); box-shadow:0 12px 30px rgba(240,192,96,0.35); }
-        。menu-hidden { opacity:0; pointer-events:none; }
-        。ui-bottom { position:fixed; bottom:0; left:0; right:0; z-index:10; pointer-events:none; padding:8px 12px; padding-bottom:max(8px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:4px; max-width:520px; margin:0 auto; }
-        。bar-row { display:flex; gap:6px; }
-        。bar-container { flex:1; background:rgba(2,30,50,0.8); border-radius:8px; padding:3px 10px; border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(8px); display:flex; align-items:center; gap:6px; font-size:11px; color:#fff; }
-        。bar-label { font-weight:700; letter-spacing:0.5px; display:flex; align-items:center; gap:3px; }
+        body { background:#001a2e; overflow:hidden; font-family:'PingFang SC','Microsoft YaHei',sans-serif; height:100vh; width:100vw; position:fixed; inset:0; cursor:default; touch-action: pan-y pinch-zoom; }
+        canvas { display:block; position:absolute; top:0; left:0; width:100%; height:100%; touch-action: none; }
+        .menu-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(2,20,40,0.92); backdrop-filter:blur(12px); z-index:100; display:flex; align-items:center; justify-content:center; transition:opacity 0.4s; }
+        .menu-container { background:rgba(2,35,55,0.95); border-radius:24px; padding:30px 26px; border:2px solid rgba(255,255,255,0.2); max-width:440px; width:92%; color:#fff; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5); }
+        .menu-title { font-size:32px; font-weight:900; letter-spacing:6px; margin-bottom:4px; background:linear-gradient(180deg,#a0e0ff,#5bc0be); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .menu-subtitle { font-size:13px; color:rgba(255,255,255,0.6); margin-bottom:22px; letter-spacing:3px; }
+        .difficulty-row { display:flex; justify-content:center; gap:10px; margin-bottom:20px; }
+        .diff-btn { background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.25); border-radius:10px; color:rgba(255,255,255,0.8); font-weight:700; padding:9px 20px; cursor:pointer; transition:0.2s; letter-spacing:2px; font-size:14px; }
+        .diff-btn.active { background:#4dff88; border-color:#4dff88; color:#002a1e; font-weight:900; box-shadow:0 0 16px rgba(77,255,136,0.3); }
+        .settings-section { background:rgba(0,0,0,0.25); border-radius:14px; padding:14px 16px; margin-bottom:20px; text-align:left; }
+        .setting-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:13px; color:rgba(255,255,255,0.9); }
+        .toggle-switch { position:relative; width:44px; height:24px; background:rgba(255,255,255,0.2); border-radius:12px; cursor:pointer; transition:0.2s; }
+        .toggle-switch.active { background:#4dff88; }
+        .toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:0.2s; }
+        .toggle-switch.active::after { left:23px; }
+        .start-btn { background:linear-gradient(135deg,#f0c060,#e0a830); border:none; border-radius:14px; padding:15px 30px; font-size:18px; font-weight:900; color:#002a1e; cursor:pointer; letter-spacing:4px; width:100%; transition:0.2s; box-shadow:0 8px 24px rgba(240,192,96,0.25); }
+        .start-btn:hover { background:linear-gradient(135deg,#ffd78a,#f0c060); transform:translateY(-1px); box-shadow:0 12px 30px rgba(240,192,96,0.35); }
+        .menu-hidden { opacity:0; pointer-events:none; }
+        .ui-bottom { position:fixed; bottom:0; left:0; right:0; z-index:10; pointer-events:none; padding:8px 12px; padding-bottom:max(8px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:4px; max-width:520px; margin:0 auto; }
+        .bar-row { display:flex; gap:6px; }
+        .bar-container { flex:1; background:rgba(2,30,50,0.8); border-radius:8px; padding:3px 10px; border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(8px); display:flex; align-items:center; gap:6px; font-size:11px; color:#fff; }
+        .bar-label { font-weight:700; letter-spacing:0.5px; display:flex; align-items:center; gap:3px; }
         .bar-label svg { width:14px; height:14px; }
         .bar-track { flex:1; height:5px; background:rgba(255,255,255,0.2); border-radius:3px; overflow:hidden; }
         .bar-fill { height:100%; border-radius:3px; transition:width 0.2s; }
@@ -73,9 +66,9 @@ canvas {
         .hint { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0); pointer-events:none; z-index:20; font-size:26px; font-weight:900; color:#fff; text-shadow:0 0 30px rgba(255,200,50,0.9); transition:transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275); white-space:nowrap; text-align:center; }
         .hint.show { transform:translate(-50%,-50%) scale(1); animation:hintPop 1.5s ease-out forwards; }
         @keyframes hintPop { 0%{transform:translate(-50%,-50%) scale(0.3);opacity:0} 30%{transform:translate(-50%,-50%) scale(1.15);opacity:1} 60%{transform:translate(-50%,-50%) scale(0.95);opacity:1} 100%{transform:translate(-50%,-50%) scale(1);opacity:0} }
-        .settings-btn { position:fixed; top:16px; right:16px; z-index:30; width:38px; height:38px; border-radius:50%; background:rgba(2,30,50,0.85); border:2px solid rgba(255,255,255,0.3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; }
+        .settings-btn { position:fixed; top:16px; right:16px; z-index:30; width:44px; height:44px; border-radius:50%; background:rgba(2,30,50,0.85); border:2px solid rgba(255,255,255,0.3); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; }
         .settings-btn:hover { background:rgba(2,50,80,0.9); }
-        .settings-btn svg { width:18px; height:18px; fill:#fff; }
+        .settings-btn svg { width:20px; height:20px; fill:#fff; }
         .settings-panel { position:fixed; top:60px; right:16px; z-index:30; background:rgba(2,30,50,0.95); border-radius:12px; padding:14px; border:2px solid rgba(255,255,255,0.25); display:none; flex-direction:column; gap:10px; min-width:210px; backdrop-filter:blur(10px); }
         .settings-panel.open { display:flex; }
         .settings-reset { color:#ffb347; font-size:11px; text-align:center; cursor:pointer; margin-top:4px; }
@@ -111,6 +104,75 @@ canvas {
         .dev-info-row span:last-child { color:#4dff88; font-weight:600; }
         .dev-info-row span.warn { color:#ffb347; }
         .dev-info-row span.danger { color:#ff4d6a; }
+
+        /* 移动端摇杆和冲刺按钮样式 */
+        .joystick {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 120px;
+            height: 120px;
+            background: rgba(30, 40, 60, 0.6);
+            border-radius: 50%;
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            touch-action: none;
+            display: none;
+        }
+        .joystick-base {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .joystick-thumb {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.02s linear;
+            box-shadow: 0 0 6px #4dff88;
+        }
+        .sprint-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(240, 192, 96, 0.9);
+            border: 3px solid #fff;
+            font-size: 32px;
+            font-weight: bold;
+            color: #002a1e;
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            touch-action: none;
+        }
+        .sprint-btn:active {
+            transform: scale(0.95);
+            background: #ffb347;
+        }
+        @media (max-width: 768px) {
+            .joystick, .sprint-btn {
+                display: flex;
+            }
+            .ui-bottom {
+                bottom: 120px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -211,6 +273,13 @@ canvas {
         </div>
     </div>
 </div>
+
+<!-- 移动端摇杆和冲刺按钮 -->
+<div id="joystick" class="joystick">
+    <div class="joystick-base"></div>
+    <div class="joystick-thumb"></div>
+</div>
+<button id="sprintBtn" class="sprint-btn">⚡</button>
 
 <script>
 (function() {
@@ -323,10 +392,12 @@ canvas {
         entangledTimer: 0,
         entangleCooldown: 0
     };
+
     // ========= 触摸控制变量 =========
-let touchX = 0, touchY = 0;      // 摇杆方向（-1..1）
-let touchActive = false;          // 是否正在触摸摇杆
-let touchSprint = false;          // 冲刺按钮是否按下
+    let touchX = 0, touchY = 0;
+    let touchActive = false;
+    let touchSprint = false;
+
     const MAX_STAMINA = 100;
     let stamina = MAX_STAMINA;
     const BASE_STAMINA_DRAIN = 35, BASE_STAMINA_REGEN = 18;
@@ -399,7 +470,6 @@ let touchSprint = false;          // 冲刺按钮是否按下
     let currentFPS = 0;
     let devCollapsed = false;
 
-    // 新增：海底岩石和浮游生物
     let seabedRocks = [];
     let planktons = [];
 
@@ -471,17 +541,17 @@ let touchSprint = false;          // 冲刺按钮是否按下
     function getPlayerPerceptionModifier() { if(!settings.stealth) return 1; const speed = Math.hypot(player.vx,player.vy); if(speed<5 && player.stillTimer>1.5) { let mod=0.4; for(let sw of seaweeds) if(Math.hypot(player.x-sw.x, player.y-(sw.y-sw.height*0.5))<sw.width*2+20){ mod*=0.85; break; } return mod; } if(isSprinting) return 1.4; return 1; }
 
     function updatePlayer(dt) {
-        let inputX = 0， inputY = 0;
-if (touchActive) {
-    inputX = touchX;
-    inputY = touchY;
-} else {
-    // 键盘方向
-    if(keys['w']||keys['arrowup']) inputY-=1;
-    if(keys['s']||keys['arrowdown']) inputY+=1;
-    if(keys['a']||keys['arrowleft']) inputX-=1;
-    if(keys['d']||keys['arrowright']) inputX+=1;
-}
+        // 优先使用触摸摇杆方向
+        let inputX = 0, inputY = 0;
+        if (touchActive && (touchX !== 0 || touchY !== 0)) {
+            inputX = touchX;
+            inputY = touchY;
+        } else {
+            if(keys['w']||keys['arrowup']) inputY-=1;
+            if(keys['s']||keys['arrowdown']) inputY+=1;
+            if(keys['a']||keys['arrowleft']) inputX-=1;
+            if(keys['d']||keys['arrowright']) inputX+=1;
+        }
         const hasInput = inputX!==0||inputY!==0;
         if(hasInput){ const len=Math.hypot(inputX,inputY); inputX/=len; inputY/=len; player.targetAngle=Math.atan2(inputY,inputX); }
         else player.stillTimer += dt;
@@ -495,7 +565,7 @@ if (touchActive) {
         player.lastAngle = player.angle;
 
         const staminaRegen = BASE_STAMINA_REGEN * currentParams.staminaRegenMult;
-        let isSprinting = (sprintKeyHeld || touchSprint) && hasInput && stamina>0;
+        isSprinting = (sprintKeyHeld || touchSprint) && hasInput && stamina>0;
         if(!locks.stamina) {
             if (cheatInfStaminaEnabled) {
                 stamina = MAX_STAMINA;
@@ -893,7 +963,6 @@ if (touchActive) {
     function updateCamera() { camera.targetX=player.x-canvasW/2; camera.targetY=player.y-canvasH/2; camera.targetX=Math.max(0,Math.min(WORLD_W-canvasW,camera.targetX)); camera.targetY=Math.max(0,Math.min(WORLD_H-canvasH,camera.targetY)); camera.x+=(camera.targetX-camera.x)*0.08; camera.y+=(camera.targetY-camera.y)*0.08; }
 
     function drawBackground() {
-        // 多层海洋渐变
         const grad = ctx.createLinearGradient(0, 0, 0, canvasH);
         grad.addColorStop(0, '#0a7eb5');
         grad.addColorStop(0.25, '#0a6d9e');
@@ -901,7 +970,6 @@ if (touchActive) {
         grad.addColorStop(1, '#022335');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, canvasW, canvasH);
-        // 动态光线
         const sunRayCount = 6;
         for (let i = 0; i < sunRayCount; i++) {
             const sx = (canvasW * 0.2 + i * canvasW * 0.15 + Math.sin(gameTime * 0.3 + i) * 60) - camera.x * 0.1;
@@ -919,7 +987,6 @@ if (touchActive) {
             ctx.closePath();
             ctx.fill();
         }
-        // 海底沙地
         const seabedY = WORLD_H - 160;
         const sbx = -camera.x, sby = seabedY - camera.y;
         if (sby < canvasH + 200 && sby + 200 > 0) {
@@ -929,7 +996,6 @@ if (touchActive) {
             sandGrad.addColorStop(1, 'rgba(80, 60, 30, 0.7)');
             ctx.fillStyle = sandGrad;
             ctx.fillRect(0, sby, canvasW, canvasH - sby);
-            // 海底岩石
             for (let rock of seabedRocks) {
                 const rx = rock.x - camera.x, ry = rock.y - camera.y;
                 if (rx < -150 || rx > canvasW + 150 || ry < -100 || ry > canvasH + 100) continue;
@@ -1118,7 +1184,81 @@ if (touchActive) {
         if(player.power>=90){ ctx.font='24px sans-serif'; ctx.fillStyle='#f0c060'; ctx.textAlign='center'; ctx.fillText('★',psx,psy-player.radius-26); }
         requestAnimationFrame(gameLoop);
     }
-    initTouchControls();
+
+    // ========= 初始化触摸控件 =========
+    function initTouchControls() {
+        const joystick = document.getElementById('joystick');
+        const thumb = document.getElementById('joystickThumb');
+        const sprintButton = document.getElementById('sprintBtn');
+        if (!joystick) return;
+
+        let rect = joystick.getBoundingClientRect();
+        let centerX = rect.left + rect.width/2;
+        let centerY = rect.top + rect.height/2;
+        const maxRadius = 40;
+
+        function updateThumbPos(clientX, clientY) {
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            let dist = Math.hypot(dx, dy);
+            if (dist > maxRadius) {
+                dx = dx / dist * maxRadius;
+                dy = dy / dist * maxRadius;
+                dist = maxRadius;
+            }
+            thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            if (dist < 10) {
+                touchX = 0;
+                touchY = 0;
+                touchActive = false;
+            } else {
+                touchX = dx / maxRadius;
+                touchY = dy / maxRadius;
+                touchActive = true;
+            }
+        }
+
+        function resetJoystick() {
+            thumb.style.transform = 'translate(-50%, -50%)';
+            touchX = 0;
+            touchY = 0;
+            touchActive = false;
+        }
+
+        joystick.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rectNow = joystick.getBoundingClientRect();
+            centerX = rectNow.left + rectNow.width/2;
+            centerY = rectNow.top + rectNow.height/2;
+            const touch = e.touches[0];
+            updateThumbPos(touch.clientX, touch.clientY);
+        });
+        joystick.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            updateThumbPos(touch.clientX, touch.clientY);
+        });
+        joystick.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            resetJoystick();
+        });
+
+        sprintButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchSprint = true;
+            sprintButton.style.transform = 'scale(0.95)';
+        });
+        sprintButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            touchSprint = false;
+            sprintButton.style.transform = 'scale(1)';
+        });
+        sprintButton.addEventListener('touchcancel', (e) => {
+            touchSprint = false;
+            sprintButton.style.transform = 'scale(1)';
+        });
+    }
+
     function startGame() {
         resize(); initSeaweeds(); initBubbles(); initSeabedRocks(); initPlanktons(); initTraps();
         aiFishes = []; for(let i=0;i<MIN_AI;i++) spawnAIFish();
@@ -1131,79 +1271,11 @@ if (touchActive) {
         setTimeout(()=>showHint('Boss会吞噬小鱼回血！尽量清理周围小鱼'),2500);
         setTimeout(()=>showHint('绿色数值的鱼可以吃'),4500);
         setTimeout(()=>showHint('每3分钟将有深海巨兽出现...'),7000);
+        initTouchControls();
         gameRunning = true; lastTime=0; paused=false; fpsHistory=[]; currentFPS=0;
         requestAnimationFrame(gameLoop);
     }
-  function initTouchControls() {
-    const joystick = document.getElementById('joystick');
-    const thumb = document.getElementById('joystickThumb');
-    const sprintButton = document.getElementById('sprintBtn');
-    if (!joystick) return;
 
-    let rect = joystick.getBoundingClientRect();
-    let centerX = rect.left + rect.width/2;
-    let centerY = rect.top + rect.height/2;
-    const maxRadius = 35; // 摇杆最大偏移像素
-
-    function updateThumbPos(x, y) {
-        let dx = x - centerX;
-        let dy = y - centerY;
-        let dist = Math.hypot(dx, dy);
-        if (dist > maxRadius) {
-            dx = dx / dist * maxRadius;
-            dy = dy / dist * maxRadius;
-        }
-        thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-        // 计算方向值 (-1..1)
-        touchX = dx / maxRadius;
-        touchY = dy / maxRadius;
-        if (dist < 8) {
-            touchX = 0; touchY = 0;
-        }
-    }
-
-    function resetJoystick() {
-        thumb.style.transform = 'translate(-50%, -50%)';
-        touchX = 0; touchY = 0;
-        touchActive = false;
-    }
-
-    joystick.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        touchActive = true;
-        const rect = joystick.getBoundingClientRect();
-        centerX = rect.left + rect.width/2;
-        centerY = rect.top + rect.height/2;
-        const touch = e.touches[0];
-        updateThumbPos(touch.clientX, touch.clientY);
-    });
-    joystick.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        if (!touchActive) return;
-        const touch = e.touches[0];
-        updateThumbPos(touch.clientX, touch.clientY);
-    });
-    joystick.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        resetJoystick();
-    });
-
-    // 冲刺按钮
-    sprintButton.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        touchSprint = true;
-        sprintButton.style.transform = 'scale(0.95)';
-    });
-    sprintButton.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        touchSprint = false;
-        sprintButton.style.transform = 'scale(1)';
-    });
-    sprintButton.addEventListener('touchcancel', (e) => {
-        touchSprint = false;
-        sprintButton.style.transform = 'scale(1)';
-    });
-}
     difficultyBtns.forEach(btn => btn.addEventListener('click', ()=>{ difficultyBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); difficulty = btn.dataset.diff; currentParams = difficultyParams[difficulty]; MIN_AI = currentParams.aiMin; MAX_AI = currentParams.aiMax; bossSpawnTimer = currentParams.bossInterval; }));
     menuAIHarm.addEventListener('click', function(){ settings.aiHarm=!settings.aiHarm; this.classList.toggle('active'); });
     menuAIVision.addEventListener('click', function(){ settings.aiVision=!settings.aiVision; this.classList.toggle('active'); });
@@ -1215,13 +1287,13 @@ if (touchActive) {
     function syncSettingsUI() { toggleAIHarm.classList.toggle('active', settings.aiHarm); toggleAIVision.classList.toggle('active', settings.aiVision); toggleHunger.classList.toggle('active', settings.hunger); toggleStealth.classList.toggle('active', settings.stealth); toggleBlood.classList.toggle('active', settings.blood); toggleBloodMega.classList.toggle('active', settings.bloodMega); }
     settingsBtn.addEventListener('click', ()=>settingsPanel.classList.toggle('open'));
     toggleAIHarm.addEventListener('click', ()=>{ settings.aiHarm=!settings.aiHarm; syncSettingsUI(); });
-    toggleAIVision。addEventListener('click', ()=>{ settings.aiVision=!settings.aiVision; syncSettingsUI(); });
+    toggleAIVision.addEventListener('click', ()=>{ settings.aiVision=!settings.aiVision; syncSettingsUI(); });
     toggleHunger.addEventListener('click', ()=>{ settings.hunger=!settings.hunger; syncSettingsUI(); });
     toggleStealth.addEventListener('click', ()=>{ settings.stealth=!settings.stealth; syncSettingsUI(); });
     toggleBlood.addEventListener('click', ()=>{ settings.blood=!settings.blood; syncSettingsUI(); });
     toggleBloodMega.addEventListener('click', ()=>{ settings.bloodMega=!settings.bloodMega; syncSettingsUI(); if(!settings.bloodMega) player.killStreak=0; });
     resetSettingsBtn.addEventListener('click', ()=>{ settings={aiHarm:true,aiVision:true,hunger:true,stealth:true,blood:true,bloodMega:true}; player.killStreak=0; syncSettingsUI(); });
-    window。addEventListener('keydown', function(e) {
+    window.addEventListener('keydown', function(e) {
         const key = e.key.toLowerCase();
         if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(key)) e.preventDefault();
         if(key === 'shift') sprintKeyHeld = true;
@@ -1234,17 +1306,17 @@ if (touchActive) {
             if (e.ctrlKey && e.shiftKey && key === 'r') { e.preventDefault(); resetPlayerState(); showHint('🔄 玩家状态已重置'); }
         }
     });
-    window。addEventListener('keyup', function(e) { const key = e.key.toLowerCase(); if(key === 'shift') sprintKeyHeld = false; keys[key] = false; });
-    window。addEventListener('blur', ()=>{ for(let k in keys) keys[k]=false; sprintKeyHeld=false; });
-    window。addEventListener('resize', resize);
+    window.addEventListener('keyup', function(e) { const key = e.key.toLowerCase(); if(key === 'shift') sprintKeyHeld = false; keys[key] = false; });
+    window.addEventListener('blur', ()=>{ for(let k in keys) keys[k]=false; sprintKeyHeld=false; });
+    window.addEventListener('resize', resize);
     function toggleDevPanel() { if (devPanel.classList.contains('open')) { devPanel.classList.remove('open'); paused = false; } else { devPanel.classList.add('open'); paused = true; syncDevSliders(); } }
     function syncDevSliders() { devPower.value = player.power; devPowerNum.value = Math.round(player.power); devHunger.value = Math.round(hunger); devHungerNum.value = Math.round(hunger); devStamina.value = Math.round(stamina); devStaminaNum.value = Math.round(stamina); devStreak.value = player.killStreak; toggleInvincible.classList.toggle('active', cheatInvincibleEnabled); toggleInfStamina.classList.toggle('active', cheatInfStaminaEnabled); toggleOneShot.classList.toggle('active', cheatOneShotEnabled); }
     devCloseBtn.addEventListener('click', ()=>{ devPanel.classList.remove('open'); paused = false; });
     devFoldBtn.addEventListener('click', ()=>{ devCollapsed = !devCollapsed; devPanel.classList.toggle('collapsed', devCollapsed); devFoldBtn.textContent = devCollapsed ? '▸' : '▾'; });
     devHeaderTitle.addEventListener('click', ()=>{ devCollapsed = !devCollapsed; devPanel.classList.toggle('collapsed', devCollapsed); devFoldBtn.textContent = devCollapsed ? '▸' : '▾'; });
     devHeader.addEventListener('mousedown', function(e) { if (e.target.tagName === 'BUTTON') return; isDragging = true; const rect = devPanel.getBoundingClientRect(); dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top; devPanel.style.transition = 'none'; devPanel.style.left = rect.left+'px'; devPanel.style.top = rect.top+'px'; devPanel.style.transform = 'none'; e.preventDefault(); });
-    window。addEventListener('mousemove', function(e) { if (!isDragging) return; const nl = e.clientX - dragOffsetX; const nt = e.clientY - dragOffsetY; devPanel.style.left = Math.max(0, Math.min(window.innerWidth-devPanel.offsetWidth, nl))+'px'; devPanel.style.top = Math.max(0, Math.min(window.innerHeight-devPanel.offsetHeight, nt))+'px'; });
-    window。addEventListener('mouseup', ()=>{ if (isDragging) { isDragging = false; devPanel.style.transition = 'opacity 0.3s ease, transform 0.3s ease'; } });
+    window.addEventListener('mousemove', function(e) { if (!isDragging) return; const nl = e.clientX - dragOffsetX; const nt = e.clientY - dragOffsetY; devPanel.style.left = Math.max(0, Math.min(window.innerWidth-devPanel.offsetWidth, nl))+'px'; devPanel.style.top = Math.max(0, Math.min(window.innerHeight-devPanel.offsetHeight, nt))+'px'; });
+    window.addEventListener('mouseup', ()=>{ if (isDragging) { isDragging = false; devPanel.style.transition = 'opacity 0.3s ease, transform 0.3s ease'; } });
     cheatInvincible.addEventListener('click', ()=>{ cheatInvincibleEnabled = !cheatInvincibleEnabled; toggleInvincible.classList.toggle('active', cheatInvincibleEnabled); });
     cheatInfStamina.addEventListener('click', ()=>{ cheatInfStaminaEnabled = !cheatInfStaminaEnabled; toggleInfStamina.classList.toggle('active', cheatInfStaminaEnabled); });
     cheatOneShot.addEventListener('click', ()=>{ cheatOneShotEnabled = !cheatOneShotEnabled; toggleOneShot.classList.toggle('active', cheatOneShotEnabled); });
@@ -1275,20 +1347,5 @@ if (touchActive) {
     resize();
 })();
 </script>
-  <!-- ========= 移动端摇杆和冲刺按钮 ========= -->
-<div id="joystick" style="position:fixed; bottom:30px; left:30px; width:120px; height:120px; background:rgba(30,40,60,0.6); border-radius:50%; backdrop-filter:blur(8px); z-index:200; touch-action:none; display:none;">
-    <div style="position:absolute; top:50%; left:50%; width:100px; height:100px; background:rgba(255,255,255,0.2); border-radius:50%; transform:translate(-50%,-50%);"></div>
-    <div id="joystickThumb" style="position:absolute; top:50%; left:50%; width:50px; height:50px; background:rgba(255,255,255,0.9); border-radius:50%; transform:translate(-50%,-50%); transition:transform 0.02s linear; box-shadow:0 0 6px #4dff88;"></div>
-</div>
-<button id="sprintBtn" style="position:fixed; bottom:40px; right:30px; width:70px; height:70px; border-radius:50%; background:rgba(240,192,96,0.9); border:3px solid #fff; font-size:32px; font-weight:bold; color:#002a1e; z-index:200; display:none; align-items:center; justify-content:center; cursor:pointer; touch-action:none;">⚡</button>
-
-<style>
-/* 只在手机屏幕上显示摇杆和按钮 */
-@media (max-width: 768px) {
-    #joystick, #sprintBtn { display: flex; }
-    #sprintBtn { display: flex; }
-    .ui-bottom { bottom: 120px; } /* 避免遮挡 */
-}
-</style>
 </body>
 </html>
