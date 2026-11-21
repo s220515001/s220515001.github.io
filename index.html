@@ -3,133 +3,155 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>文件目录</title>
+<title>文件浏览器</title>
 <style>
-:root{
-  color-scheme: light dark;
-  --bg:#f6f8fa; --fg:#1f2328; --muted:#656d76;
-  --card:#ffffff; --border:#d0d7de; --accent:#0969da; --hover:#eef2f6;
-}
-@media (prefers-color-scheme: dark){
   :root{
-    --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e;
-    --card:#161b22; --border:#30363d; --accent:#58a6ff; --hover:#1f2630;
+    color-scheme: light dark;
+    --bg:#f6f8fa; --fg:#1f2328; --muted:#656d76;
+    --card:#ffffff; --border:#d0d7de; --accent:#0969da; --hover:#eef2f6;
   }
-}
-*{box-sizing:border-box}
-body{
-  margin:0; padding:28px 16px 80px;
-  background:var(--bg); color:var(--fg);
-  font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
-       "Hiragino Sans GB","Microsoft YaHei",sans-serif;
-}
-.wrap{max-width:860px;margin:0 auto}
-header{margin-bottom:18px}
-h1{font-size:19px;font-weight:600;margin:0 0 6px}
-.sub{color:var(--muted);font-size:13px;word-break:break-all}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.toolbar button{
-  padding:8px 14px;border-radius:8px;border:1px solid var(--border);
-  background:var(--card);color:var(--fg);font-size:13.5px;cursor:pointer;
-  transition:.15s;font-family:inherit;
-}
-.toolbar button:hover:not(:disabled){background:var(--hover);border-color:var(--accent)}
-.toolbar button:disabled{opacity:.45;cursor:not-allowed}
-.toolbar button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.toolbar button.primary:hover{filter:brightness(1.08)}
-.searchbar{margin-bottom:10px}
-.searchbar input{
-  width:100%;padding:9px 12px;border-radius:8px;
-  border:1px solid var(--border);background:var(--card);color:var(--fg);
-  font-size:14px;outline:none;transition:.15s;font-family:inherit;
-}
-.searchbar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.15)}
-.searchbar input:disabled{opacity:.5;cursor:not-allowed}
-.breadcrumb{
-  display:flex;flex-wrap:wrap;align-items:center;gap:2px;
-  font-size:13.5px;margin-bottom:10px;min-height:28px;
-}
-.breadcrumb .crumb{
-  background:none;border:none;color:var(--accent);
-  cursor:pointer;padding:3px 6px;border-radius:6px;font-size:inherit;
-  font-family:inherit;
-}
-.breadcrumb .crumb:hover{background:var(--hover)}
-.breadcrumb .crumb.current{color:var(--fg);cursor:default;font-weight:500}
-.breadcrumb .crumb.current:hover{background:none}
-.breadcrumb .sep{color:var(--muted);user-select:none}
-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.row{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 14px;background:var(--card);
-  border:1px solid var(--border);border-radius:10px;
-  cursor:pointer;transition:.15s;user-select:none;
-}
-.row:hover{background:var(--hover);border-color:var(--accent);transform:translateY(-1px)}
-.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ico{font-size:20px;line-height:1;flex:none;width:24px;text-align:center}
-.name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.size{color:var(--muted);font-size:12.5px;flex:none;font-variant-numeric:tabular-nums}
-.badge{
-  flex:none;font-size:11.5px;padding:2px 8px;border-radius:999px;
-  border:1px solid var(--border);color:var(--muted);
-}
-.badge.open{color:var(--accent);border-color:currentColor}
-.badge.dir{color:var(--fg)}
-.empty{text-align:center;color:var(--muted);padding:40px 16px;font-size:14px}
-.prompt{max-width:480px;margin:0 auto;text-align:center}
-.prompt-icon{font-size:48px;margin-bottom:12px;line-height:1}
-.prompt h2{font-size:18px;margin:0 0 10px;color:var(--fg);font-weight:600}
-.prompt p{color:var(--muted);font-size:13.5px;line-height:1.7;margin:8px 0}
-.prompt .hint{font-size:12px;margin-top:14px;opacity:.85}
-.prompt button{
-  margin:10px 4px 0;padding:10px 20px;border-radius:8px;
-  border:1px solid var(--border);background:var(--card);color:var(--fg);
-  font-size:14px;cursor:pointer;transition:.15s;font-family:inherit;
-}
-.prompt button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.prompt button:hover{filter:brightness(1.08)}
-body.dragging::after{
-  content:'松开鼠标上传到当前文件夹';
-  position:fixed;inset:0;z-index:999;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(9,105,218,.12);
-  border:3px dashed var(--accent);
-  color:var(--accent);font-size:20px;font-weight:600;
-  pointer-events:none;backdrop-filter:blur(2px);
-}
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e;
+      --card:#161b22; --border:#30363d; --accent:#58a6ff; --hover:#1f2630;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 64px}
+
+  .title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{font-size:19px;font-weight:600;margin:0}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    padding:8px 12px;border:1px solid var(--border);border-radius:8px;
+    background:var(--card);color:var(--fg);font-size:13.5px;cursor:pointer;
+    font-family:inherit;
+  }
+  button:hover{background:var(--hover)}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.primary:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.55;cursor:not-allowed}
+
+  .crumbs{margin:14px 0 6px;font-size:14px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;word-break:break-all}
+  .crumb{color:var(--accent);text-decoration:none;padding:2px 5px;border-radius:4px}
+  .crumb:hover{background:var(--hover)}
+  .crumb.current{color:var(--fg);font-weight:600}
+  .sep{color:var(--muted);opacity:.6}
+
+  .status{color:var(--muted);font-size:12.5px;min-height:18px;word-break:break-all}
+  .status.err{color:#cf222e}
+  .status.ok{color:#1a7f37}
+
+  .settings{margin:14px 0;border:1px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden}
+  .settings>summary{padding:10px 14px;cursor:pointer;font-size:13.5px;color:var(--muted);user-select:none;list-style:none}
+  .settings>summary::-webkit-details-marker{display:none}
+  .settings[open]>summary{border-bottom:1px solid var(--border)}
+  .settings-body{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .settings-body label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted)}
+  .settings-body label.full{grid-column:1/-1}
+  .settings-body input{
+    padding:8px 10px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg);color:var(--fg);font-size:14px;font-family:inherit;
+    outline:none;width:100%;
+  }
+  .settings-body input:focus{border-color:var(--accent)}
+  .hint{grid-column:1/-1;font-size:12px;color:var(--muted);line-height:1.6}
+  .settings-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+
+  .toolbar{margin:12px 0}
+  input[type=search]{
+    width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;
+    background:var(--card);color:var(--fg);font-size:14px;outline:none;font-family:inherit;
+  }
+  input[type=search]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.15)}
+
+  ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  li .file{
+    display:flex;align-items:center;gap:12px;padding:11px 14px;
+    background:var(--card);border:1px solid var(--border);border-radius:10px;
+    color:inherit;text-decoration:none;transition:.15s;cursor:pointer;
+  }
+  li .file:hover{background:var(--hover);border-color:var(--accent);transform:translateY(-1px)}
+  .ico{font-size:19px;width:24px;text-align:center;flex:none;line-height:1}
+  .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .size{color:var(--muted);font-size:12.5px;flex:none;font-variant-numeric:tabular-nums}
+  .badge{flex:none;font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+  .badge.open{color:var(--accent);border-color:currentColor}
+  .badge.dir{color:#9a6700;border-color:currentColor}
+  @media (prefers-color-scheme: dark){.badge.dir{color:#d29922}}
+
+  .hint-row{padding:28px 12px;text-align:center;color:var(--muted);font-size:14px}
+  .hint-row.error{color:#cf222e}
+
+  @media (max-width:620px){.settings-body{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>📁 文件目录</h1>
-    <div class="sub" id="sub">选择一个文件夹开始</div>
-  </header>
+
+  <div class="title-row">
+    <h1>📁 文件浏览器</h1>
+    <div class="actions">
+      <button id="btn-upload" class="primary" type="button">⬆ 上传</button>
+      <button id="btn-newfolder" type="button">＋ 新建文件夹</button>
+      <button id="btn-refresh" type="button">⟳ 刷新</button>
+      <button id="btn-settings" type="button">⚙ 设置</button>
+    </div>
+  </div>
+
+  <nav id="crumbs" class="crumbs"></nav>
+  <div id="status" class="status"></div>
+
+  <details id="settings" class="settings">
+    <summary>⚙ 仓库设置</summary>
+    <div class="settings-body">
+      <label>Owner（用户名）
+        <input id="set-owner" placeholder="octocat">
+      </label>
+      <label>Repo（仓库名）
+        <input id="set-repo" placeholder="my-repo">
+      </label>
+      <label class="full">根路径（index.html 在仓库中的目录，可为空）
+        <input id="set-root" placeholder="例如 docs / blog">
+      </label>
+      <label class="full">GitHub Token（上传 / 新建文件夹需要）
+        <input id="set-token" type="password" placeholder="ghp_... 或 github_pat_...">
+      </label>
+      <div class="hint">
+        Token 只保存在本机 localStorage，用于调用 GitHub API 写入文件。<br>
+        建议使用 fine-grained token，只勾选本仓库的 <b>Contents: Read and write</b> 权限。
+      </div>
+      <div class="settings-actions">
+        <button id="btn-save" type="button" class="primary">保存并重新加载</button>
+        <button id="btn-redetect" type="button">重新自动检测</button>
+      </div>
+    </div>
+  </details>
 
   <div class="toolbar">
-    <button id="btnPick" class="primary" type="button">选择文件夹</button>
-    <button id="btnUpload" type="button" disabled>上传文件</button>
-    <button id="btnNewFolder" type="button" disabled>新建文件夹</button>
-    <button id="btnRefresh" type="button" disabled>刷新</button>
+    <input type="search" id="search" placeholder="搜索当前目录…" autocomplete="off">
   </div>
-
-  <div class="searchbar">
-    <input type="search" id="search" placeholder="搜索当前文件夹…" disabled autocomplete="off">
-  </div>
-
-  <div class="breadcrumb" id="breadcrumb"></div>
 
   <ul id="list"></ul>
-  <div class="empty" id="empty"></div>
+  <input type="file" id="file-input" multiple hidden>
 </div>
 
 <script>
 (function () {
   'use strict';
 
-  /* ===================== 常量 ===================== */
-  const HTML_RE = /\.(html?|xhtml)$/i;
+  /* ============================================================
+   *  常量
+   * ============================================================ */
+  const API_BASE = 'https://api.github.com';
+  const LS_KEY   = 'gh-file-browser-config';
+  const HTML_RE  = /\.(html?|xhtml)$/i;
+  const MAX_UPLOAD = 25 * 1024 * 1024;   // Contents API 建议上限
 
   const ICONS = {
     html:'🌐', htm:'🌐', xhtml:'🌐',
@@ -144,590 +166,648 @@ body.dragging::after{
     exe:'💾', apk:'📦', dmg:'📦', iso:'💿', ttf:'🔤', otf:'🔤', woff:'🔤', woff2:'🔤'
   };
 
-  /* ===================== DOM ===================== */
-  const $ = function (id) { return document.getElementById(id); };
-  const el = {
-    sub: $('sub'),
-    breadcrumb: $('breadcrumb'),
-    list: $('list'),
-    empty: $('empty'),
-    search: $('search'),
-    btnPick: $('btnPick'),
-    btnUpload: $('btnUpload'),
-    btnNewFolder: $('btnNewFolder'),
-    btnRefresh: $('btnRefresh')
+  /* ============================================================
+   *  状态
+   * ============================================================ */
+  const state = {
+    owner: '', repo: '', rootPath: '', token: '',
+    path: '',          // 相对 rootPath 的当前目录
+    entries: [],       // 当前目录条目
+    query: '',
+    loading: false,
+    error: null,
+    configured: false,
   };
 
-  /* ===================== 状态 ===================== */
-  let rootHandle = null;
-  let currentHandle = null;
-  let pathStack = [];       // [{name, handle}]
-  let entries = [];
-  let query = '';
-  let loading = false;
+  /* ============================================================
+   *  DOM
+   * ============================================================ */
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    list:      $('list'),
+    crumbs:    $('crumbs'),
+    status:    $('status'),
+    search:    $('search'),
+    settings:  $('settings'),
+    inOwner:   $('set-owner'),
+    inRepo:    $('set-repo'),
+    inRoot:    $('set-root'),
+    inToken:   $('set-token'),
+    fileInput: $('file-input'),
+  };
 
-  /* ===================== 工具 ===================== */
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
+  /* ============================================================
+   *  工具函数
+   * ============================================================ */
+  function encPath(p) {
+    return String(p).split('/').map(encodeURIComponent).join('/');
   }
-
+  function joinPath() {
+    return Array.prototype.slice.call(arguments)
+      .filter(function (x) { return x !== undefined && x !== null && x !== ''; })
+      .join('/');
+  }
   function fmtSize(n) {
-    if (n == null || isNaN(n) || n < 0) return '';
+    if (n == null || isNaN(n)) return '';
     if (n < 1024) return n + ' B';
     const units = ['KB', 'MB', 'GB', 'TB'];
     let i = -1, v = n;
     do { v /= 1024; i++; } while (v >= 1024 && i < units.length - 1);
     return v.toFixed(v < 10 ? 1 : 0) + ' ' + units[i];
   }
-
-  function iconFor(name, kind) {
-    if (kind === 'directory') return '📁';
+  function iconFor(name) {
     const m = /\.([^.]+)$/.exec(name);
-    return (m && ICONS[m[1].toLowerCase()]) || '📄';
+    const ext = m ? m[1].toLowerCase() : '';
+    return ICONS[ext] || '📄';
   }
+  function isHtmlFile(name) { return HTML_RE.test(name); }
 
-  /* ===================== IndexedDB（记住上次目录） ===================== */
-  function idbOpen() {
+  function fileToBase64(file) {
     return new Promise(function (resolve, reject) {
-      const req = indexedDB.open('dirbrowser', 1);
-      req.onupgradeneeded = function () {
-        if (!req.result.objectStoreNames.contains('kv')) {
-          req.result.createObjectStore('kv');
-        }
+      const reader = new FileReader();
+      reader.onload = function () {
+        const s = String(reader.result);
+        const i = s.indexOf(',');
+        resolve(i >= 0 ? s.slice(i + 1) : '');
       };
-      req.onsuccess = function () { resolve(req.result); };
-      req.onerror = function () { reject(req.error); };
-    });
-  }
-  async function idbGet(key) {
-    const db = await idbOpen();
-    return new Promise(function (resolve, reject) {
-      const tx = db.transaction('kv', 'readonly');
-      const req = tx.objectStore('kv').get(key);
-      req.onsuccess = function () { resolve(req.result); };
-      req.onerror = function () { reject(req.error); };
-    });
-  }
-  async function idbSet(key, val) {
-    const db = await idbOpen();
-    return new Promise(function (resolve, reject) {
-      const tx = db.transaction('kv', 'readwrite');
-      tx.objectStore('kv').put(val, key);
-      tx.oncomplete = function () { resolve(); };
-      tx.onerror = function () { reject(tx.error); };
+      reader.onerror = function () { reject(reader.error || new Error('读取文件失败')); };
+      reader.readAsDataURL(file);
     });
   }
 
-  /* ===================== 权限 ===================== */
-  async function ensurePermission(handle, mode) {
-    mode = mode || 'readwrite';
-    try {
-      if (handle.queryPermission) {
-        const q = await handle.queryPermission({ mode: mode });
-        if (q === 'granted') return true;
-      }
-      if (handle.requestPermission) {
-        const r = await handle.requestPermission({ mode: mode });
-        return r === 'granted';
-      }
-      return true;
-    } catch (e) {
-      console.warn('权限检查失败', e);
-      return false;
+  function setStatus(text, type) {
+    els.status.textContent = text || '';
+    els.status.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  /* ============================================================
+   *  GitHub API
+   * ============================================================ */
+  function apiHeaders() {
+    const h = { 'Accept': 'application/vnd.github+json' };
+    if (state.token) h['Authorization'] = 'Bearer ' + state.token;
+    return h;
+  }
+
+  function contentsUrlFor(owner, repo, repoPath) {
+    return API_BASE + '/repos/' + encodeURIComponent(owner) + '/' +
+           encodeURIComponent(repo) + '/contents/' + encPath(repoPath || '');
+  }
+
+  function contentsUrl(repoPath) {
+    return contentsUrlFor(state.owner, state.repo, repoPath);
+  }
+
+  // 返回文件对象；不存在返回 null；其它错误抛出
+  async function apiGet(repoPath) {
+    const res = await fetch(contentsUrl(repoPath), {
+      headers: apiHeaders(), cache: 'no-store'
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      throw new Error(data.message || ('HTTP ' + res.status));
     }
+    return res.json();
   }
 
-  /* ===================== 目录遍历 ===================== */
-  async function listEntries(handle) {
-    const out = [];
-    if (typeof handle.entries === 'function') {
-      for await (const pair of handle.entries()) {
-        out.push(pair);
-      }
-    } else if (typeof handle.values === 'function') {
-      for await (const h of handle.values()) {
-        out.push([h.name, h]);
+  // 返回数组；不存在返回 null
+  async function apiList(repoPath) {
+    const res = await fetch(contentsUrl(repoPath), {
+      headers: apiHeaders(), cache: 'no-store'
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) {
+      const data = await res.json().catch(function () { return {}; });
+      if (res.status === 403) throw new Error('API 速率受限或权限不足（' + (data.message || '403') + '）');
+      if (res.status === 401) throw new Error('Token 无效（401）');
+      throw new Error(data.message || ('HTTP ' + res.status));
+    }
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('目标不是目录');
+    return data;
+  }
+
+  async function apiPut(repoPath, body) {
+    const res = await fetch(contentsUrl(repoPath), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, apiHeaders()),
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      if (res.status === 401) throw new Error('Token 无效或缺少权限（401）');
+      if (res.status === 403) throw new Error('权限不足或速率受限（403）');
+      if (res.status === 422) throw new Error('请求被拒绝：' + (data.message || '422'));
+      throw new Error(data.message || ('HTTP ' + res.status));
+    }
+    return data;
+  }
+
+  /* ============================================================
+   *  配置
+   * ============================================================ */
+  function loadConfig() {
+    try {
+      const s = localStorage.getItem(LS_KEY);
+      return s ? JSON.parse(s) : null;
+    } catch (e) { return null; }
+  }
+  function saveConfig() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        owner: state.owner,
+        repo: state.repo,
+        rootPath: state.rootPath,
+        token: state.token,
+      }));
+    } catch (e) { /* 隐私模式下可能失败，忽略 */ }
+  }
+
+  function renderSettings() {
+    els.inOwner.value = state.owner;
+    els.inRepo.value  = state.repo;
+    els.inRoot.value  = state.rootPath;
+    els.inToken.value = state.token;
+  }
+
+  /* 从 *.github.io 域名推断 owner/repo/rootPath */
+  async function autoDetect() {
+    const host = location.hostname;
+    const m = /^([^.]+)\.github\.io$/i.exec(host);
+    if (!m) return null;
+    const owner = m[1];
+
+    let segs = location.pathname.split('/').filter(Boolean);
+    if (segs.length && /^index\.html?$/i.test(segs[segs.length - 1])) segs.pop();
+
+    const candidates = [];
+    if (segs.length === 0) {
+      candidates.push({ repo: owner + '.github.io', rootPath: '' });
+    } else {
+      candidates.push({ repo: segs[0], rootPath: segs.slice(1).join('/') });
+      if (segs[0] !== owner + '.github.io') {
+        candidates.push({ repo: owner + '.github.io', rootPath: segs.join('/') });
       }
     }
-    return out;
-  }
 
-  /* ===================== 加载目录 ===================== */
-  async function loadDir(handle) {
-    if (loading) return;
-    loading = true;
-    currentHandle = handle;
-    query = '';
-    el.search.value = '';
-    el.list.innerHTML = '';
-    el.empty.hidden = true;
-    el.sub.textContent = '正在读取…';
-    setBusy(true);
-
-    try {
-      const raw = await listEntries(handle);
-      const arr = [];
-      for (let i = 0; i < raw.length; i++) {
-        const name = raw[i][0];
-        const h = raw[i][1];
-        let size = null;
-        if (h.kind === 'file') {
-          try {
-            const f = await h.getFile();
-            size = f.size;
-          } catch (e) { /* 忽略读取失败的文件 */ }
+    for (let i = 0; i < candidates.length; i++) {
+      const c = candidates[i];
+      try {
+        const res = await fetch(contentsUrlFor(owner, c.repo, c.rootPath), {
+          headers: { 'Accept': 'application/vnd.github+json' },
+          cache: 'no-store',
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return { owner: owner, repo: c.repo, rootPath: c.rootPath };
         }
-        arr.push({ name: name, kind: h.kind, handle: h, size: size });
+      } catch (e) { /* 试下一个 */ }
+    }
+    return null;
+  }
+
+  /* ============================================================
+   *  hash 路由
+   * ============================================================ */
+  function readHash() {
+    let h = location.hash.replace(/^#/, '');
+    try { h = decodeURIComponent(h); } catch (e) {}
+    return h.replace(/^\/+/, '');
+  }
+
+  function setPath(p) {
+    state.path = p;
+    const newHash = '#/' + encPath(p);
+    if (location.hash !== newHash) location.hash = newHash;
+    loadDir();
+  }
+
+  window.addEventListener('hashchange', function () {
+    const p = readHash();
+    if (p !== state.path) {
+      state.path = p;
+      loadDir();
+    }
+  });
+
+  /* ============================================================
+   *  加载目录
+   * ============================================================ */
+  async function loadDir() {
+    if (!state.configured) return;
+
+    state.loading = true;
+    state.error = null;
+    render();
+
+    try {
+      const repoPath = joinPath(state.rootPath, state.path);
+      const data = await apiList(repoPath);
+
+      if (data === null) {
+        state.entries = [];
+        state.error = '目录不存在：/' + repoPath;
+      } else {
+        state.entries = data.map(function (it) {
+          return {
+            name: it.name,
+            type: it.type,                 // file / dir / symlink / submodule
+            size: it.size,
+            sha: it.sha,
+            download_url: it.download_url,
+            html_url: it.html_url,
+            path: it.path,
+          };
+        });
       }
-      entries = arr;
     } catch (e) {
-      el.sub.textContent = '读取目录失败：' + (e && e.message ? e.message : e);
-      loading = false;
-      setBusy(false);
+      state.entries = [];
+      state.error = e.message || String(e);
+    } finally {
+      state.loading = false;
+      render();
+    }
+  }
+
+  /* ============================================================
+   *  渲染
+   * ============================================================ */
+  function render() {
+    renderCrumbs();
+    renderList();
+    renderStatus();
+  }
+
+  function renderStatus() {
+    if (!state.configured) {
+      setStatus('尚未配置仓库，请展开「⚙ 仓库设置」填写，或点击「重新自动检测」。');
       return;
     }
-
-    render();
-    renderBreadcrumb();
-    updateToolbar();
-    loading = false;
-    setBusy(false);
+    if (state.loading) { setStatus('加载中…'); return; }
+    if (state.error)   { setStatus(state.error, 'err'); return; }
+    const dirs  = state.entries.filter(function (e) { return e.type === 'dir'; }).length;
+    const files = state.entries.length - dirs;
+    setStatus(
+      state.owner + '/' + state.repo +
+      (state.rootPath ? '/' + state.rootPath : '') +
+      (state.path ? '/' + state.path : '') +
+      ' · ' + dirs + ' 个文件夹 · ' + files + ' 个文件'
+    );
   }
 
-  /* ===================== 渲染 ===================== */
-  function setBusy(b) {
-    el.btnPick.disabled = b;
-    if (b) {
-      el.btnUpload.disabled = true;
-      el.btnNewFolder.disabled = true;
-      el.btnRefresh.disabled = true;
+  function renderCrumbs() {
+    els.crumbs.innerHTML = '';
+
+    const crumbs = [{ label: '🏠 根目录', path: '' }];
+    const parts = state.path.split('/').filter(Boolean);
+    let acc = '';
+    for (let i = 0; i < parts.length; i++) {
+      acc = acc ? acc + '/' + parts[i] : parts[i];
+      crumbs.push({ label: parts[i], path: acc });
     }
-  }
 
-  function updateToolbar() {
-    const has = !!currentHandle;
-    el.btnPick.disabled = false;
-    el.btnUpload.disabled = !has;
-    el.btnNewFolder.disabled = !has;
-    el.btnRefresh.disabled = !has;
-    el.search.disabled = !has;
-  }
-
-  function renderBreadcrumb() {
-    el.breadcrumb.innerHTML = '';
-    if (!pathStack.length) return;
-    pathStack.forEach(function (item, i) {
+    crumbs.forEach(function (c, i) {
+      const isLast = i === crumbs.length - 1;
       if (i > 0) {
         const sep = document.createElement('span');
         sep.className = 'sep';
         sep.textContent = '/';
-        el.breadcrumb.appendChild(sep);
+        els.crumbs.appendChild(sep);
       }
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'crumb' + (i === pathStack.length - 1 ? ' current' : '');
-      btn.textContent = item.name;
-      btn.disabled = (i === pathStack.length - 1);
-      btn.addEventListener('click', function () { goTo(i); });
-      el.breadcrumb.appendChild(btn);
+      if (isLast) {
+        const span = document.createElement('span');
+        span.className = 'crumb current';
+        span.textContent = c.label;
+        els.crumbs.appendChild(span);
+      } else {
+        const a = document.createElement('a');
+        a.className = 'crumb';
+        a.href = '#/' + encPath(c.path);
+        a.textContent = c.label;
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          setPath(c.path);
+        });
+        els.crumbs.appendChild(a);
+      }
     });
   }
 
-  function render() {
-    const q = query.trim().toLowerCase();
-    const items = entries.filter(function (e) {
-      return !q || e.name.toLowerCase().indexOf(q) !== -1;
-    });
+  function renderList() {
+    const list = els.list;
+    list.innerHTML = '';
+
+    if (!state.configured) {
+      list.innerHTML = '<li class="hint-row">请先配置仓库</li>';
+      return;
+    }
+    if (state.loading) {
+      list.innerHTML = '<li class="hint-row">加载中…</li>';
+      return;
+    }
+    if (state.error) {
+      const li = document.createElement('li');
+      li.className = 'hint-row error';
+      li.textContent = state.error;
+      list.appendChild(li);
+      return;
+    }
+
+    const q = state.query.trim().toLowerCase();
+    let items = state.entries.filter(function (e) { return e.name.charAt(0) !== '.'; });
+    if (q) {
+      items = items.filter(function (e) {
+        return e.name.toLowerCase().indexOf(q) !== -1;
+      });
+    }
+
     items.sort(function (a, b) {
-      if (a.kind !== b.kind) return a.kind === 'directory' ? -1 : 1;
+      const ad = a.type === 'dir', bd = b.type === 'dir';
+      if (ad !== bd) return ad ? -1 : 1;
       return a.name.localeCompare(b.name, 'zh-CN', { numeric: true, sensitivity: 'base' });
     });
 
-    el.list.innerHTML = '';
-    el.empty.className = 'empty';
-
     if (!items.length) {
-      el.empty.hidden = false;
-      el.empty.textContent = entries.length ? '没有匹配的文件' : '这个文件夹是空的';
-      el.sub.textContent = entries.length + ' 个条目';
+      const li = document.createElement('li');
+      li.className = 'hint-row';
+      li.textContent = q ? '没有匹配的文件' : '这个目录是空的';
+      list.appendChild(li);
       return;
     }
-    el.empty.hidden = true;
 
     const frag = document.createDocumentFragment();
-    items.forEach(function (item) {
-      const isDir = item.kind === 'directory';
-      const isHtml = !isDir && HTML_RE.test(item.name);
+    items.forEach(function (item) { frag.appendChild(renderItem(item)); });
+    list.appendChild(frag);
+  }
 
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.tabIndex = 0;
-      row.setAttribute('role', 'button');
-      row.title = isDir ? '进入文件夹' : (isHtml ? '打开：' : '下载：') + item.name;
+  function pageUrlFor(relPath) {
+    // index.html 所在目录 → 目标文件
+    const base = new URL('.', location.href);
+    return new URL(encPath(relPath), base).href;
+  }
 
-      const ico = document.createElement('span');
-      ico.className = 'ico';
-      ico.textContent = iconFor(item.name, item.kind);
+  function renderItem(item) {
+    const isDir     = item.type === 'dir';
+    const isHtml    = !isDir && isHtmlFile(item.name);
+    const relPath   = state.path ? state.path + '/' + item.name : item.name;
 
-      const name = document.createElement('span');
-      name.className = 'name';
-      name.textContent = item.name;
+    const a = document.createElement('a');
+    a.className = 'file';
 
-      const size = document.createElement('span');
-      size.className = 'size';
-      size.textContent = fmtSize(item.size);
-
-      const badge = document.createElement('span');
-      badge.className = 'badge' + (isDir ? ' dir' : (isHtml ? ' open' : ''));
-      badge.textContent = isDir ? '进入' : (isHtml ? '打开' : '下载');
-
-      row.appendChild(ico);
-      row.appendChild(name);
-      row.appendChild(size);
-      row.appendChild(badge);
-
-      function activate() { handleRowClick(item); }
-      row.addEventListener('click', activate);
-      row.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          activate();
-        }
+    if (isDir) {
+      a.href = '#/' + encPath(relPath);
+      a.title = '进入：' + item.name;
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        setPath(relPath);
       });
-
-      const li = document.createElement('li');
-      li.appendChild(row);
-      frag.appendChild(li);
-    });
-
-    el.list.appendChild(frag);
-    el.sub.textContent = items.length + (q ? ' / ' + entries.length : '') + ' 个条目';
-  }
-
-  /* ===================== 行点击 ===================== */
-  async function handleRowClick(item) {
-    if (item.kind === 'directory') {
-      await enterFolder(item);
-    } else if (HTML_RE.test(item.name)) {
-      await openHtml(item.handle);
+    } else if (isHtml) {
+      a.href = pageUrlFor(relPath);
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.title = '打开：' + item.name;
     } else {
-      await downloadFile(item.handle);
+      a.href = '#';
+      a.title = '下载：' + item.name;
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        downloadFile(item);
+      });
     }
+
+    const ico = document.createElement('span');
+    ico.className = 'ico';
+    ico.textContent = isDir ? '📁' : iconFor(item.name);
+
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = item.name;
+
+    const size = document.createElement('span');
+    size.className = 'size';
+    size.textContent = isDir ? '' : fmtSize(item.size);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge' + (isDir ? ' dir' : isHtml ? ' open' : '');
+    badge.textContent = isDir ? '打开' : isHtml ? '打开' : '下载';
+
+    a.appendChild(ico);
+    a.appendChild(name);
+    a.appendChild(size);
+    a.appendChild(badge);
+
+    const li = document.createElement('li');
+    li.appendChild(a);
+    return li;
   }
 
-  async function enterFolder(item) {
-    pathStack.push({ name: item.name, handle: item.handle });
-    await loadDir(item.handle);
-  }
-
-  async function goTo(index) {
-    if (index >= pathStack.length - 1) return;
-    pathStack = pathStack.slice(0, index + 1);
-    await loadDir(pathStack[index].handle);
-  }
-
-  /* ===================== 打开 / 下载 ===================== */
-  async function openHtml(handle) {
-    const win = window.open('about:blank', '_blank');
+  /* ============================================================
+   *  下载
+   * ============================================================ */
+  async function downloadFile(item) {
+    const url = item.download_url;
+    if (!url) { alert('无法获取下载地址'); return; }
+    setStatus('正在下载 ' + item.name + ' …');
     try {
-      const file = await handle.getFile();
-      const url = URL.createObjectURL(file);
-      if (!win) {
-        URL.revokeObjectURL(url);
-        alert('弹窗被拦截，请允许本站弹出窗口后再试。');
-        return;
-      }
-      try { win.location.href = url; } catch (e) { /* 窗口已被关闭 */ }
-      setTimeout(function () { URL.revokeObjectURL(url); }, 300000);
-    } catch (e) {
-      try { if (win) win.close(); } catch (e2) { /* 忽略 */ }
-      alert('打开失败：' + (e && e.message ? e.message : e));
-    }
-  }
-
-  async function downloadFile(handle) {
-    try {
-      const file = await handle.getFile();
-      const url = URL.createObjectURL(file);
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
-      a.download = file.name;
+      a.href = objUrl;
+      a.download = item.name;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      setTimeout(function () { URL.revokeObjectURL(objUrl); }, 2000);
+      setStatus('已下载 ' + item.name, 'ok');
     } catch (e) {
-      alert('下载失败：' + (e && e.message ? e.message : e));
+      setStatus('下载失败：' + (e.message || e), 'err');
     }
   }
 
-  /* ===================== 上传 ===================== */
-  async function fileExists(dir, name) {
-    try {
-      await dir.getFileHandle(name);
-      return true;
-    } catch (e) {
-      return false;
+  /* ============================================================
+   *  上传
+   * ============================================================ */
+  async function handleUpload(fileList) {
+    if (!state.token) {
+      alert('上传需要先填写 GitHub Token（在「⚙ 仓库设置」里）');
+      els.settings.open = true;
+      return;
     }
-  }
+    const files = Array.prototype.slice.call(fileList);
+    if (!files.length) return;
 
-  async function saveFiles(files) {
-    if (!currentHandle || !files.length) return;
-
-    const names = files.map(function (f) { return f.name; });
-    const existing = [];
-    for (let i = 0; i < names.length; i++) {
-      if (await fileExists(currentHandle, names[i])) existing.push(names[i]);
-    }
-    if (existing.length) {
-      const ok = confirm(
-        '以下文件已存在，继续将覆盖它们：\n\n' +
-        existing.join('\n') + '\n\n是否继续？'
-      );
-      if (!ok) return;
-    }
-
-    let okCount = 0, failCount = 0;
+    let ok = 0, fail = 0;
     for (let i = 0; i < files.length; i++) {
-      const f = files[i];
+      const file = files[i];
+      setStatus('上传中 (' + (i + 1) + '/' + files.length + ')：' + file.name);
       try {
-        const fh = await currentHandle.getFileHandle(f.name, { create: true });
-        const w = await fh.createWritable();
-        await w.write(f);
-        await w.close();
-        okCount++;
-      } catch (e) {
-        console.error('写入失败：', f.name, e);
-        failCount++;
-      }
-    }
-
-    await loadDir(currentHandle);
-    if (failCount) {
-      alert('上传完成：成功 ' + okCount + ' 个，失败 ' + failCount + ' 个。');
-    }
-  }
-
-  function pickUpload() {
-    if (!currentHandle) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.style.display = 'none';
-    input.addEventListener('change', async function () {
-      if (input.files && input.files.length) {
-        await saveFiles(Array.prototype.slice.call(input.files));
-      }
-      input.remove();
-    });
-    document.body.appendChild(input);
-    input.click();
-  }
-
-  /* ===================== 新建文件夹 ===================== */
-  async function newFolder() {
-    if (!currentHandle) return;
-    const name = prompt('新建文件夹，请输入名称：');
-    if (name === null) return;
-    const trimmed = name.trim();
-    if (!trimmed) { alert('名称不能为空'); return; }
-    if (/[\\/:*?"<>|]/.test(trimmed)) {
-      alert('名称包含非法字符：\\ / : * ? " < > |');
-      return;
-    }
-    if (trimmed === '.' || trimmed === '..') { alert('名称无效'); return; }
-
-    try {
-      let exists = false;
-      try {
-        await currentHandle.getDirectoryHandle(trimmed);
-        exists = true;
-      } catch (e) { /* 不存在 */ }
-      if (exists) { alert('同名文件夹已存在'); return; }
-
-      await currentHandle.getDirectoryHandle(trimmed, { create: true });
-      await loadDir(currentHandle);
-    } catch (e) {
-      alert('创建失败：' + (e && e.message ? e.message : e));
-    }
-  }
-
-  /* ===================== 选择文件夹 ===================== */
-  async function pickDirectory() {
-    if (!('showDirectoryPicker' in window)) {
-      alert('当前浏览器不支持 File System Access API。\n请使用最新版 Chrome、Edge 或 Opera。');
-      return;
-    }
-    try {
-      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      const ok = await ensurePermission(handle, 'readwrite');
-      if (!ok) {
-        alert('未获得读写权限，无法浏览该文件夹。');
-        return;
-      }
-      rootHandle = handle;
-      pathStack = [{ name: handle.name || '根目录', handle: handle }];
-      idbSet('lastDir', handle).catch(function () {});
-      await loadDir(handle);
-      updateToolbar();
-    } catch (e) {
-      if (e && e.name === 'AbortError') return;
-      console.error(e);
-      alert('打开文件夹失败：' + (e && e.message ? e.message : e));
-    }
-  }
-
-  /* ===================== 引导界面 ===================== */
-  function showPickPrompt() {
-    el.list.innerHTML = '';
-    el.breadcrumb.innerHTML = '';
-    el.sub.textContent = '选择一个文件夹开始';
-    el.empty.hidden = false;
-    el.empty.className = 'empty';
-    el.empty.innerHTML =
-      '<div class="prompt">' +
-        '<div class="prompt-icon">📂</div>' +
-        '<h2>选择一个文件夹</h2>' +
-        '<p>请选择 <b>index.html 所在的文件夹</b>（或任意你希望浏览的文件夹）。' +
-        '选定后，这里会列出其中的所有文件和子文件夹。</p>' +
-        '<p>HTML 文件点击后直接打开，其他格式点击后下载；' +
-        '文件夹可以点进去查看下级内容，也可以上传文件、新建文件夹。</p>' +
-        '<button type="button" class="primary" id="promptPick">选择文件夹</button>' +
-        '<p class="hint">所有读写都在你本机的浏览器中完成，不会上传到任何服务器。' +
-        '出于安全考虑，浏览器要求每次访问新文件夹时由你手动授权。</p>' +
-      '</div>';
-    document.getElementById('promptPick').addEventListener('click', pickDirectory);
-  }
-
-  function showRestore(saved) {
-    el.list.innerHTML = '';
-    el.breadcrumb.innerHTML = '';
-    el.sub.textContent = '需要重新授权';
-    el.empty.hidden = false;
-    el.empty.className = 'empty';
-    el.empty.innerHTML =
-      '<div class="prompt">' +
-        '<div class="prompt-icon">🔒</div>' +
-        '<h2>需要重新授权</h2>' +
-        '<p>上次使用的文件夹「' + escapeHtml(saved.name || '未命名') + '」需要你再次确认访问权限。</p>' +
-        '<button type="button" class="primary" id="promptRestore">恢复访问</button>' +
-        '<button type="button" id="promptPickNew">选择其他文件夹</button>' +
-      '</div>';
-
-    document.getElementById('promptRestore').addEventListener('click', async function () {
-      try {
-        const perm = await saved.requestPermission({ mode: 'readwrite' });
-        if (perm !== 'granted') { alert('未获得权限'); return; }
-        rootHandle = saved;
-        pathStack = [{ name: saved.name || '根目录', handle: saved }];
-        await loadDir(saved);
-        updateToolbar();
-      } catch (e) {
-        alert('恢复失败：' + (e && e.message ? e.message : e));
-      }
-    });
-    document.getElementById('promptPickNew').addEventListener('click', pickDirectory);
-  }
-
-  function showUnsupported() {
-    el.list.innerHTML = '';
-    el.breadcrumb.innerHTML = '';
-    el.sub.textContent = '浏览器不支持';
-    el.empty.hidden = false;
-    el.empty.className = 'empty';
-    el.empty.innerHTML =
-      '<div class="prompt">' +
-        '<div class="prompt-icon">😕</div>' +
-        '<h2>浏览器不支持</h2>' +
-        '<p>本页面使用 <b>File System Access API</b> 读写本地文件夹，' +
-        '目前仅 Chrome、Edge、Opera 等 Chromium 内核浏览器支持。</p>' +
-        '<p>请更换浏览器后再打开本页面。</p>' +
-      '</div>';
-    el.btnPick.disabled = true;
-  }
-
-  /* ===================== 事件绑定 ===================== */
-  el.btnPick.addEventListener('click', pickDirectory);
-  el.btnUpload.addEventListener('click', pickUpload);
-  el.btnNewFolder.addEventListener('click', newFolder);
-  el.btnRefresh.addEventListener('click', function () {
-    if (currentHandle) loadDir(currentHandle);
-  });
-  el.search.addEventListener('input', function () {
-    query = el.search.value;
-    render();
-  });
-
-  /* ===================== 拖拽上传 ===================== */
-  document.addEventListener('dragover', function (e) {
-    if (!currentHandle) return;
-    e.preventDefault();
-    document.body.classList.add('dragging');
-  });
-  document.addEventListener('dragleave', function (e) {
-    if (e.relatedTarget === null) document.body.classList.remove('dragging');
-  });
-  document.addEventListener('drop', async function (e) {
-    if (!currentHandle) return;
-    e.preventDefault();
-    document.body.classList.remove('dragging');
-
-    const dt = e.dataTransfer;
-    if (!dt) return;
-
-    // 检查是否包含文件夹（暂不支持）
-    if (dt.items && dt.items.length) {
-      let hasDir = false;
-      for (let i = 0; i < dt.items.length; i++) {
-        const it = dt.items[i];
-        if (it.webkitGetAsEntry) {
-          const ent = it.webkitGetAsEntry();
-          if (ent && ent.isDirectory) { hasDir = true; break; }
+        if (file.size > MAX_UPLOAD) {
+          throw new Error('文件超过 ' + fmtSize(MAX_UPLOAD) + '，无法通过 Contents API 上传');
         }
+        const relPath  = state.path ? state.path + '/' + file.name : file.name;
+        const repoPath = joinPath(state.rootPath, relPath);
+
+        let sha = null;
+        const existing = await apiGet(repoPath);
+        if (existing && existing.type === 'file') sha = existing.sha;
+
+        const content = await fileToBase64(file);
+        const body = { message: 'Upload ' + file.name, content: content };
+        if (sha) body.sha = sha;
+
+        await apiPut(repoPath, body);
+        ok++;
+      } catch (e) {
+        fail++;
+        console.error('上传失败：', file.name, e);
       }
-      if (hasDir) {
-        alert('暂不支持拖拽文件夹，请拖拽文件，或先用「上传文件」按钮选择。');
+    }
+    setStatus('上传完成：成功 ' + ok + ' 个' + (fail ? '，失败 ' + fail + ' 个' : ''), fail ? 'err' : 'ok');
+    await loadDir();
+  }
+
+  /* ============================================================
+   *  新建文件夹
+   * ============================================================ */
+  async function handleNewFolder() {
+    if (!state.token) {
+      alert('新建文件夹需要先填写 GitHub Token（在「⚙ 仓库设置」里）');
+      els.settings.open = true;
+      return;
+    }
+    const name = (prompt('新文件夹名称：') || '').trim();
+    if (!name) return;
+    if (/[\\\/]/.test(name)) { alert('名称不能包含斜杠'); return; }
+    if (name === '.' || name === '..') { alert('名称无效'); return; }
+
+    // GitHub 没有真正的空目录，用 .gitkeep 占位
+    const relPath  = (state.path ? state.path + '/' : '') + name + '/.gitkeep';
+    const repoPath = joinPath(state.rootPath, relPath);
+
+    setStatus('正在创建文件夹 ' + name + ' …');
+    try {
+      await apiPut(repoPath, {
+        message: 'Create folder ' + name,
+        content: '',
+      });
+      setStatus('已创建文件夹 ' + name, 'ok');
+      await loadDir();
+    } catch (e) {
+      setStatus('创建失败：' + (e.message || e), 'err');
+    }
+  }
+
+  /* ============================================================
+   *  初始化
+   * ============================================================ */
+  async function init() {
+    state.path = readHash();
+
+    const saved = loadConfig();
+    if (saved && saved.owner && saved.repo) {
+      state.owner    = saved.owner;
+      state.repo     = saved.repo;
+      state.rootPath = saved.rootPath || '';
+      state.token    = saved.token || '';
+      state.configured = true;
+    } else {
+      setStatus('正在自动检测仓库…');
+      const detected = await autoDetect();
+      if (detected) {
+        state.owner    = detected.owner;
+        state.repo     = detected.repo;
+        state.rootPath = detected.rootPath;
+        state.configured = true;
+        saveConfig();
+      } else {
+        state.configured = false;
+        els.settings.open = true;
+        renderSettings();
+        render();
         return;
       }
     }
 
-    const files = dt.files ? Array.prototype.slice.call(dt.files) : [];
-    if (files.length) await saveFiles(files);
+    renderSettings();
+    await loadDir();
+  }
+
+  /* ============================================================
+   *  事件绑定
+   * ============================================================ */
+  els.search.addEventListener('input', function () {
+    state.query = els.search.value;
+    renderList();
   });
 
-  /* ===================== 初始化 ===================== */
-  (async function init() {
-    updateToolbar();
+  $('btn-refresh').addEventListener('click', function () {
+    if (state.configured) loadDir();
+    else init();
+  });
 
-    if (!('showDirectoryPicker' in window)) {
-      showUnsupported();
+  $('btn-settings').addEventListener('click', function () {
+    els.settings.open = !els.settings.open;
+    if (els.settings.open) els.settings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  $('btn-upload').addEventListener('click', function () {
+    els.fileInput.click();
+  });
+
+  els.fileInput.addEventListener('change', function () {
+    const files = els.fileInput.files;
+    els.fileInput.value = '';
+    handleUpload(files);
+  });
+
+  $('btn-newfolder').addEventListener('click', handleNewFolder);
+
+  $('btn-save').addEventListener('click', async function () {
+    const owner = els.inOwner.value.trim();
+    const repo  = els.inRepo.value.trim();
+    const root  = els.inRoot.value.trim().replace(/^\/+|\/+$/g, '');
+    const token = els.inToken.value.trim();
+
+    if (!owner || !repo) { alert('请填写 Owner 和 Repo'); return; }
+
+    state.owner    = owner;
+    state.repo     = repo;
+    state.rootPath = root;
+    state.token    = token;
+    state.configured = true;
+    state.path     = '';
+    saveConfig();
+
+    els.settings.open = false;
+    setStatus('配置已保存，正在加载…');
+    location.hash = '#/';
+    await loadDir();
+  });
+
+  $('btn-redetect').addEventListener('click', async function () {
+    setStatus('正在自动检测仓库…');
+    const detected = await autoDetect();
+    if (!detected) {
+      setStatus('自动检测失败：当前域名不是 *.github.io，或仓库不可访问。请手动填写。', 'err');
       return;
     }
+    state.owner    = detected.owner;
+    state.repo     = detected.repo;
+    state.rootPath = detected.rootPath;
+    state.configured = true;
+    state.path     = '';
+    saveConfig();
+    renderSettings();
+    els.settings.open = false;
+    location.hash = '#/';
+    await loadDir();
+  });
 
-    let saved = null;
-    try { saved = await idbGet('lastDir'); } catch (e) { /* 忽略 */ }
-
-    if (saved) {
-      try {
-        if (saved.queryPermission) {
-          const perm = await saved.queryPermission({ mode: 'readwrite' });
-          if (perm === 'granted') {
-            rootHandle = saved;
-            pathStack = [{ name: saved.name || '根目录', handle: saved }];
-            await loadDir(saved);
-            return;
-          }
-        }
-      } catch (e) { /* 忽略 */ }
-      showRestore(saved);
-      return;
-    }
-
-    showPickPrompt();
-  })();
-
+  init();
 })();
 </script>
 </body>
