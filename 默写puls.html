@@ -1,0 +1,3699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>通用挖空默写 · Dictation</title>
+<style>
+:root {
+    --card-scale: 1;
+    --bg-base: #f4f1ec;
+    --bg-surface: rgba(255, 255, 255, 0.92);
+    --bg-glass: rgba(255, 255, 255, 0.72);
+    --border-glass: rgba(0, 0, 0, 0.06);
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b6b6b;
+    --text-tertiary: #9a9a9a;
+    --accent: oklch(0.62 0.14 250);
+    --accent-soft: oklch(0.94 0.04 250);
+    --success: oklch(0.62 0.16 150);
+    --success-soft: oklch(0.94 0.05 150);
+    --danger: oklch(0.58 0.18 25);
+    --danger-soft: oklch(0.94 0.06 25);
+    --warn: oklch(0.70 0.14 80);
+    --warn-soft: oklch(0.95 0.05 80);
+    --radius-card: 24px;
+    --radius-btn: 14px;
+    --font-serif: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-float: 0 16px 48px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.05);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+[data-theme="dark"] {
+    --bg-base: #0a0a0a;
+    --bg-surface: rgba(26, 26, 28, 0.94);
+    --bg-glass: rgba(30, 30, 32, 0.78);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --text-primary: #f0f0f0;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #6a6a6a;
+    --accent: oklch(0.72 0.14 250);
+    --accent-soft: oklch(0.22 0.04 250);
+    --success: oklch(0.70 0.16 150);
+    --success-soft: oklch(0.20 0.05 150);
+    --danger: oklch(0.68 0.18 25);
+    --danger-soft: oklch(0.22 0.06 25);
+    --warn: oklch(0.78 0.14 80);
+    --warn-soft: oklch(0.24 0.05 80);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-float: 0 16px 48px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    min-height: 100vh; min-height: 100dvh;
+    font-family: var(--font-sans); color: var(--text-primary); background: var(--bg-base);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    transition: background-color 0.3s var(--ease-out), color 0.3s var(--ease-out);
+}
+body { display: flex; flex-direction: column; }
+.ambient-light { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.ambient-light::before, .ambient-light::after { content: ""; position: absolute; border-radius: 50%; opacity: 0.4; will-change: transform; }
+.ambient-light::before { width: 55vmax; height: 55vmax; top: -20vmax; right: -15vmax; background: radial-gradient(circle, oklch(0.85 0.08 250), transparent 68%); animation: driftA 20s ease-in-out infinite alternate; }
+.ambient-light::after { width: 45vmax; height: 45vmax; bottom: -18vmax; left: -12vmax; background: radial-gradient(circle, oklch(0.88 0.06 30), transparent 68%); animation: driftB 24s ease-in-out infinite alternate; }
+[data-theme="dark"] .ambient-light::before { background: radial-gradient(circle, oklch(0.30 0.08 250), transparent 68%); }
+[data-theme="dark"] .ambient-light::after { background: radial-gradient(circle, oklch(0.26 0.06 30), transparent 68%); }
+@keyframes driftA { to { transform: translate3d(-4vmax, 3vmax, 0) scale(1.06); } }
+@keyframes driftB { to { transform: translate3d(3vmax, -2vmax, 0) scale(1.04); } }
+
+.top-bar { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; flex: 0 0 auto; gap: 10px; }
+.brand { font-family: var(--font-serif); font-size: 20px; font-weight: 600; letter-spacing: 0.02em; color: var(--text-primary); white-space: nowrap; }
+.brand span { color: var(--accent); }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
+.wrong-actions-group { display: flex; align-items: center; gap: 10px; max-width: 350px; opacity: 1; transform: translateX(0); transition: max-width 0.45s var(--ease-spring), opacity 0.3s var(--ease-out), transform 0.45s var(--ease-spring), margin-right 0.45s var(--ease-spring); }
+.wrong-actions-group.hidden-group { max-width: 0; opacity: 0; transform: translateX(25px); margin-right: -10px; pointer-events: none; overflow: hidden; }
+
+/* ===== 文件状态 chip ===== */
+.fs-chip { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; background: var(--bg-glass); border: 1px solid var(--border-glass); font-size: 12px; color: var(--text-secondary); cursor: pointer; max-width: 180px; transition: all 0.2s var(--ease-out); }
+.fs-chip:hover { border-color: var(--accent); color: var(--accent); }
+.fs-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-tertiary); flex: 0 0 auto; }
+.fs-chip[data-state="ok"] .fs-dot { background: var(--success); }
+.fs-chip[data-state="busy"] .fs-dot { background: var(--accent); animation: pulse 1s infinite; }
+.fs-chip[data-state="warn"] .fs-dot { background: var(--warn); }
+.fs-chip[data-state="err"] .fs-dot { background: var(--danger); }
+.fs-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@keyframes pulse { 50% { opacity: 0.3; } }
+
+.btn { appearance: none; border: none; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 18px; border-radius: var(--radius-btn); transition: transform 0.16s var(--ease-out), background-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), opacity 0.2s var(--ease-out); white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.btn:active { transform: scale(0.96); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-ghost { background: var(--bg-glass); border: 1px solid var(--border-glass); color: var(--text-primary); }
+.btn-ghost:hover { background: var(--bg-surface); box-shadow: var(--shadow-card); }
+.btn-primary { background: var(--text-primary); color: var(--bg-base); }
+.btn-primary:hover { opacity: 0.85; box-shadow: var(--shadow-card); }
+.btn-sm { padding: 7px 13px; font-size: 13px; border-radius: 10px; }
+.btn-review { position: relative; }
+.btn-review .badge { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; transform: scale(0); transition: transform 0.3s var(--ease-spring); }
+.btn-review .badge.visible { transform: scale(1); }
+.btn-review .cross-dot { position: absolute; top: -3px; right: -8px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg-base); }
+
+.stage { position: relative; z-index: 5; flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 24px; min-height: 0; }
+.view { width: 100%; max-width: min(calc(800px * var(--card-scale)), calc(100vw - 48px)); display: none; flex-direction: column; align-items: center; }
+.view.active { display: flex; animation: viewEnter 0.45s var(--ease-out) both; }
+@keyframes viewEnter { from { opacity: 0; transform: translate3d(0, 18px, 0); } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+
+.hero-title { font-family: var(--font-serif); font-size: clamp(32px, 6vw, 56px); font-weight: 600; line-height: 1.15; text-align: center; letter-spacing: -0.01em; margin-bottom: 16px; }
+.hero-title em { font-style: normal; color: var(--accent); }
+.hero-sub { font-size: 16px; color: var(--text-secondary); text-align: center; line-height: 1.7; max-width: 480px; margin-bottom: 40px; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-hero { padding: 16px 36px; font-size: 16px; font-weight: 600; border-radius: 16px; }
+.word-count-hint { margin-top: 24px; font-size: 13px; color: var(--text-tertiary); text-align: center; }
+
+.bank-switcher { display: flex; align-items: center; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+.bank-select, .opt-select {
+    appearance: none; border: 1px solid var(--border-glass); background: var(--bg-glass);
+    color: var(--text-primary); font-family: inherit; font-size: 13px; font-weight: 500;
+    padding: 9px 32px 9px 14px; border-radius: 11px; cursor: pointer; outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.bank-select:focus, .opt-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px oklch(0.62 0.14 250 / 0.12); }
+
+.panel { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: var(--radius-card); box-shadow: var(--shadow-card); padding: calc(28px * var(--card-scale)); display: flex; flex-direction: column; gap: calc(18px * var(--card-scale)); }
+#viewSettings .panel, #viewGlobalSettings .panel, #viewStats .panel { max-height: calc(100dvh - 120px); overflow-y: auto; }
+#viewSettings .panel::-webkit-scrollbar, #viewGlobalSettings .panel::-webkit-scrollbar, #viewStats .panel::-webkit-scrollbar { width: 6px; }
+#viewSettings .panel::-webkit-scrollbar-thumb, #viewGlobalSettings .panel::-webkit-scrollbar-thumb, #viewStats .panel::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 99px; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.panel-title { font-size: 17px; font-weight: 600; }
+.panel-desc { font-size: 13px; color: var(--text-tertiary); line-height: 1.6; margin-top: 4px; }
+.panel-desc code { font-family: var(--font-mono); font-size: 12px; padding: 1px 5px; border-radius: 5px; background: var(--bg-glass); border: 1px solid var(--border-glass); }
+.bank-name-input { appearance: none; border: 1px solid transparent; background: transparent; color: var(--text-primary); font-family: var(--font-sans); font-size: 18px; font-weight: 600; padding: 4px 8px; margin-left: -8px; border-radius: 9px; outline: none; max-width: 100%; transition: border-color 0.2s, background-color 0.2s; }
+.bank-name-input:hover { background: var(--bg-glass); }
+.bank-name-input:focus { border-color: var(--accent); background: var(--bg-glass); }
+
+.wrong-list { width: 100%; max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+.wrong-list::-webkit-scrollbar { width: 6px; }
+.wrong-list::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 99px; }
+.wrong-item { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(16px * var(--card-scale)); padding: calc(14px * var(--card-scale)) calc(18px * var(--card-scale)); border-radius: 14px; background: var(--bg-glass); border: 1px solid var(--border-glass); animation: viewEnter 0.3s var(--ease-out) both; }
+.wrong-item-main { flex: 1; min-width: 0; }
+.wrong-item-content { font-size: 14px; line-height: 1.6; color: var(--text-secondary); word-break: break-word; }
+.wrong-item-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.wrong-item-answer { font-family: var(--font-mono); font-weight: 600; color: var(--danger); white-space: nowrap; font-size: 14px; }
+.wrong-item-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.link-btn { appearance: none; border: none; background: transparent; color: var(--accent); font-size: 12px; cursor: pointer; padding: 2px 4px; border-radius: 6px; }
+.link-btn:hover { background: var(--accent-soft); }
+.link-btn.danger { color: var(--danger); }
+.link-btn.danger:hover { background: var(--danger-soft); }
+.empty-state { padding: 40px 20px; text-align: center; color: var(--text-tertiary); font-size: 14px; font-weight: 500; }
+.archive-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; background: var(--bg-glass); border: 1px solid var(--border-glass); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+.archive-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.archive-box { display: none; flex-direction: column; gap: 10px; }
+.archive-box.open { display: flex; }
+
+.editor-shell { width: 100%; border-radius: 16px; border: 1px solid var(--border-glass); background: var(--bg-glass); padding: 8px; display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; transition: border-color 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out); }
+.editor-shell:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px oklch(0.62 0.14 250 / 0.12); }
+.editor-shell::-webkit-scrollbar { width: 6px; }
+.editor-shell::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 99px; }
+.editor-lines { display: flex; flex-direction: column; gap: 2px; }
+.ed-line { display: flex; align-items: flex-start; gap: 8px; padding: 4px 4px 4px 8px; border-radius: 10px; transition: background-color 0.15s var(--ease-out), opacity 0.15s; }
+.ed-line:hover { background: var(--bg-surface); }
+.ed-line.dragging { opacity: 0.4; }
+.ed-bullet { color: var(--text-tertiary); font-family: var(--font-mono); font-size: 14px; line-height: 1.9; user-select: none; flex: 0 0 auto; padding-top: 1px; cursor: grab; }
+.ed-bullet:active { cursor: grabbing; }
+.ed-input { flex: 1; min-height: 26px; border: none; background: transparent; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; line-height: 1.7; resize: none; outline: none; overflow: hidden; padding: 3px 0; word-break: break-word; white-space: pre-wrap; }
+.ed-input::placeholder { color: var(--text-tertiary); opacity: 0.7; }
+.ed-play { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-glass); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; line-height: 1; padding-bottom: 2px; margin-top: 2px; transition: all 0.2s var(--ease-out); }
+.ed-play:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.08); }
+.ed-play:active { transform: scale(0.94); }
+.ed-error { display: none; margin: 0 0 4px 26px; padding: 6px 10px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); font-size: 12px; line-height: 1.5; border: 1px solid oklch(0.70 0.14 80 / 0.3); }
+.ed-error.show { display: block; }
+.ed-drop-line { height: 2px; background: var(--accent); border-radius: 2px; margin: 2px 0; box-shadow: 0 0 8px oklch(0.62 0.14 250 / 0.5); }
+.ed-menu-pop { position: fixed; z-index: 500; min-width: 140px; background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: 12px; box-shadow: var(--shadow-float); padding: 6px; display: flex; flex-direction: column; gap: 2px; animation: modalIn 0.16s var(--ease-out) both; }
+.ed-menu-item { appearance: none; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 13px; text-align: left; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.ed-menu-item:hover { background: var(--accent-soft); color: var(--accent); }
+.ed-menu-item.danger { color: var(--danger); }
+.ed-menu-item.danger:hover { background: var(--danger-soft); }
+.ed-menu-item:disabled { opacity: 0.35; cursor: default; }
+.ed-menu-item:disabled:hover { background: transparent; color: var(--text-primary); }
+
+.editor-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.file-label { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 10px; border: 1px dashed var(--border-glass); background: var(--bg-glass); color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color 0.2s, color 0.2s, background-color 0.2s; }
+.file-label:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.file-label input { display: none; }
+.file-hint { font-size: 12px; color: var(--text-tertiary); }
+.panel-footer { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; flex-wrap: wrap; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 10px; background: var(--bg-glass); border: 1px solid var(--border-glass); color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s var(--ease-out); }
+.back-link:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+.settings-row { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 14px; background: var(--bg-glass); border: 1px solid var(--border-glass); }
+.settings-row-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.settings-row-title { font-size: 14px; font-weight: 600; }
+.settings-row-value { font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.range-track { position: relative; width: 100%; height: 24px; display: flex; align-items: center; }
+.card-range { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 999px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill, 50%), var(--border-glass) var(--fill, 50%), var(--border-glass) 100%); outline: none; cursor: pointer; display: block; }
+.card-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-surface); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); cursor: grab; transition: transform 0.15s var(--ease-out); }
+.card-range::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.18); }
+.card-range::-moz-range-track { height: 5px; border-radius: 999px; background: var(--border-glass); }
+.card-range::-moz-range-progress { height: 5px; border-radius: 999px; background: var(--accent); }
+.card-range::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-surface); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); cursor: grab; }
+.scale-legend { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); }
+.card-preview-wrap { width: 100%; border-radius: 14px; border: 1px dashed var(--border-glass); background: var(--bg-base); height: 220px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.card-preview-inner { width: 300px; padding: 20px 22px; border-radius: 16px; background: var(--bg-surface); border: 1px solid var(--border-glass); box-shadow: var(--shadow-card); font-family: var(--font-serif); font-size: 13px; line-height: 1.9; color: var(--text-primary); transform: scale(var(--card-scale)); transform-origin: center center; transition: transform 0.1s linear; pointer-events: none; }
+.card-preview-inner .cp-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+.card-preview-inner p { margin: 0 0 6px; }
+.card-preview-inner p:last-child { margin-bottom: 0; }
+
+.opt-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--text-secondary); }
+.opt-row label { flex: 1; }
+.opt-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.opt-select { min-width: 130px; }
+.opt-select:disabled { opacity: 0.45; cursor: not-allowed; }
+.opt-row.disabled { opacity: 0.55; }
+
+.quiz-card { position: relative; width: 100%; background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: var(--radius-card); box-shadow: var(--shadow-float); padding: calc(40px * var(--card-scale)) calc(36px * var(--card-scale)) calc(32px * var(--card-scale)); display: flex; flex-direction: column; align-items: center; transition: background-color 0.35s var(--ease-out), border-color 0.35s var(--ease-out); }
+.quiz-card.correct { background: var(--success-soft); border-color: oklch(0.62 0.16 150 / 0.4); }
+.quiz-card.wrong { background: var(--danger-soft); border-color: oklch(0.58 0.18 25 / 0.4); }
+.progress-track { width: 100%; height: 4px; background: var(--border-glass); border-radius: 999px; overflow: hidden; margin-bottom: 24px; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 999px; width: 0%; transition: width 0.5s var(--ease-out), background-color 0.35s; }
+.quiz-card.correct .progress-fill { background: var(--success); }
+.quiz-card.wrong .progress-fill { background: var(--danger); }
+.progress-range { -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: transparent; border-radius: 999px; outline: none; margin-bottom: 18px; cursor: pointer; display: block; padding: 0; flex: 0 0 auto; }
+.progress-range::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--fill, 0%), var(--border-glass) var(--fill, 0%), var(--border-glass) 100%); }
+.progress-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-surface); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); margin-top: -6px; cursor: grab; transition: transform 0.15s var(--ease-out); }
+.progress-range::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.18); }
+.progress-range::-moz-range-track { height: 4px; border-radius: 999px; background: var(--border-glass); }
+.progress-range::-moz-range-progress { height: 4px; border-radius: 999px; background: var(--accent); }
+.progress-range::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-surface); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); cursor: grab; }
+.quiz-meta { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 20px; font-size: 13px; color: var(--text-tertiary); gap: 10px; }
+.timer-badge { font-family: var(--font-mono); font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--bg-glass); border: 1px solid var(--border-glass); font-variant-numeric: tabular-nums; }
+.timer-badge.warn { color: var(--warn); border-color: var(--warn-soft); }
+.timer-badge.danger { color: var(--danger); border-color: var(--danger-soft); animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+.content-area { width: 100%; font-family: var(--font-serif); font-size: calc(clamp(19px, 3.6vw, 26px) * var(--card-scale)); font-weight: 600; line-height: 2; text-align: left; color: var(--text-primary); margin-bottom: 32px; word-break: break-word; max-height: 50vh; overflow-y: auto; padding-right: 4px; transition: color 0.35s var(--ease-out); }
+.content-area::-webkit-scrollbar { width: 6px; }
+.content-area::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 99px; }
+.quiz-card.correct .content-area { color: var(--success); }
+.quiz-card.wrong .content-area { color: var(--danger); }
+#viewPreview .content-area { max-height: 42vh; margin-bottom: 20px; }
+.content-area h1, .content-area h2, .content-area h3, .content-area h4, .content-area h5, .content-area h6 { font-family: var(--font-serif); line-height: 1.45; margin: 0 0 0.5em; font-weight: 700; }
+.content-area h1 { font-size: 1.35em; }
+.content-area h2 { font-size: 1.18em; }
+.content-area h3 { font-size: 1.02em; }
+.content-area h4, .content-area h5, .content-area h6 { font-size: 0.9em; }
+.content-area p { margin: 0 0 0.7em; }
+.content-area p:last-child { margin-bottom: 0; }
+.content-area ul, .content-area ol { margin: 0 0 0.7em; padding-left: 1.5em; }
+.content-area li { margin: 0.15em 0; }
+.content-area blockquote { margin: 0 0 0.7em; padding-left: 1em; border-left: 3px solid var(--border-glass); color: var(--text-secondary); }
+.content-area code { font-family: var(--font-mono); font-size: 0.82em; background: var(--bg-glass); border-radius: 5px; padding: 0.1em 0.35em; }
+.content-area hr { border: none; border-top: 1px solid var(--border-glass); margin: 0.8em 0; }
+.content-area table { border-collapse: collapse; width: 100%; margin: 0.6em 0 0.9em; font-size: 0.64em; font-family: var(--font-sans); font-weight: 400; }
+.content-area th, .content-area td { border: 1px solid var(--border-glass); padding: 0.55em 0.7em; text-align: left; line-height: 1.55; vertical-align: middle; }
+.content-area th { background: var(--bg-glass); font-weight: 600; }
+.hl { color: var(--accent); background: var(--accent-soft); padding: 0.02em 0.28em; border-radius: 6px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.quiz-card.correct .hl, .quiz-card.wrong .hl { color: inherit; background: transparent; }
+
+.inline-blank { display: inline-block; font-family: var(--font-mono); font-size: 0.88em; font-weight: 500; color: var(--accent); background: transparent; border: none; border-bottom: 2px solid var(--accent); outline: none; padding: 0 5px; margin: 0 5px; text-align: center; transition: all 0.2s var(--ease-out); border-radius: 4px 4px 0 0; vertical-align: baseline; max-width: 100%; -webkit-user-select: text; user-select: text; }
+.inline-blank::placeholder { color: var(--text-tertiary); font-weight: 400; opacity: 0.75; }
+.inline-blank:focus { background: var(--accent-soft); border-bottom-width: 2px; box-shadow: 0 4px 12px oklch(0.62 0.14 250 / 0.1); }
+.inline-blank.input-correct { color: var(--success); border-color: var(--success); background: transparent; }
+.inline-blank.input-wrong { color: var(--danger); border-color: var(--danger); background: transparent; }
+.inline-blank[disabled] { opacity: 0.92; cursor: default; }
+.blank-static { font-family: var(--font-mono); font-weight: 600; color: inherit; }
+
+.answer-zone { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.feedback-line { min-height: 24px; font-size: 14px; font-weight: 500; text-align: center; transition: color 0.3s var(--ease-out); line-height: 1.6; }
+.feedback-line.correct { color: var(--success); }
+.feedback-line.wrong { color: var(--danger); }
+.feedback-line.hint { color: var(--text-tertiary); font-weight: 400; font-size: 12.5px; }
+.quiz-actions { display: flex; gap: 10px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.btn-next { background: var(--text-primary); color: var(--bg-base); }
+.quiz-card.correct .btn-next { background: var(--success); color: #fff; }
+.quiz-card.wrong .btn-next { background: var(--danger); color: #fff; }
+
+.result-card { width: 100%; background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: var(--radius-card); box-shadow: var(--shadow-float); padding: calc(48px * var(--card-scale)) calc(36px * var(--card-scale)); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.result-emoji { font-size: 56px; margin-bottom: 16px; line-height: 1; }
+.result-title { font-family: var(--font-serif); font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+.result-sub { font-size: 15px; color: var(--text-secondary); margin-bottom: 28px; }
+.result-stats { display: flex; gap: 32px; margin-bottom: 36px; }
+.stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stat-value { font-family: var(--font-serif); font-size: 36px; font-weight: 600; line-height: 1; }
+.stat-value.good { color: var(--success); }
+.stat-value.bad { color: var(--danger); }
+.stat-label { font-size: 12px; color: var(--text-tertiary); letter-spacing: 0.04em; }
+
+.blank-preview { display: inline-block; font-family: var(--font-mono); font-size: 0.84em; font-weight: 500; color: var(--text-tertiary); border-bottom: 1.5px dashed var(--text-tertiary); padding: 0 7px; margin: 0 4px; border-radius: 4px 4px 0 0; vertical-align: baseline; max-width: 100%; word-break: break-word; }
+.preview-pager { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.pager-btn { width: 34px; height: 34px; border-radius: 11px; border: 1px solid var(--border-glass); background: var(--bg-glass); color: var(--text-primary); font-size: 18px; line-height: 1; padding-bottom: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s var(--ease-out); flex: 0 0 auto; }
+.pager-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.pager-btn:active:not(:disabled) { transform: scale(0.94); }
+.pager-btn:disabled { opacity: 0.3; cursor: default; }
+.pager-label { font-size: 13px; color: var(--text-secondary); min-width: 150px; text-align: center; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(10, 10, 10, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.modal-backdrop.show { display: flex; animation: fadeIn 0.22s var(--ease-out) both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card { width: 100%; max-width: 720px; max-height: 84vh; background: var(--bg-surface); border: 1px solid var(--border-glass); border-radius: var(--radius-card); box-shadow: var(--shadow-float); display: flex; flex-direction: column; overflow: hidden; animation: modalIn 0.32s var(--ease-out) both; }
+@keyframes modalIn { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: calc(20px * var(--card-scale)) calc(24px * var(--card-scale)) calc(16px * var(--card-scale)); border-bottom: 1px solid var(--border-glass); flex: 0 0 auto; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-sub { font-size: 12px; color: var(--text-tertiary); margin-top: 3px; }
+.modal-close { appearance: none; border: 1px solid var(--border-glass); background: var(--bg-glass); color: var(--text-secondary); width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto; transition: all 0.2s var(--ease-out); }
+.modal-close:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+.modal-body { flex: 1; overflow-y: auto; padding: calc(22px * var(--card-scale)) calc(24px * var(--card-scale)) calc(26px * var(--card-scale)); }
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border-glass); border-radius: 99px; }
+.modal-body .content-area.preview-content { font-size: clamp(16px, 3vw, 20px); margin-bottom: 0; max-height: none; overflow: visible; }
+.content-area.preview-content { font-size: clamp(16px, 3vw, 20px); line-height: 1.9; }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translate3d(-50%, 20px, 0); z-index: 300; padding: 12px 22px; border-radius: 14px; background: var(--text-primary); color: var(--bg-base); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out); max-width: 80vw; text-align: center; }
+.toast.show { opacity: 1; transform: translate3d(-50%, 0, 0); }
+
+/* ===== 统计面板 ===== */
+.stats-tabs { display: flex; gap: 6px; background: var(--bg-glass); border-radius: 12px; padding: 4px; width: fit-content; border: 1px solid var(--border-glass); }
+.tab-btn { appearance: none; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 500; padding: 7px 16px; border-radius: 9px; cursor: pointer; transition: all 0.2s var(--ease-out); }
+.tab-btn.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-card); }
+.stats-overview { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 8px 4px; }
+.stat-big { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.stat-big-value { font-family: var(--font-serif); font-size: 48px; font-weight: 600; line-height: 1; color: var(--accent); }
+.stat-mini-group { display: flex; gap: 28px; flex-wrap: wrap; }
+.stat-mini { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-mini span { font-family: var(--font-serif); font-size: 24px; font-weight: 600; line-height: 1; }
+.stat-mini label { font-size: 11px; color: var(--text-tertiary); }
+.chart { display: flex; align-items: flex-end; gap: 10px; height: 150px; padding: 8px 4px 0; }
+.chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+.chart-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.chart-bar { width: 70%; min-height: 3px; border-radius: 6px 6px 2px 2px; background: var(--accent); transition: height 0.5s var(--ease-out), opacity 0.3s; position: relative; }
+.chart-bar.empty { background: var(--border-glass); }
+.chart-bar .chart-att { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chart-label { font-size: 11px; color: var(--text-tertiary); }
+.weak-list { display: flex; flex-direction: column; gap: 8px; }
+.weak-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-radius: 11px; background: var(--bg-surface); border: 1px solid var(--border-glass); cursor: pointer; transition: all 0.2s var(--ease-out); }
+.weak-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+.weak-item-name { flex: 1; min-width: 0; font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.weak-item-rate { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--danger); white-space: nowrap; }
+.weak-item-att { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+
+@media (max-width: 560px) {
+    .top-bar { padding: 14px 16px; }
+    .brand { font-size: 17px; }
+    .stage { padding: 0 14px; }
+    .panel { border-radius: 20px; }
+    #viewSettings .panel, #viewGlobalSettings .panel, #viewStats .panel { max-height: calc(100dvh - 100px); }
+    .quiz-card { border-radius: 20px; }
+    .content-area { max-height: 46vh; font-size: calc(clamp(17px, 4.4vw, 22px) * var(--card-scale)); }
+    .inline-blank { font-size: 16px; }
+    .result-card { padding: 32px 20px; }
+    .result-stats { gap: 24px; }
+    .btn-hero { padding: 14px 28px; font-size: 15px; }
+    .top-actions .btn span.label { display: none; }
+    .top-actions .btn { padding: 10px 12px; }
+    .wrong-list { max-height: 40vh; }
+    .editor-shell { max-height: 240px; }
+    .preview-pager { gap: 10px; }
+    .pager-label { min-width: 0; font-size: 12px; }
+    .modal-card { max-height: 88vh; }
+    .card-preview-wrap { height: 180px; }
+    .card-preview-inner { width: 240px; padding: 16px 18px; }
+    .quiz-actions { flex-wrap: nowrap; }
+    .quiz-actions .btn { flex: 1; min-width: 0; }
+    .fs-chip { max-width: 110px; }
+    .stats-overview { flex-direction: column; align-items: flex-start; }
+    .stat-big-value { font-size: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    .ambient-light::before, .ambient-light::after { animation: none; }
+}
+</style>
+</head>
+<body data-theme="light">
+<div class="ambient-light" aria-hidden="true"></div>
+
+<header class="top-bar">
+    <div class="brand">Dictation<span>.</span></div>
+    <div class="top-actions">
+        <div class="wrong-actions-group hidden-group" id="wrongActionsGroup">
+            <button class="btn btn-ghost" id="btnOpenWrongBook" title="查看错题本">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span class="label">错题本</span>
+            </button>
+            <button class="btn btn-ghost btn-review" id="btnReview" title="直接默写错题">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span class="label">错题默写</span>
+                <span class="badge" id="reviewBadge">0</span>
+                <span class="cross-dot" id="reviewDot" style="display:none"></span>
+            </button>
+        </div>
+        <button class="btn btn-ghost" id="btnStatsTop" title="统计" aria-label="统计">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        </button>
+        <button class="btn btn-ghost" id="btnTheme" title="切换主题" aria-label="切换主题">
+            <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        </button>
+        <button class="btn btn-ghost" id="btnSettingsTop" title="设置" aria-label="设置">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <div class="fs-chip" id="fsChip" data-state="off" title="数据文件状态" role="button" tabindex="0">
+            <span class="fs-dot"></span>
+            <span class="fs-text" id="fsText">本地</span>
+        </div>
+    </div>
+</header>
+
+<main class="stage">
+
+    <!-- ===== 首页 ===== -->
+    <section class="view active" id="viewIdle">
+        <h1 class="hero-title">通用<em>挖空默写</em></h1>
+        <div class="bank-switcher">
+            <select class="bank-select" id="bankSelect" aria-label="切换词库"></select>
+            <button class="btn btn-ghost btn-sm" id="btnNewBank" title="新建词库">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                新建
+            </button>
+        </div>
+        <p class="hero-sub">智能抽取段落，自适应挖空。支持或逻辑、乱序、可省略、容错、SRS 间隔重复与 Markdown 排版。</p>
+        <div class="hero-actions">
+            <button class="btn btn-primary btn-hero" id="btnStart" disabled>开始默写</button>
+            <button class="btn btn-ghost btn-hero" id="btnGoSettings">设置文本</button>
+        </div>
+        <p class="word-count-hint" id="wordCountHint">尚未加载文本</p>
+    </section>
+
+    <!-- ===== 错题本 ===== -->
+    <section class="view" id="viewWrongBook">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">错题本</div>
+                    <div class="panel-desc" id="wrongBookDesc">暂无错题</div>
+                </div>
+            </div>
+            <div class="wrong-list" id="wrongList"></div>
+            <div class="archive-toggle" id="archiveToggle">
+                <span id="archiveToggleLabel">已掌握（0）</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" id="archiveChevron"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="archive-box" id="archiveBox"></div>
+            <div class="panel-footer">
+                <button class="btn btn-ghost" id="btnClearWrongBook" style="color:var(--danger); border-color:var(--danger-soft); margin-right:auto;">清空</button>
+                <button class="btn btn-ghost" id="btnCloseWrongBook">返回</button>
+                <button class="btn btn-primary" id="btnReviewFromBook">开始重练</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 词库编辑 ===== -->
+    <section class="view" id="viewSettings">
+        <div class="panel">
+            <div class="panel-header">
+                <div style="flex:1;min-width:0;">
+                    <input class="bank-name-input" id="bankNameInput" aria-label="词库名称" title="点击重命名词库">
+                    <div class="panel-desc">每个 <code>-</code> 引导一个题目（可多行，含 Markdown 表格）· 用 <code>&amp;...&amp;</code> 包裹挖空 · 支持 <code>/</code> <code>()</code> <code>~</code> <code>&lt;&gt;</code> <code>!</code> <code>^dot^</code> <code>^space^</code> <code>^key^</code> <code>^tip()</code> <code>^len()</code> <code>[]</code></div>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="btnDeleteBank" title="删除当前词库" style="color:var(--danger);">删除词库</button>
+            </div>
+
+            <div class="editor-shell" id="editorShell">
+                <div class="editor-lines" id="editorLines"></div>
+            </div>
+
+            <div class="editor-toolbar">
+                <button class="btn btn-ghost btn-sm" id="btnAddPara">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                    添加题目
+                </button>
+                <label class="file-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                    上传文件
+                    <input type="file" id="fileInput" accept=".txt,.csv,.md,text/plain,text/csv,text/markdown">
+                </label>
+                <span class="file-hint">支持 .txt / .md / .csv</span>
+            </div>
+
+            <div class="panel-footer">
+                <button class="btn btn-ghost" id="btnOpenGlobal" style="margin-right:auto;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                    全局设置
+                </button>
+                <button class="btn btn-ghost" id="btnCancelSettings">取消</button>
+                <button class="btn btn-ghost" id="btnPreviewAll">预览全部</button>
+                <button class="btn btn-primary" id="btnSaveSettings">保存</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 全局设置（含练习设置 + 数据文件） ===== -->
+    <section class="view" id="viewGlobalSettings">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">全局设置</div>
+                    <div class="panel-desc">卡片显示大小 · 练习策略 · 数据文件</div>
+                </div>
+                <button class="back-link" id="btnBackGlobal">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                    返回
+                </button>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-head">
+                    <span class="settings-row-title">卡片大小</span>
+                    <span class="settings-row-value" id="cardScaleValue">100%</span>
+                </div>
+                <div class="range-track">
+                    <input type="range" class="card-range" id="cardScaleRange" min="85" max="140" value="100" step="1" aria-label="卡片大小">
+                </div>
+                <div class="scale-legend"><span>更紧凑</span><span>更宽大</span></div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-head"><span class="settings-row-title">实时预览</span><span class="settings-row-value">示例卡片</span></div>
+                <div class="card-preview-wrap">
+                    <div class="card-preview-inner" aria-hidden="true">
+                        <div class="cp-title">鸦片战争核心考点</div>
+                        <p>在**林则徐**主持下，收缴的鸦片在<span class="blank-preview">虎门</span>海滩被当众销毁。</p>
+                        <p>鸦片战争使中国开始沦为<span class="blank-preview">半殖民地半封建</span>社会。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-head"><span class="settings-row-title">练习设置</span></div>
+                <div class="opt-row"><label for="optBlanksPerPara">每段挖空数</label>
+                    <select class="opt-select" id="optBlanksPerPara">
+                        <option value="auto">自动</option>
+                        <option value="1">1 个</option>
+                        <option value="2">2 个</option>
+                        <option value="3">3 个</option>
+                        <option value="4">4 个</option>
+                        <option value="5">5 个</option>
+                        <option value="all">全部</option>
+                    </select>
+                </div>
+                <div class="opt-row"><label for="optOrder">出题顺序</label>
+                    <select class="opt-select" id="optOrder">
+                        <option value="random">随机</option>
+                        <option value="sequential">顺序</option>
+                        <option value="wrongFirst">错误优先</option>
+                    </select>
+                </div>
+                <div class="opt-row"><label for="optTimeLimit">限时</label>
+                    <select class="opt-select" id="optTimeLimit">
+                        <option value="0">不限</option>
+                        <option value="15">15 秒</option>
+                        <option value="30">30 秒</option>
+                        <option value="60">60 秒</option>
+                    </select>
+                </div>
+                <div class="opt-row" id="rowKeyOnly"><label for="optKeyOnly">只练重点空（^key^）</label><input type="checkbox" id="optKeyOnly"></div>
+                <div class="opt-row"><label for="optHaptic">触觉反馈（振动）</label><input type="checkbox" id="optHaptic" checked></div>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-row-head"><span class="settings-row-title">数据文件</span></div>
+                <div class="editor-toolbar">
+                    <button class="btn btn-ghost btn-sm" id="btnConnectFile">连接 JSON 文件</button>
+                    <button class="btn btn-ghost btn-sm" id="btnExportJSON">导出 JSON</button>
+                    <label class="file-label">导入 JSON<input type="file" id="importFileInput" accept=".json,application/json"></label>
+                    <button class="btn btn-ghost btn-sm" id="btnWriteNow">立即写盘</button>
+                </div>
+                <div class="file-hint" id="fsHint">未连接 · 支持 File System Access 的浏览器可自动写盘</div>
+            </div>
+
+            <div class="panel-footer">
+                <button class="btn btn-ghost" id="btnResetScale" style="margin-right:auto;">恢复默认大小</button>
+                <button class="btn btn-primary" id="btnDoneGlobal">完成</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 统计 ===== -->
+    <section class="view" id="viewStats">
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="panel-title">统计</div>
+                    <div class="panel-desc" id="statsDesc">当前词库</div>
+                </div>
+                <button class="back-link" id="btnCloseStats">返回</button>
+            </div>
+            <div class="stats-tabs">
+                <button class="tab-btn active" data-scope="current">当前词库</button>
+                <button class="tab-btn" data-scope="all">全部词库</button>
+            </div>
+            <div class="stats-overview">
+                <div class="stat-big"><div class="stat-big-value" id="statAccValue">0%</div><div class="stat-label">累计正确率</div></div>
+                <div class="stat-mini-group">
+                    <div class="stat-mini"><span id="statAttempts">0</span><label>答题空数</label></div>
+                    <div class="stat-mini"><span id="statDoneBlanks">0/0</span><label>已完成空</label></div>
+                    <div class="stat-mini"><span id="statArchived">0</span><label>已掌握（SRS）</label></div>
+                </div>
+            </div>
+            <div class="settings-row">
+                <div class="settings-row-head"><span class="settings-row-title">近 7 天正确率</span><span class="settings-row-value">柱高=正确率 · 数字=答题量</span></div>
+                <div class="chart" id="statsChart"></div>
+            </div>
+            <div class="settings-row">
+                <div class="settings-row-head"><span class="settings-row-title">薄弱段落</span><span class="settings-row-value">错误率降序 · ≥5 次</span></div>
+                <div class="weak-list" id="weakList"></div>
+            </div>
+            <div class="panel-footer">
+                <button class="btn btn-ghost" id="btnResetStats" style="margin-right:auto;color:var(--danger);">重置统计</button>
+                <button class="btn btn-primary" id="btnDoneStats">完成</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 默写 ===== -->
+    <section class="view" id="viewQuiz">
+        <div class="quiz-card" id="quizCard">
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="quiz-meta">
+                <span id="quizCounter">0 / 0</span>
+                <span id="quizModeLabel">默写中</span>
+                <span class="timer-badge" id="timerBadge" style="display:none;"></span>
+            </div>
+            <div class="content-area" id="contentArea"></div>
+            <div class="answer-zone">
+                <div class="feedback-line" id="feedbackLine"></div>
+                <div class="quiz-actions">
+                    <div id="actionsInput" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;">
+                        <button class="btn btn-primary btn-sm" id="btnConfirm">确认</button>
+                        <button class="btn btn-ghost btn-sm" id="btnSkip">跳过</button>
+                    </div>
+                    <div id="actionsCorrect" style="display:none;gap:10px;flex-wrap:wrap;justify-content:center;width:100%;">
+                        <button class="btn btn-next btn-sm" id="btnNext">下一个</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 结果 ===== -->
+    <section class="view" id="viewResult">
+        <div class="result-card">
+            <div class="result-emoji" id="resultEmoji">🎉</div>
+            <div class="result-title" id="resultTitle">本轮完成</div>
+            <div class="result-sub" id="resultSub"></div>
+            <div class="result-stats">
+                <div class="stat"><span class="stat-value good" id="statCorrect">0</span><span class="stat-label">正确</span></div>
+                <div class="stat"><span class="stat-value bad" id="statWrong">0</span><span class="stat-label">错误</span></div>
+                <div class="stat"><span class="stat-value" id="statTotal">0</span><span class="stat-label">总计</span></div>
+            </div>
+            <div class="quiz-actions" style="max-width:420px;">
+                <button class="btn btn-primary btn-sm" id="btnResultHome">返回首页</button>
+                <button class="btn btn-ghost btn-sm" id="btnResultStats">查看统计</button>
+                <button class="btn btn-ghost btn-sm" id="btnResultReview" style="display:none;">错题重练</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 全题预览 ===== -->
+    <section class="view" id="viewPreview">
+        <div class="quiz-card" id="previewCard">
+            <input type="range" class="progress-range" id="previewRange" min="0" max="0" value="0" step="1" aria-label="题目进度">
+            <div class="quiz-meta">
+                <span id="previewCounter">第 1 题 / 共 1 题</span>
+                <span>全题预览</span>
+            </div>
+            <div class="content-area preview-content" id="previewBody"></div>
+            <div class="answer-zone">
+                <div class="preview-pager">
+                    <button class="pager-btn" id="btnPrevQ" aria-label="上一题">‹</button>
+                    <span class="pager-label" id="pagerLabel">第 1 题 / 共 1 题</span>
+                    <button class="pager-btn" id="btnNextQ" aria-label="下一题">›</button>
+                </div>
+                <div class="quiz-actions">
+                    <button class="btn btn-ghost btn-sm" id="btnClosePreview">返回</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<div class="modal-backdrop" id="previewModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <div>
+                <div class="modal-title">单题预览</div>
+                <div class="modal-sub">灰色为答案 · 仅用于检查排版</div>
+            </div>
+            <button class="modal-close" id="btnCloseModal" aria-label="关闭">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="modal-body"><div class="content-area preview-content" id="modalBody"></div></div>
+    </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+"use strict";
+
+/* =========================================================================
+ * 模块 0：常量、状态、工具
+ * ========================================================================= */
+const DATA_KEY = "dictation-paragraphs-v3";
+const WRONG_KEY = "dictation-wrong-book";
+const THEME_KEY = "dictation-theme";
+const SCALE_KEY = "dictation-card-scale";
+const DRAFT_KEY = "dictation-last-draft";
+const BANKS_KEY = "dictation-banks-v2";
+const SETTINGS_KEY = "dictation-settings-v2";
+
+const SAMPLE_TEXT = [
+    "### 鸦片战争核心考点",
+    "- 在**林则徐**主持下，收缴的鸦片在&虎门^tip(广东地名)^key^&海滩被当众销毁，史称“[虎门销烟]”。",
+    "- 鸦片战争使中国开始沦为&半殖民地半封建^space^&社会，成为中国近代史的&开端^key^&。",
+    "",
+    "| 条约 | 核心内容 | 影响 |",
+    "| :--- | :--- | :--- |",
+    "| 《南京条约》 | 开放广州、厦门等五处为通商口岸 | 中国&~丧失主权~& |",
+    "| 《马关条约》 | 允许日本在通商口岸开设&工厂& | 大大加深&半殖民地化&程度 |",
+    "",
+    "- 戊戌变法是一场自上而下的&资产阶级/地主阶级^tip(选对阶级)&性质的改良运动。",
+    "- 孙中山将同盟会纲领阐发为&<!民族!、!民权!、!民生!>^dot^&三大主义。",
+    "- 我的生日是&10月30日/九月十六&。"
+].join("\n");
+
+const state = {
+    banks: [],
+    activeBankId: "",
+    settings: null,
+    phase: "idle",
+    currentQuestion: null,
+    isReviewMode: false,
+    reviewAll: false,
+    singleParaId: null,
+    roundStats: { correct: 0, wrong: 0, total: 0 },
+    statsScope: "current",
+    ready: false,
+    pendingAutoNext: false,
+    reviewedThisRound: new Set()
+};
+
+function getBank() {
+    return state.banks.find(b => b.id === state.activeBankId) || state.banks[0];
+}
+// 兼容访问器：把原本 state.paragraphs 等迁移到 activeBank 上
+["paragraphs", "completedBlanks", "wrongBook"].forEach(prop => {
+    Object.defineProperty(state, prop, {
+        get() { const b = getBank(); return b ? b[prop] : (prop === "paragraphs" ? [] : {}); },
+        set(v) { const b = getBank(); if (b) b[prop] = v; }
+    });
+});
+
+const $ = (id) => document.getElementById(id);
+
+const viewIdle = $("viewIdle"), viewSettings = $("viewSettings"),
+      viewQuiz = $("viewQuiz"), viewResult = $("viewResult"),
+      viewWrongBook = $("viewWrongBook"), viewPreview = $("viewPreview"),
+      viewGlobalSettings = $("viewGlobalSettings"), viewStats = $("viewStats");
+
+const btnStart = $("btnStart"), btnGoSettings = $("btnGoSettings"),
+      btnSettingsTop = $("btnSettingsTop"), btnReview = $("btnReview"),
+      btnOpenWrongBook = $("btnOpenWrongBook"), wrongActionsGroup = $("wrongActionsGroup"),
+      reviewBadge = $("reviewBadge"), reviewDot = $("reviewDot"),
+      btnTheme = $("btnTheme"), iconMoon = $("iconMoon"), iconSun = $("iconSun"),
+      btnStatsTop = $("btnStatsTop");
+
+const wrongList = $("wrongList"), wrongBookDesc = $("wrongBookDesc"),
+      btnClearWrongBook = $("btnClearWrongBook"), btnCloseWrongBook = $("btnCloseWrongBook"),
+      btnReviewFromBook = $("btnReviewFromBook"), archiveToggle = $("archiveToggle"),
+      archiveToggleLabel = $("archiveToggleLabel"), archiveBox = $("archiveBox");
+
+const editorShell = $("editorShell"), editorLines = $("editorLines"),
+      btnAddPara = $("btnAddPara"), fileInput = $("fileInput"),
+      btnSaveSettings = $("btnSaveSettings"), btnCancelSettings = $("btnCancelSettings"),
+      btnPreviewAll = $("btnPreviewAll"), wordCountHint = $("wordCountHint"),
+      bankNameInput = $("bankNameInput"), btnDeleteBank = $("btnDeleteBank");
+
+const btnOpenGlobal = $("btnOpenGlobal"), btnBackGlobal = $("btnBackGlobal"),
+      btnDoneGlobal = $("btnDoneGlobal"), btnResetScale = $("btnResetScale"),
+      cardScaleRange = $("cardScaleRange"), cardScaleValue = $("cardScaleValue");
+
+const optBlanksPerPara = $("optBlanksPerPara"), optOrder = $("optOrder"),
+      optTimeLimit = $("optTimeLimit"), optKeyOnly = $("optKeyOnly"),
+      optHaptic = $("optHaptic"), rowKeyOnly = $("rowKeyOnly");
+
+const quizCard = $("quizCard"), progressFill = $("progressFill"),
+      quizCounter = $("quizCounter"), quizModeLabel = $("quizModeLabel"),
+      contentArea = $("contentArea"), feedbackLine = $("feedbackLine"),
+      timerBadge = $("timerBadge");
+
+const actionsInput = $("actionsInput"), actionsCorrect = $("actionsCorrect"),
+      btnConfirm = $("btnConfirm"), btnSkip = $("btnSkip"), btnNext = $("btnNext");
+
+const resultEmoji = $("resultEmoji"), resultTitle = $("resultTitle"),
+      resultSub = $("resultSub"), statCorrect = $("statCorrect"),
+      statWrong = $("statWrong"), statTotal = $("statTotal"),
+      btnResultHome = $("btnResultHome"), btnResultReview = $("btnResultReview"),
+      btnResultStats = $("btnResultStats");
+
+const previewRange = $("previewRange"), previewBody = $("previewBody"),
+      previewCounter = $("previewCounter"), pagerLabel = $("pagerLabel"),
+      btnPrevQ = $("btnPrevQ"), btnNextQ = $("btnNextQ"),
+      btnClosePreview = $("btnClosePreview");
+
+const previewModal = $("previewModal"), modalBody = $("modalBody"),
+      btnCloseModal = $("btnCloseModal");
+
+const bankSelect = $("bankSelect"), btnNewBank = $("btnNewBank");
+
+const btnCloseStats = $("btnCloseStats"), btnDoneStats = $("btnDoneStats"),
+      btnResetStats = $("btnResetStats"), statsChart = $("statsChart"),
+      weakList = $("weakList"), statsDesc = $("statsDesc");
+
+const fsChip = $("fsChip"), fsText = $("fsText"),
+      btnConnectFile = $("btnConnectFile"), btnExportJSON = $("btnExportJSON"),
+      importFileInput = $("importFileInput"), btnWriteNow = $("btnWriteNow"),
+      fsHint = $("fsHint");
+
+const toast = $("toast");
+
+let toastTimer = null;
+function showToast(msg) {
+    clearTimeout(toastTimer);
+    toast.textContent = msg;
+    toast.classList.add("show");
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+}
+
+function safeSetItem(key, value) {
+    try { localStorage.setItem(key, value); return true; }
+    catch (e) { console.warn("LocalStorage 写入失败", e); return false; }
+}
+
+function uid(prefix) {
+    return prefix + Math.random().toString(36).slice(2, 8);
+}
+
+function dateKey(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function vibrate(pattern) {
+    if (!state.settings || !state.settings.practice.haptic) return;
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+}
+
+/* =========================================================================
+ * 模块 2/7：数据结构、存储、迁移
+ * ========================================================================= */
+function defaultPractice() {
+    return { blanksPerPara: "auto", order: "random", timeLimitSec: 0, keyOnly: false, haptic: true };
+}
+function defaultSettings() {
+    return { theme: "light", cardScale: 1, practice: defaultPractice() };
+}
+function emptyStats() {
+    return { total: { attempts: 0, correct: 0 }, perParagraph: {}, perBlank: {}, daily: {} };
+}
+function ensureStats(s) {
+    if (!s || typeof s !== "object") return emptyStats();
+    if (!s.total) s.total = { attempts: 0, correct: 0 };
+    if (!s.perParagraph) s.perParagraph = {};
+    if (!s.perBlank) s.perBlank = {};
+    if (!s.daily) s.daily = {};
+    return s;
+}
+function makeBank(id, name) {
+    return {
+        id, name, createdAt: Date.now(), updatedAt: Date.now(),
+        draft: "", paragraphs: [], completedBlanks: {}, wrongBook: [], stats: emptyStats()
+    };
+}
+function ensureWrongItem(w) {
+    return {
+        pId: w.pId, blankIndex: w.blankIndex,
+        answer: w.answer || "", context: w.context || "",
+        ease: typeof w.ease === "number" ? w.ease : 2.5,
+        interval: typeof w.interval === "number" ? w.interval : 0,
+        due: typeof w.due === "number" ? w.due : 0,
+        reps: w.reps || 0, lapses: w.lapses || 0,
+        lastReview: w.lastReview || null,
+        archived: !!w.archived
+    };
+}
+
+function normalizeBank(b) {
+    const nb = makeBank(b.id || uid("b"), b.name || "未命名词库");
+    nb.createdAt = b.createdAt || Date.now();
+    nb.updatedAt = b.updatedAt || Date.now();
+    nb.draft = typeof b.draft === "string" ? b.draft : "";
+    nb.paragraphs = Array.isArray(b.paragraphs) ? b.paragraphs : [];
+    nb.completedBlanks = (b.completedBlanks && typeof b.completedBlanks === "object") ? b.completedBlanks : {};
+    nb.wrongBook = Array.isArray(b.wrongBook) ? b.wrongBook.map(ensureWrongItem) : [];
+    nb.stats = ensureStats(b.stats || emptyStats());
+    return nb;
+}
+
+function loadState() {
+    let loadedBanks = null, activeId = null;
+    try {
+        const raw = localStorage.getItem(BANKS_KEY);
+        if (raw) {
+            const o = JSON.parse(raw);
+            if (o && Array.isArray(o.banks) && o.banks.length) {
+                loadedBanks = o.banks;
+                activeId = o.activeBankId;
+            }
+        }
+    } catch (e) { console.warn("词库读取异常", e); }
+
+    if (!loadedBanks) {
+        // 迁移旧数据（只做一次，旧键保留）
+        let paragraphs = [], wrongBook = [], draft = "";
+        try {
+            const sp = localStorage.getItem(DATA_KEY);
+            if (sp) { const arr = JSON.parse(sp); if (Array.isArray(arr)) paragraphs = arr; }
+            const sw = localStorage.getItem(WRONG_KEY);
+            if (sw) { const arr = JSON.parse(sw); if (Array.isArray(arr)) wrongBook = arr.map(ensureWrongItem); }
+            draft = localStorage.getItem(DRAFT_KEY) || "";
+        } catch (e) { console.warn("旧数据迁移异常", e); }
+
+        const b = makeBank("default", "默认词库");
+        b.paragraphs = paragraphs;
+        b.wrongBook = wrongBook;
+        b.draft = draft;
+        loadedBanks = [b];
+        activeId = "default";
+        try { safeSetItem(BANKS_KEY, JSON.stringify({
+            _app: "dictation", _version: 2, savedAt: new Date().toISOString(),
+            activeBankId: "default", banks: loadedBanks
+        })); } catch (e) {}
+    }
+
+    state.banks = loadedBanks.map(normalizeBank);
+    state.activeBankId = (activeId && state.banks.some(b => b.id === activeId)) ? activeId : state.banks[0].id;
+
+    // 设置
+    let settings = defaultSettings();
+    try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (raw) {
+            const o = JSON.parse(raw);
+            if (o) {
+                settings = Object.assign(settings, o);
+                settings.practice = Object.assign(defaultPractice(), o.practice || {});
+            }
+        } else {
+            const t = localStorage.getItem(THEME_KEY); if (t) settings.theme = t;
+            const s = parseFloat(localStorage.getItem(SCALE_KEY)); if (!isNaN(s) && s > 0) settings.cardScale = s;
+        }
+    } catch (e) { console.warn("设置读取异常", e); }
+    state.settings = settings;
+}
+
+function buildJSON() {
+    return {
+        _app: "dictation", _version: 2,
+        savedAt: new Date().toISOString(),
+        activeBankId: state.activeBankId,
+        banks: state.banks,
+        settings: state.settings
+    };
+}
+
+function persistData() {
+    safeSetItem(BANKS_KEY, JSON.stringify(buildJSON()));
+}
+function persistSettings() {
+    safeSetItem(SETTINGS_KEY, JSON.stringify(state.settings));
+    safeSetItem(THEME_KEY, state.settings.theme);
+    safeSetItem(SCALE_KEY, String(state.settings.cardScale));
+}
+
+/* =========================================================================
+ * 模块 3.4：挖空语法解析（在原有基础上增加 ^key^）
+ * ========================================================================= */
+const PUNCT_RE = /[，。、；：？！“”‘’《》〈〉「」『』【】〔〕（）·…—～,.;:?!'"()\[\]{}<>@#$%^&*_+=|\\/\-~]/g;
+
+function stripModifiers(raw) {
+    const meta = { tip: "", len: 0, dot: false, space: false, key: false };
+    const guards = [];
+    let s = raw.replace(/<[^>]*>/g, (m) => {
+        guards.push(m);
+        return "\uE100" + (guards.length - 1) + "\uE101";
+    });
+    s = s.replace(/\^tip\(([^)）]*)\)\^?/g, (m, p) => { meta.tip = p; return ""; });
+    s = s.replace(/\^len\((\d+)\)\^?/g, (m, p) => { meta.len = parseInt(p, 10) || 0; return ""; });
+    s = s.replace(/\^dot\^/g, () => { meta.dot = true; return ""; });
+    s = s.replace(/\^space\^/g, () => { meta.space = true; return ""; });
+    s = s.replace(/\^key\^/g, () => { meta.key = true; return ""; });
+    s = s.replace(/\uE100(\d+)\uE101/g, (m, n) => guards[+n] || "");
+    return { core: s.trim(), meta };
+}
+
+function findFirstParen(s) {
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if (ch === "(" || ch === "（") {
+            let depth = 0;
+            for (let j = i; j < s.length; j++) {
+                const c = s[j];
+                if (c === "(" || c === "（") depth++;
+                else if (c === ")" || c === "）") {
+                    depth--;
+                    if (depth === 0) return { start: i, end: j, content: s.slice(i + 1, j) };
+                }
+            }
+            return null;
+        }
+    }
+    return null;
+}
+
+function splitTopLevel(s, sep) {
+    const parts = [];
+    let depth = 0, cur = "";
+    for (const ch of s) {
+        if (ch === "(" || ch === "（") depth++;
+        else if (ch === ")" || ch === "）") depth--;
+        if (ch === sep && depth === 0) { parts.push(cur); cur = ""; }
+        else cur += ch;
+    }
+    parts.push(cur);
+    return parts;
+}
+
+function expandPlain(s, guard) {
+    guard = (guard || 0) + 1;
+    if (guard > 40) return [s];
+    const p = findFirstParen(s);
+    if (p) {
+        const withContent = s.slice(0, p.start) + p.content + s.slice(p.end + 1);
+        const without = s.slice(0, p.start) + s.slice(p.end + 1);
+        const set = new Set();
+        expandPlain(withContent, guard).forEach(x => set.add(x));
+        expandPlain(without, guard).forEach(x => set.add(x));
+        return [...set];
+    }
+    const parts = splitTopLevel(s, "/");
+    if (parts.length > 1) {
+        const set = new Set();
+        for (const part of parts) expandPlain(part, guard).forEach(x => set.add(x));
+        return [...set];
+    }
+    return [s];
+}
+
+function permutations(arr) {
+    if (arr.length <= 1) return [arr.slice()];
+    const res = [];
+    arr.forEach((x, i) => {
+        const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+        for (const p of permutations(rest)) res.push([x, ...p]);
+    });
+    return res;
+}
+
+function expandAngleInner(inner) {
+    if (!inner.includes("!")) return [inner];
+    const re = /!([^!]*)!/g;
+    const items = [], literals = [];
+    let last = 0, m;
+    while ((m = re.exec(inner))) {
+        literals.push(inner.slice(last, m.index));
+        items.push(m[1]);
+        last = m.index + m[0].length;
+    }
+    literals.push(inner.slice(last));
+    if (!items.length) return [inner];
+    const n = items.length;
+    let perms;
+    if (n <= 6) perms = permutations(items.map((_, i) => i));
+    else perms = [items.map((_, i) => i), items.map((_, i) => n - 1 - i)];
+    const results = new Set();
+    for (const perm of perms) {
+        let s = literals[0] || "";
+        for (let i = 0; i < perm.length; i++) s += items[perm[i]] + (literals[i + 1] || "");
+        results.add(s);
+    }
+    return [...results];
+}
+
+function expandContains(core) {
+    const contains = [];
+    let stripped = core.replace(/~([^~]*)~/g, (m, p1) => { contains.push(p1); return ""; });
+    stripped = stripped.replace(/^[\s/]+|[\s/]+$/g, "").trim();
+    const exact = stripped ? expandPlain(stripped) : [];
+    return { exact, contains };
+}
+
+function analyzeBlank(raw) {
+    const { core, meta } = stripModifiers(raw);
+
+    const angleGroups = [];
+    let protectedCore = "";
+    let i = 0;
+    while (i < core.length) {
+        if (core[i] === "<") {
+            const end = core.indexOf(">", i + 1);
+            if (end !== -1) {
+                const inner = core.slice(i + 1, end);
+                const opts = expandAngleInner(inner);
+                if (opts.length === 1 && opts[0] === inner) {
+                    protectedCore += inner;
+                } else {
+                    const g = angleGroups.length;
+                    angleGroups.push(opts);
+                    protectedCore += "\uE200" + g + "\uE201";
+                }
+                i = end + 1;
+                continue;
+            }
+        }
+        protectedCore += core[i];
+        i++;
+    }
+
+    let exactParts = [], containsParts = [];
+    if (protectedCore.includes("~")) {
+        const r = expandContains(protectedCore);
+        exactParts = r.exact;
+        containsParts = r.contains;
+    } else {
+        exactParts = expandPlain(protectedCore);
+    }
+
+    function expandPlaceholders(str) {
+        const re = /\uE200(\d+)\uE201/g;
+        const matches = [];
+        let m;
+        while ((m = re.exec(str))) matches.push({ index: m.index, length: m[0].length, g: parseInt(m[1], 10) });
+        if (!matches.length) return [str];
+        let results = [""];
+        let pos = 0;
+        for (const match of matches) {
+            const prefix = str.slice(pos, match.index);
+            const opts = angleGroups[match.g] || [""];
+            const next = [];
+            for (const r of results) for (const opt of opts) next.push(r + prefix + opt);
+            results = next;
+            pos = match.index + match.length;
+            if (results.length > 5000) { results = results.slice(0, 5000); break; }
+        }
+        const tail = str.slice(pos);
+        return results.map(r => r + tail);
+    }
+
+    const finalExact = new Set(), finalContains = new Set();
+    for (const p of exactParts) expandPlaceholders(p).forEach(x => finalExact.add(x));
+    for (const p of containsParts) expandPlaceholders(p).forEach(x => finalContains.add(x));
+
+    const uniq = (arr) => [...new Set(arr.map(x => x.trim()).filter(x => x.length > 0))];
+    let exact = uniq([...finalExact]);
+    let contains = uniq([...finalContains]);
+    if (!exact.length && !contains.length) exact = [core.trim() || " "];
+
+    const all = [...exact, ...contains];
+    const display = all[0] || "";
+
+    return {
+        raw, core, exact, contains, all, display,
+        tip: meta.tip, len: meta.len, dot: meta.dot, space: meta.space,
+        isKey: !!meta.key
+    };
+}
+
+function extractBlanks(raw) {
+    const blanks = [];
+    let out = "";
+    let i = 0;
+    while (i < raw.length) {
+        if (raw[i] === "&") {
+            const end = raw.indexOf("&", i + 1);
+            if (end === -1) { out += raw.slice(i); break; }
+            const inner = raw.slice(i + 1, end);
+            if (inner.includes("\n")) { out += raw[i]; i++; continue; }
+            blanks.push(analyzeBlank(inner));
+            out += "%%%BLANK" + (blanks.length - 1) + "%%%";
+            i = end + 1;
+        } else { out += raw[i]; i++; }
+    }
+    return { template: out, blanks };
+}
+
+function buildParagraph(id, prefix, raw) {
+    const { template, blanks } = extractBlanks(raw);
+    const parts = [];
+    const re = /%%%BLANK(\d+)%%%/g;
+    let last = 0, m;
+    while ((m = re.exec(template))) {
+        parts.push(template.slice(last, m.index));
+        last = m.index + m[0].length;
+    }
+    parts.push(template.slice(last));
+    const plain = template.replace(/%%%BLANK(\d+)%%%/g, (mm, n) => blanks[+n].display);
+    return { id, prefix: prefix || "", template, blanks, parts, plain };
+}
+
+function parseText(text, bankId) {
+    const rawBlocks = String(text).split(/\r?\n(?=-)/);
+    const blocks = [];
+    for (let p of rawBlocks) {
+        p = p.trim();
+        if (!p) continue;
+        const hasBlank = /&[^&\n]*&/.test(p);
+        let body = p;
+        if (body.startsWith("-")) body = body.substring(1);
+        blocks.push({ raw: body.replace(/^\s+/, ""), hasBlank });
+    }
+    const paragraphs = [];
+    let pendingPrefix = [];
+    let idc = 0;
+    const prefixId = bankId ? bankId + ":" : "";
+    for (const b of blocks) {
+        if (!b.hasBlank) { pendingPrefix.push(b.raw); continue; }
+        paragraphs.push(buildParagraph(prefixId + "p" + (idc++), pendingPrefix.join("\n"), b.raw));
+        pendingPrefix = [];
+    }
+    return paragraphs;
+}
+
+function splitIntoBlocks(text) {
+    if (!text || !String(text).trim()) return [];
+    const parts = String(text).split(/\r?\n(?=-)/);
+    const result = [];
+    let pending = [];
+    for (const raw of parts) {
+        if (raw.startsWith("-")) {
+            const content = raw.substring(1).replace(/^\s+/, "");
+            const combined = (pending.length ? pending.join("\n") + "\n" : "") + content;
+            result.push(combined);
+            pending = [];
+        } else {
+            if (raw.trim()) pending.push(raw);
+        }
+    }
+    if (pending.length) result.push(pending.join("\n"));
+    return result;
+}
+
+function joinBlocks(blocks) {
+    return blocks.map(b => String(b).trim()).filter(b => b.length > 0).map(b => "- " + b).join("\n");
+}
+
+/* =========================================================================
+ * 模块 0：极简 Markdown 渲染
+ * ========================================================================= */
+function renderInline(s) {
+    s = escapeHTML(s);
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>");
+    s = s.replace(/\[([^\[\]]+)\]/g, '<span class="hl">$1</span>');
+    return s;
+}
+function isTableSep(line) {
+    if (!line) return false;
+    const t = line.trim();
+    if (!t.includes("-")) return false;
+    return /^\|?[-:\s|]+\|[-:\s|]*$/.test(t);
+}
+function splitTableRow(line) {
+    let s = line.trim();
+    if (s.startsWith("|")) s = s.slice(1);
+    if (s.endsWith("|")) s = s.slice(0, -1);
+    return s.split("|").map(x => x.trim());
+}
+function parseAligns(line) {
+    return splitTableRow(line).map(c => {
+        const l = c.startsWith(":"), r = c.endsWith(":");
+        if (l && r) return "center";
+        if (r) return "right";
+        if (l) return "left";
+        return "";
+    });
+}
+function buildTable(header, aligns, rows) {
+    let html = "<table><thead><tr>";
+    header.forEach((c, i) => {
+        const a = aligns[i] ? ' style="text-align:' + aligns[i] + '"' : "";
+        html += "<th" + a + ">" + renderInline(c) + "</th>";
+    });
+    html += "</tr></thead><tbody>";
+    rows.forEach(r => {
+        html += "<tr>";
+        for (let i = 0; i < header.length; i++) {
+            const a = aligns[i] ? ' style="text-align:' + aligns[i] + '"' : "";
+            html += "<td" + a + ">" + renderInline(r[i] || "") + "</td>";
+        }
+        html += "</tr>";
+    });
+    html += "</tbody></table>";
+    return html;
+}
+function isSpecialLine(line, lines, i) {
+    const t = line.trim();
+    if (!t) return true;
+    if (/^#{1,6}\s+/.test(t)) return true;
+    if (/^[-*+]\s+/.test(t)) return true;
+    if (/^\d+\.\s+/.test(t)) return true;
+    if (t.startsWith(">")) return true;
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(t)) return true;
+    if (t.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) return true;
+    return false;
+}
+function renderMarkdown(md) {
+    const lines = md.split("\n");
+    let html = "";
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i].trim();
+        if (!line) { i++; continue; }
+        if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+            const header = splitTableRow(line);
+            const aligns = parseAligns(lines[i + 1]);
+            const rows = [];
+            i += 2;
+            while (i < lines.length && lines[i].trim() && lines[i].includes("|")) {
+                rows.push(splitTableRow(lines[i])); i++;
+            }
+            html += buildTable(header, aligns, rows);
+            continue;
+        }
+        const hm = line.match(/^(#{1,6})\s+(.*)$/);
+        if (hm) {
+            const lv = hm[1].length;
+            html += "<h" + lv + ">" + renderInline(hm[2]) + "</h" + lv + ">";
+            i++; continue;
+        }
+        if (/^(-{3,}|\*{3,}|_{3,})$/.test(line)) { html += "<hr>"; i++; continue; }
+        if (line.startsWith(">")) {
+            const buf = [];
+            while (i < lines.length && lines[i].trim().startsWith(">")) {
+                buf.push(lines[i].trim().replace(/^>\s?/, "")); i++;
+            }
+            html += "<blockquote>" + renderInline(buf.join(" ")) + "</blockquote>";
+            continue;
+        }
+        if (/^[-*+]\s+/.test(line)) {
+            const items = [];
+            while (i < lines.length && /^[-*+]\s+/.test(lines[i].trim())) {
+                items.push(lines[i].trim().replace(/^[-*+]\s+/, "")); i++;
+            }
+            html += "<ul>" + items.map(t => "<li>" + renderInline(t) + "</li>").join("") + "</ul>";
+            continue;
+        }
+        if (/^\d+\.\s+/.test(line)) {
+            const items = [];
+            while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
+                items.push(lines[i].trim().replace(/^\d+\.\s+/, "")); i++;
+            }
+            html += "<ol>" + items.map(t => "<li>" + renderInline(t) + "</li>").join("") + "</ol>";
+            continue;
+        }
+        const buf = [line];
+        i++;
+        while (i < lines.length && !isSpecialLine(lines[i], lines, i)) {
+            buf.push(lines[i].trim()); i++;
+        }
+        html += "<p>" + renderInline(buf.join(" ")) + "</p>";
+    }
+    return html;
+}
+
+/* =========================================================================
+ * 模块 0：预览渲染
+ * ========================================================================= */
+function renderPreviewHTML(p) {
+    const md = (p.prefix ? p.prefix + "\n" : "") + p.template;
+    let html = renderMarkdown(md);
+    html = html.replace(/%%%BLANK(\d+)%%%/g, (mm, n) => {
+        const b = p.blanks[+n];
+        if (!b) return "";
+        const tip = b.tip ? ' title="' + escapeHTML(b.tip) + '"' : "";
+        return '<span class="blank-preview"' + tip + ">" + escapeHTML(b.display) + "</span>";
+    });
+    return html;
+}
+function openPreviewModal(p) {
+    if (!p) return;
+    modalBody.innerHTML = renderPreviewHTML(p);
+    previewModal.classList.add("show");
+}
+function closePreviewModal() {
+    previewModal.classList.remove("show");
+    modalBody.innerHTML = "";
+}
+
+/* =========================================================================
+ * 模块 5：编辑器增强（菜单 / 撤销重做 / 校验 / 拖拽）
+ * ========================================================================= */
+let undoStack = [], redoStack = [];
+let undoDebounce = null;
+let lastSnapshotKey = "";
+let activeMenu = null;
+let dragLine = null;
+
+function autoGrow(ta) {
+    ta.style.height = "auto";
+    ta.style.height = Math.max(26, ta.scrollHeight) + "px";
+}
+
+function snapshotEditor() {
+    const tas = [...editorLines.querySelectorAll(".ed-input")];
+    const values = tas.map(t => t.value);
+    const focusIdx = tas.indexOf(document.activeElement);
+    const carets = tas.map(t => [t.selectionStart, t.selectionEnd]);
+    return { values, focusIdx, carets };
+}
+
+function pushUndo(snap) {
+    const key = JSON.stringify(snap.values);
+    if (key === lastSnapshotKey) return;
+    lastSnapshotKey = key;
+    undoStack.push(snap);
+    if (undoStack.length > 50) undoStack.shift();
+    redoStack = [];
+}
+
+function scheduleUndo() {
+    clearTimeout(undoDebounce);
+    undoDebounce = setTimeout(() => pushUndo(snapshotEditor()), 300);
+}
+
+function restoreEditor(snap) {
+    const tas = [...editorLines.querySelectorAll(".ed-input")];
+    if (tas.length !== snap.values.length) {
+        editorLines.innerHTML = "";
+        snap.values.forEach(v => addEditorBlock(v));
+    } else {
+        tas.forEach((t, i) => { t.value = snap.values[i] || ""; autoGrow(t); });
+    }
+    lastSnapshotKey = JSON.stringify(snap.values);
+    const tas2 = [...editorLines.querySelectorAll(".ed-input")];
+    if (snap.focusIdx >= 0 && snap.focusIdx < tas2.length) {
+        const t = tas2[snap.focusIdx];
+        t.focus();
+        const c = snap.carets[snap.focusIdx];
+        if (c) { try { t.setSelectionRange(c[0], c[1]); } catch (e) {} }
+    }
+}
+
+function undoEditor() {
+    clearTimeout(undoDebounce);
+    if (!undoStack.length) return;
+    const cur = snapshotEditor();
+    const prev = undoStack.pop();
+    redoStack.push(cur);
+    restoreEditor(prev);
+}
+function redoEditor() {
+    clearTimeout(undoDebounce);
+    if (!redoStack.length) return;
+    const cur = snapshotEditor();
+    const next = redoStack.pop();
+    undoStack.push(cur);
+    restoreEditor(next);
+}
+
+function closeBlockMenu() {
+    if (activeMenu) { activeMenu.remove(); activeMenu = null; }
+    document.removeEventListener("keydown", onEscCloseMenu);
+}
+
+function onEscCloseMenu(e) { if (e.key === "Escape") closeBlockMenu(); }
+function onDocClickCloseMenu(e) {
+    if (activeMenu && !activeMenu.contains(e.target)) closeBlockMenu();
+}
+
+function previewBlockFromTa(ta) {
+    const raw = ta.value.trim();
+    if (!raw) { showToast("此题为空"); return; }
+    if (!/&[^&\n]+&/.test(raw)) { showToast("此题尚未包含 &挖空& 内容"); return; }
+    const arr = parseText("- " + raw, getBank().id);
+    if (!arr.length) { showToast("解析失败，请检查格式"); return; }
+    openPreviewModal(arr[0]);
+}
+
+function duplicateBlock(line) {
+    const tas = [...editorLines.querySelectorAll(".ed-line")];
+    if (tas.length >= 200) return;
+    pushUndo(snapshotEditor());
+    const ta = line.querySelector(".ed-input");
+    const clone = addEditorBlock(ta.value);
+    line.parentNode.insertBefore(clone.closest(".ed-line"), line.nextSibling);
+    clone.focus();
+    scheduleUndo();
+}
+
+function moveBlock(line, dir) {
+    const all = [...editorLines.querySelectorAll(".ed-line")];
+    const idx = all.indexOf(line);
+    if (idx < 0) return;
+    const target = all[idx + dir];
+    if (!target) return;
+    pushUndo(snapshotEditor());
+    const ta = line.querySelector(".ed-input");
+    if (dir < 0) editorLines.insertBefore(line, target);
+    else editorLines.insertBefore(line, target.nextSibling);
+    if (ta) ta.focus();
+    scheduleUndo();
+}
+
+function deleteBlock(line) {
+    const all = [...editorLines.querySelectorAll(".ed-line")];
+    if (all.length <= 1) { showToast("至少保留一个题目"); return; }
+    const idx = all.indexOf(line);
+    pushUndo(snapshotEditor());
+    line.remove();
+    const next = [...editorLines.querySelectorAll(".ed-line")][Math.max(0, idx - 1)];
+    if (next) { const ta = next.querySelector(".ed-input"); if (ta) ta.focus(); }
+    scheduleUndo();
+}
+
+function openBlockMenu(btn, line, ta) {
+    closeBlockMenu();
+    const pop = document.createElement("div");
+    pop.className = "ed-menu-pop";
+    const items = [
+        { label: "预览", fn: () => previewBlockFromTa(ta) },
+        { label: "复制", fn: () => duplicateBlock(line) },
+        { label: "上移", fn: () => moveBlock(line, -1), disabled: editorLines.querySelector(".ed-line") === line },
+        { label: "下移", fn: () => moveBlock(line, 1), disabled: editorLines.querySelector(".ed-line:last-child") === line },
+        { label: "删除", fn: () => deleteBlock(line), danger: true }
+    ];
+    items.forEach(it => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "ed-menu-item" + (it.danger ? " danger" : "");
+        b.textContent = it.label;
+        if (it.disabled) b.disabled = true;
+        b.addEventListener("click", () => { closeBlockMenu(); it.fn(); });
+        pop.appendChild(b);
+    });
+    const rect = btn.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 160)) + "px";
+    document.body.appendChild(pop);
+    activeMenu = pop;
+    setTimeout(() => {
+        document.addEventListener("click", onDocClickCloseMenu);
+        document.addEventListener("keydown", onEscCloseMenu);
+    }, 0);
+}
+
+/* ---- 语法校验 ---- */
+function validateBlockText(text) {
+    const errors = [];
+    const ampCount = (text.match(/&/g) || []).length;
+    if (ampCount % 2 !== 0) { errors.push("& 未闭合"); return errors; }
+
+    const re = /&([^&\n]*)&/g;
+    let m;
+    while ((m = re.exec(text))) {
+        const inner = m[1];
+        if (!inner.trim()) { errors.push("存在空挖空 & &"); continue; }
+        if (inner.includes("<")) {
+            const open = (inner.match(/</g) || []).length;
+            const close = (inner.match(/>/g) || []).length;
+            if (open !== close) errors.push("<> 未闭合");
+        }
+        if (inner.includes("^tip(") && !/\^tip\([^)）]*\)\^?/.test(inner)) {
+            errors.push("^tip( 缺少 )^");
+        }
+        let d = 0, bad = false;
+        for (const c of inner) {
+            if (c === "(" || c === "（") d++;
+            else if (c === ")" || c === "）") { d--; if (d < 0) { bad = true; break; } }
+        }
+        if (bad || d !== 0) errors.push("括号不匹配");
+        if (inner.includes("^") && !/\^(dot|space|key)\^/.test(inner) && !/\^tip\(/.test(inner) && !/\^len\(/.test(inner)) {
+            // 可能是独立未闭合 ^
+            const carets = (inner.match(/\^/g) || []).length;
+            const known = (inner.match(/\^(dot|space|key)\^/g) || []).length * 2
+                + (inner.match(/\^tip\([^)）]*\)\^?/g) || []).length * 2
+                + (inner.match(/\^len\(\d+\)\^?/g) || []).length * 2;
+            if (carets > known) errors.push("^ 未闭合");
+        }
+    }
+    return [...new Set(errors)];
+}
+
+const validateTimers = new WeakMap();
+function validateBlockSoon(line, ta) {
+    clearTimeout(validateTimers.get(ta));
+    validateTimers.set(ta, setTimeout(() => {
+        const errs = validateBlockText(ta.value);
+        let box = line.querySelector(".ed-error");
+        if (!errs.length) { if (box) box.classList.remove("show"); return; }
+        if (!box) {
+            box = document.createElement("div");
+            box.className = "ed-error";
+            line.parentNode.insertBefore(box, line.nextSibling);
+        }
+        box.classList.add("show");
+        box.textContent = errs[0] + (errs.length > 1 ? " 等 " + errs.length + " 个问题" : "");
+    }, 500));
+}
+
+function collectAllErrors() {
+    const tas = [...editorLines.querySelectorAll(".ed-input")];
+    let total = 0;
+    tas.forEach(ta => { total += validateBlockText(ta.value).length; });
+    return total;
+}
+
+/* ---- 拖拽 ---- */
+function bindDrag(line) {
+    line.setAttribute("draggable", "true");
+    line.addEventListener("dragstart", (e) => {
+        if (window.innerWidth <= 560) { e.preventDefault(); return; }
+        dragLine = line;
+        line.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        try { e.dataTransfer.setData("text/plain", ""); } catch (err) {}
+        closeBlockMenu();
+    });
+    line.addEventListener("dragend", () => {
+        line.classList.remove("dragging");
+        dragLine = null;
+        clearDropIndicator();
+    });
+}
+function clearDropIndicator() {
+    editorLines.querySelectorAll(".ed-drop-line").forEach(e => e.remove());
+}
+let dropIndicator = null;
+function ensureIndicator() {
+    if (!dropIndicator) {
+        dropIndicator = document.createElement("div");
+        dropIndicator.className = "ed-drop-line";
+    }
+    return dropIndicator;
+}
+
+function addEditorBlock(value) {
+    const line = document.createElement("div");
+    line.className = "ed-line";
+
+    const bullet = document.createElement("span");
+    bullet.className = "ed-bullet";
+    bullet.textContent = "-";
+    bullet.title = "拖拽排序";
+    bullet.setAttribute("aria-hidden", "true");
+
+    const ta = document.createElement("textarea");
+    ta.className = "ed-input";
+    ta.rows = 1;
+    ta.spellcheck = false;
+    ta.value = value || "";
+    ta.placeholder = "输入题目内容（可多行，含 Markdown 表格），用 &挖空& 标记填空…";
+
+    const menuBtn = document.createElement("button");
+    menuBtn.type = "button";
+    menuBtn.className = "ed-play";
+    menuBtn.title = "更多操作";
+    menuBtn.setAttribute("aria-label", "更多操作");
+    menuBtn.innerHTML = "⋯";
+
+    menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openBlockMenu(menuBtn, line, ta);
+    });
+
+    ta.addEventListener("input", () => { autoGrow(ta); scheduleUndo(); validateBlockSoon(line, ta); });
+    ta.addEventListener("focus", () => autoGrow(ta));
+
+    line.appendChild(bullet);
+    line.appendChild(ta);
+    line.appendChild(menuBtn);
+    bindDrag(line);
+    editorLines.appendChild(line);
+    setTimeout(() => autoGrow(ta), 0);
+    return ta;
+}
+
+function renderEditorFromText(text) {
+    closeBlockMenu();
+    editorLines.innerHTML = "";
+    undoStack = []; redoStack = []; lastSnapshotKey = "";
+    const blocks = splitIntoBlocks(text);
+    if (!blocks.length) blocks.push("");
+    blocks.forEach(b => addEditorBlock(b));
+    setTimeout(() => pushUndo(snapshotEditor()), 0);
+}
+
+function collectEditorText() {
+    const tas = [...editorLines.querySelectorAll(".ed-input")];
+    const blocks = tas.map(ta => ta.value.trim()).filter(v => v.length > 0);
+    return joinBlocks(blocks);
+}
+
+editorLines.addEventListener("dragover", (e) => {
+    if (!dragLine) return;
+    e.preventDefault();
+    const lines = [...editorLines.querySelectorAll(".ed-line")];
+    clearDropIndicator();
+    let target = null, before = true;
+    for (const l of lines) {
+        if (l === dragLine) continue;
+        const r = l.getBoundingClientRect();
+        if (e.clientY < r.top + r.height / 2) { target = l; before = true; break; }
+        target = l; before = false;
+    }
+    const ind = ensureIndicator();
+    if (target) {
+        if (before) editorLines.insertBefore(ind, target);
+        else editorLines.insertBefore(ind, target.nextSibling);
+    } else {
+        editorLines.appendChild(ind);
+    }
+});
+editorLines.addEventListener("drop", (e) => {
+    if (!dragLine) return;
+    e.preventDefault();
+    const ind = editorLines.querySelector(".ed-drop-line");
+    if (ind) {
+        pushUndo(snapshotEditor());
+        editorLines.insertBefore(dragLine, ind);
+        ind.remove();
+        scheduleUndo();
+    }
+    dragLine.classList.remove("dragging");
+    dragLine = null;
+});
+
+btnAddPara.addEventListener("click", () => {
+    pushUndo(snapshotEditor());
+    const ta = addEditorBlock("");
+    ta.focus();
+    editorShell.scrollTop = editorShell.scrollHeight;
+    scheduleUndo();
+});
+
+/* =========================================================================
+ * 模块 3/7：全局设置、练习设置
+ * ========================================================================= */
+function setCardScale(scale, persist) {
+    scale = Math.max(0.85, Math.min(1.4, Number(scale) || 1));
+    document.documentElement.style.setProperty("--card-scale", scale);
+    cardScaleValue.textContent = Math.round(scale * 100) + "%";
+    cardScaleRange.value = Math.round(scale * 100);
+    const pct = ((scale - 0.85) / (1.4 - 0.85)) * 100;
+    cardScaleRange.style.setProperty("--fill", pct + "%");
+    state.settings.cardScale = scale;
+    if (persist) { persistSettings(); markDirty(); }
+}
+
+cardScaleRange.addEventListener("input", () => {
+    setCardScale(parseInt(cardScaleRange.value, 10) / 100, true);
+});
+btnResetScale.addEventListener("click", () => setCardScale(1, true));
+
+function renderPracticeSettings() {
+    const p = state.settings.practice;
+    optBlanksPerPara.value = (p.blanksPerPara === "auto" || p.blanksPerPara === "all")
+        ? p.blanksPerPara : String(p.blanksPerPara.fixed || 1);
+    optOrder.value = p.order || "random";
+    optTimeLimit.value = String(p.timeLimitSec || 0);
+    optKeyOnly.checked = !!p.keyOnly;
+    optHaptic.checked = !!p.haptic;
+    optBlanksPerPara.disabled = !!p.keyOnly;
+    rowKeyOnly.classList.toggle("disabled", false);
+}
+
+function savePractice() {
+    const v = optBlanksPerPara.value;
+    state.settings.practice.blanksPerPara = (v === "auto" || v === "all") ? v : { fixed: parseInt(v, 10) };
+    state.settings.practice.order = optOrder.value;
+    state.settings.practice.timeLimitSec = parseInt(optTimeLimit.value, 10) || 0;
+    state.settings.practice.keyOnly = optKeyOnly.checked;
+    state.settings.practice.haptic = optHaptic.checked;
+    persistSettings();
+    markDirty();
+}
+
+optBlanksPerPara.addEventListener("change", () => { if (!optKeyOnly.checked) { savePractice(); } });
+optOrder.addEventListener("change", savePractice);
+optTimeLimit.addEventListener("change", savePractice);
+optHaptic.addEventListener("change", savePractice);
+optKeyOnly.addEventListener("change", () => {
+    if (optKeyOnly.checked) {
+        const hasKey = getBank().paragraphs.some(p => p.blanks.some(b => b.isKey));
+        if (!hasKey) {
+            optKeyOnly.checked = false;
+            showToast("未标记任何重点空（^key^）");
+            return;
+        }
+    }
+    optBlanksPerPara.disabled = optKeyOnly.checked;
+    savePractice();
+});
+
+function openGlobalSettings() {
+    renderPracticeSettings();
+    updateFSHint();
+    setCardScale(state.settings.cardScale, false);
+    switchView(viewGlobalSettings);
+}
+function closeGlobalSettings() { switchView(viewSettings); }
+
+btnOpenGlobal.addEventListener("click", openGlobalSettings);
+btnBackGlobal.addEventListener("click", closeGlobalSettings);
+btnDoneGlobal.addEventListener("click", closeGlobalSettings);
+
+/* =========================================================================
+ * 模块 0：全题预览
+ * ========================================================================= */
+let previewIndex = 0;
+let previewList = [];
+
+function openPreviewAll() {
+    const text = collectEditorText();
+    previewList = parseText(text, getBank().id);
+    if (!previewList.length) { showToast("暂无可预览的题目"); return; }
+    const errs = collectAllErrors();
+    if (errs) showToast("有 " + errs + " 处语法问题，预览可能异常");
+    previewIndex = 0;
+    switchView(viewPreview);
+    renderPreviewAll();
+}
+function closePreviewAll() { switchView(viewSettings); }
+
+function renderPreviewAll() {
+    const total = previewList.length;
+    if (!total) return;
+    previewIndex = Math.max(0, Math.min(previewIndex, total - 1));
+    const p = previewList[previewIndex];
+    previewBody.innerHTML = renderPreviewHTML(p);
+    previewRange.min = 0;
+    previewRange.max = Math.max(0, total - 1);
+    previewRange.value = previewIndex;
+    const pct = total <= 1 ? 100 : (previewIndex / (total - 1)) * 100;
+    previewRange.style.setProperty("--fill", pct + "%");
+    const label = "第 " + (previewIndex + 1) + " 题 / 共 " + total + " 题";
+    previewCounter.textContent = label;
+    pagerLabel.textContent = label;
+    btnPrevQ.disabled = previewIndex <= 0;
+    btnNextQ.disabled = previewIndex >= total - 1;
+}
+
+btnPrevQ.addEventListener("click", () => { if (previewIndex > 0) { previewIndex--; renderPreviewAll(); } });
+btnNextQ.addEventListener("click", () => { if (previewIndex < previewList.length - 1) { previewIndex++; renderPreviewAll(); } });
+previewRange.addEventListener("input", () => {
+    const v = parseInt(previewRange.value, 10) || 0;
+    if (v === previewIndex) return;
+    previewIndex = v;
+    renderPreviewAll();
+});
+btnClosePreview.addEventListener("click", closePreviewAll);
+btnPreviewAll.addEventListener("click", openPreviewAll);
+btnCloseModal.addEventListener("click", closePreviewModal);
+previewModal.addEventListener("click", (e) => { if (e.target === previewModal) closePreviewModal(); });
+
+/* =========================================================================
+ * 模块 1/6：默写渲染、判题、键盘
+ * ========================================================================= */
+function displayLen(str) {
+    let w = 0;
+    for (const ch of str) {
+        w += /[\u2E80-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF\u3000-\u303F]/.test(ch) ? 1 : 0.55;
+    }
+    return w;
+}
+function calcBlankWidth(blank) {
+    if (blank.len > 0) return "calc(" + blank.len + "em + 10px)";
+    let maxW = 2;
+    for (const a of blank.all) {
+        const w = displayLen(a);
+        if (w > maxW) maxW = w;
+    }
+    const w = Math.min(Math.ceil(maxW * 2) / 2 + 1.2, 26);
+    return "calc(" + w + "em + 12px)";
+}
+
+function makeBlankNode(idx, blank, active) {
+    if (!active) {
+        const span = document.createElement("span");
+        span.className = "blank-static";
+        span.textContent = blank.display;
+        return span;
+    }
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "inline-blank";
+    input.dataset.index = String(idx);
+    input.style.width = calcBlankWidth(blank);
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    if (blank.tip) input.placeholder = blank.tip;
+    input.title = blank.tip || "";
+
+    input.addEventListener("keydown", (e) => {
+        if (e.isComposing || e.keyCode === 229) return;
+
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            submitAnswer(true);
+            return;
+        }
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const all = [...contentArea.querySelectorAll(".inline-blank:not([disabled])")];
+            const pos = all.indexOf(input);
+            if (pos > -1 && pos < all.length - 1) {
+                all[pos + 1].focus();
+            } else {
+                const emptyOne = all.find(i => !i.value.trim());
+                if (emptyOne) emptyOne.focus();
+                else submitAnswer();
+            }
+            return;
+        }
+        if (e.key === "Tab") {
+            e.preventDefault();
+            const all = [...contentArea.querySelectorAll(".inline-blank:not([disabled])")];
+            if (!all.length) return;
+            const pos = all.indexOf(input);
+            if (pos < 0) return;
+            const next = e.shiftKey ? (pos - 1 + all.length) % all.length : (pos + 1) % all.length;
+            all[next].focus();
+            return;
+        }
+    });
+
+    input.addEventListener("focus", () => {
+        setTimeout(() => {
+            try { input.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+        }, 300);
+    });
+
+    // 长按显示 tip
+    let lpTimer = null;
+    input.addEventListener("touchstart", () => {
+        if (!blank.tip) return;
+        lpTimer = setTimeout(() => showToast(blank.tip), 500);
+    }, { passive: true });
+    input.addEventListener("touchend", () => clearTimeout(lpTimer));
+    input.addEventListener("touchmove", () => clearTimeout(lpTimer));
+
+    return input;
+}
+
+function injectBlanks(container, blanks, activeSet) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+        const text = node.nodeValue;
+        if (!text || text.indexOf("%%%BLANK") === -1) continue;
+        const pieces = text.split(/(%%%BLANK\d+%%%)/);
+        const frag = document.createDocumentFragment();
+        for (const piece of pieces) {
+            const m = piece.match(/^%%%BLANK(\d+)%%%$/);
+            if (m) {
+                const idx = parseInt(m[1], 10);
+                frag.appendChild(makeBlankNode(idx, blanks[idx], activeSet.has(idx)));
+            } else if (piece) {
+                frag.appendChild(document.createTextNode(piece));
+            }
+        }
+        if (node.parentNode) node.parentNode.replaceChild(frag, node);
+    }
+}
+
+function setFeedbackPlaceholder() {
+    feedbackLine.textContent = "";
+    feedbackLine.className = "feedback-line hint";
+}
+
+function renderCurrent() {
+    if (!state.currentQuestion) return;
+    const bank = getBank();
+    const p = bank.paragraphs.find(x => x.id === state.currentQuestion.pId);
+    if (!p) { nextQuestion(); return; }
+
+    quizCard.classList.remove("correct", "wrong");
+    feedbackLine.textContent = "";
+    feedbackLine.className = "feedback-line";
+    setFeedbackPlaceholder();
+
+    const md = (p.prefix ? p.prefix + "\n" : "") + p.template;
+    contentArea.innerHTML = renderMarkdown(md);
+
+    const activeSet = new Set(state.currentQuestion.blankIndices);
+    injectBlanks(contentArea, p.blanks, activeSet);
+
+    contentArea.querySelectorAll(".inline-blank").forEach(inp => {
+        inp.addEventListener("input", () => {
+            if (inp.dataset.judged === "wrong") {
+                inp.classList.remove("input-wrong");
+                delete inp.dataset.judged;
+                if (state.phase === "partial") {
+                    const wrongLeft = [...contentArea.querySelectorAll(".inline-blank")]
+                        .some(i => i.dataset.judged === "wrong");
+                    if (!wrongLeft) { state.phase = "input"; btnConfirm.textContent = "确认"; }
+                }
+            }
+        });
+    });
+
+    updateProgress();
+
+    actionsInput.style.display = "flex";
+    actionsCorrect.style.display = "none";
+    btnConfirm.textContent = "确认";
+    state.phase = "input";
+
+    setTimeout(() => {
+        const first = contentArea.querySelector(".inline-blank:not([disabled])");
+        if (first) { first.focus(); startTimer(); }
+    }, 50);
+}
+
+/* ---- 限时 ---- */
+const timerState = { id: null, remain: 0, paused: false, active: false };
+
+function startTimer() {
+    stopTimer();
+    const sec = state.settings.practice.timeLimitSec;
+    if (!sec || !viewQuiz.classList.contains("active")) return;
+    timerState.remain = sec;
+    timerState.paused = false;
+    timerState.active = true;
+    renderTimer();
+    timerState.id = setInterval(() => {
+        if (timerState.paused) return;
+        timerState.remain--;
+        if (timerState.remain <= 0) {
+            stopTimer();
+            handleTimeout();
+            return;
+        }
+        renderTimer();
+    }, 1000);
+}
+function renderTimer() {
+    if (!timerState.active) { timerBadge.style.display = "none"; return; }
+    timerBadge.style.display = "";
+    timerBadge.textContent = "⏱ " + timerState.remain + "s";
+    timerBadge.classList.toggle("warn", timerState.remain <= 10);
+    timerBadge.classList.toggle("danger", timerState.remain <= 5);
+}
+function stopTimer() {
+    if (timerState.id) clearInterval(timerState.id);
+    timerState.id = null;
+    timerState.active = false;
+    renderTimer();
+}
+function pauseTimer() { timerState.paused = true; }
+function resumeTimer() {
+    if (timerState.active) timerState.paused = false;
+}
+function handleTimeout() {
+    if (!state.currentQuestion) return;
+    if (state.phase !== "input" && state.phase !== "partial") return;
+    giveUp("⏰ 超时");
+    vibrate([20, 40, 20]);
+}
+
+/* ---- 判题 ---- */
+function cleanString(s, blank) {
+    let x = String(s).trim().toLowerCase();
+    if (blank.dot) x = x.replace(PUNCT_RE, "");
+    if (blank.space) x = x.replace(/\s+/g, "");
+    return x;
+}
+function checkBlank(blank, userStr) {
+    const u = cleanString(userStr, blank);
+    if (!u) return false;
+    if (blank.contains.length > 0) {
+        for (const ans of blank.contains) {
+            const c = cleanString(ans, blank);
+            if (c && u.includes(c)) return true;
+        }
+        return false;
+    }
+    for (const ans of blank.exact) {
+        if (cleanString(ans, blank) === u) return true;
+    }
+    return false;
+}
+
+function submitAnswer(force) {
+    if (!state.currentQuestion) return;
+    if (state.phase !== "input" && state.phase !== "partial") return;
+    const bank = getBank();
+    const p = bank.paragraphs.find(x => x.id === state.currentQuestion.pId);
+    if (!p) return;
+
+    const inputs = [...contentArea.querySelectorAll(".inline-blank")];
+    inputs.forEach(input => {
+        if (input.disabled && input.dataset.judged === "correct") return;
+        const idx = +input.dataset.index;
+        const blank = p.blanks[idx];
+        const val = input.value;
+        const ok = (force && !val.trim()) ? false : checkBlank(blank, val);
+        input.dataset.judged = ok ? "correct" : "wrong";
+        input.classList.toggle("input-correct", ok);
+        input.classList.toggle("input-wrong", !ok);
+        if (ok) input.disabled = true;
+    });
+
+    const correctCount = inputs.filter(i => i.dataset.judged === "correct").length;
+    const wrongCount = inputs.filter(i => i.dataset.judged === "wrong").length;
+
+    if (wrongCount === 0) {
+        state.phase = "checked";
+        quizCard.classList.remove("wrong");
+        quizCard.classList.add("correct");
+        feedbackLine.textContent = "✓ 全部正确";
+        feedbackLine.className = "feedback-line correct";
+        actionsInput.style.display = "none";
+        actionsCorrect.style.display = "flex";
+        finalizeQuestion();
+        vibrate(10);
+        scheduleAutoNext();
+    } else {
+        state.phase = "partial";
+        quizCard.classList.remove("correct");
+        quizCard.classList.add("wrong");
+        feedbackLine.textContent = correctCount === 0
+            ? "✗ 全部错误，可修改或跳过看答案"
+            : "对 " + correctCount + " · 错 " + wrongCount + "，修改标红空后继续";
+        feedbackLine.className = "feedback-line wrong";
+        actionsInput.style.display = "flex";
+        actionsCorrect.style.display = "none";
+        btnConfirm.textContent = "继续提交";
+        vibrate([20, 40, 20]);
+        const firstWrong = inputs.find(i => i.dataset.judged === "wrong" && !i.disabled);
+        if (firstWrong) firstWrong.focus();
+    }
+}
+
+function giveUp(msg) {
+    stopTimer();
+    if (!state.currentQuestion) return;
+    const bank = getBank();
+    const p = bank.paragraphs.find(x => x.id === state.currentQuestion.pId);
+    if (!p) return;
+    const inputs = [...contentArea.querySelectorAll(".inline-blank")];
+    inputs.forEach(input => {
+        if (input.dataset.judged === "correct") return;
+        const idx = +input.dataset.index;
+        input.value = p.blanks[idx].display;
+        input.classList.remove("input-correct");
+        input.classList.add("input-wrong");
+        input.dataset.judged = "wrong";
+        input.disabled = true;
+    });
+    finalizeQuestion();
+    quizCard.classList.remove("correct");
+    quizCard.classList.add("wrong");
+    feedbackLine.textContent = msg || "已跳过，正确答案已填入";
+    feedbackLine.className = "feedback-line wrong";
+    state.phase = "checked";
+    actionsInput.style.display = "none";
+    actionsCorrect.style.display = "flex";
+    updateProgress();
+}
+
+function skipCurrent() {
+    if (state.phase !== "input" && state.phase !== "partial") return;
+    giveUp("已跳过，正确答案已填入");
+}
+
+/* ---- 定格（统计与写盘只在此时发生） ---- */
+function finalizeQuestion() {
+    const q = state.currentQuestion;
+    if (!q || q.finalized) return;
+    q.finalized = true;
+
+    const bank = getBank();
+    const p = bank.paragraphs.find(x => x.id === q.pId);
+    if (!p) { markDirty(); return; }
+
+    const inputs = [...contentArea.querySelectorAll(".inline-blank")];
+    const today = dateKey(new Date());
+    const stats = bank.stats;
+    stats.total.attempts += inputs.length;
+
+    inputs.forEach(input => {
+        const idx = +input.dataset.index;
+        const ok = input.dataset.judged === "correct";
+
+        if (ok) stats.total.correct++;
+
+        const pp = stats.perParagraph[q.pId] || (stats.perParagraph[q.pId] = { attempts: 0, correct: 0 });
+        pp.attempts++; if (ok) pp.correct++;
+
+        const pb = stats.perBlank[q.pId] || (stats.perBlank[q.pId] = {});
+        const pbk = pb[idx] || (pb[idx] = { attempts: 0, correct: 0 });
+        pbk.attempts++; if (ok) pbk.correct++;
+
+        const d = stats.daily[today] || (stats.daily[today] = { attempts: 0, correct: 0 });
+        d.attempts++; if (ok) d.correct++;
+
+        if (state.isReviewMode) {
+            updateSRSForItem(bank, q.pId, idx, ok);
+        } else if (!ok) {
+            addOrUpdateWrongItem(bank, p, idx);
+        }
+    });
+
+    trimDaily(stats);
+
+    if (!state.isReviewMode) {
+        const comp = bank.completedBlanks[q.pId] || (bank.completedBlanks[q.pId] = []);
+        q.blankIndices.forEach(i => { if (!comp.includes(i)) comp.push(i); });
+    }
+
+    bank.updatedAt = Date.now();
+    updateReviewButton();
+    updateProgress();
+    markDirty();
+}
+
+function trimDaily(stats) {
+    const keys = Object.keys(stats.daily).sort();
+    while (keys.length > 30) { delete stats.daily[keys.shift()]; }
+}
+
+/* ---- 自动跳转 ---- */
+let autoNextTimer = null;
+let autoNextArmed = false;
+let autoNextArmTimer = null;
+
+function scheduleAutoNext() {
+    cancelAutoNext();
+    state.pendingAutoNext = true;
+    // 延迟到下一轮事件循环再 arm，避免触发提交的那次 keydown 冒泡到 document 时把自己取消
+    autoNextArmTimer = setTimeout(() => { autoNextArmed = true; }, 0);
+    autoNextTimer = setTimeout(() => {
+        autoNextArmed = false;
+        state.pendingAutoNext = false;
+        if (state.phase === "checked") nextQuestion();
+    }, 1000);
+}
+function cancelAutoNext() {
+    if (autoNextTimer) clearTimeout(autoNextTimer);
+    if (autoNextArmTimer) clearTimeout(autoNextArmTimer);
+    autoNextTimer = null;
+    autoNextArmTimer = null;
+    autoNextArmed = false;
+    state.pendingAutoNext = false;
+}
+
+/* =========================================================================
+ * 模块 2：SRS 间隔重复
+ * ========================================================================= */
+function updateSRS(item, correct) {
+    const now = Date.now();
+    if (correct) {
+        item.reps = (item.reps || 0) + 1;
+        if (item.reps <= 1) item.interval = 1;
+        else if (item.reps === 2) item.interval = 3;
+        else item.interval = Math.min(180, Math.round((item.interval || 3) * (item.ease || 2.5)));
+        item.ease = Math.min(2.8, (item.ease || 2.5) + 0.05);
+        item.due = now + item.interval * 86400000;
+        if (item.interval >= 60) item.archived = true;
+    } else {
+        item.reps = 0;
+        item.lapses = (item.lapses || 0) + 1;
+        item.ease = Math.max(1.3, (item.ease || 2.5) - 0.2);
+        item.interval = 0;
+        item.due = now + 10 * 60000;
+        item.archived = false;
+    }
+    item.lastReview = now;
+}
+
+function updateSRSForItem(bank, pId, blankIndex, correct) {
+    const item = bank.wrongBook.find(w => w.pId === pId && w.blankIndex === blankIndex);
+    if (!item) {
+        if (!correct) {
+            const p = bank.paragraphs.find(x => x.id === pId);
+            if (p) addOrUpdateWrongItem(bank, p, blankIndex);
+        }
+        return;
+    }
+    updateSRS(item, correct);
+}
+
+function addOrUpdateWrongItem(bank, p, blankIndex) {
+    let item = bank.wrongBook.find(w => w.pId === p.id && w.blankIndex === blankIndex);
+    const blank = p.blanks[blankIndex];
+    if (!blank) return;
+
+    if (item) {
+        updateSRS(item, false);
+        return;
+    }
+
+    const parts = p.parts;
+    const cleanPlain = (s) => String(s)
+        .replace(/%%%BLANK\d+%%%/g, "")
+        .replace(/[#*`>|]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    let left = cleanPlain(parts[blankIndex] || "");
+    let right = cleanPlain(parts[blankIndex + 1] || "");
+    if (left.length > 16) left = "…" + left.slice(-16);
+    if (right.length > 16) right = right.slice(0, 16) + "…";
+    const context = (left + " ______ " + right).trim();
+
+    item = ensureWrongItem({
+        pId: p.id, blankIndex,
+        answer: blank.display, context,
+        ease: 2.5, interval: 0, due: 0, reps: 0, lapses: 0,
+        lastReview: null, archived: false
+    });
+    updateSRS(item, false);
+    bank.wrongBook.push(item);
+}
+
+/* =========================================================================
+ * 模块 2：错题按钮与错题本
+ * ========================================================================= */
+function updateReviewButton() {
+    const bank = getBank();
+    const now = Date.now();
+    const due = bank ? bank.wrongBook.filter(w => !w.archived && w.due <= now).length : 0;
+    const unarchived = bank ? bank.wrongBook.filter(w => !w.archived).length : 0;
+    const anyOtherDue = state.banks.some(b => b.id !== state.activeBankId &&
+        b.wrongBook.some(w => !w.archived && w.due <= now));
+
+    reviewBadge.textContent = due;
+    reviewBadge.classList.toggle("visible", due > 0);
+    if (reviewDot) reviewDot.style.display = anyOtherDue ? "block" : "none";
+
+    const label = btnReview.querySelector(".label");
+    if (label) {
+        label.textContent = due > 0 ? "错题默写" : (unarchived > 0 ? "暂无到期 · 全部复习" : "错题默写");
+    }
+
+    const show = due > 0 || unarchived > 0;
+    if (show && wrongActionsGroup.classList.contains("hidden-group")) {
+        wrongActionsGroup.style.overflow = "hidden";
+        wrongActionsGroup.classList.remove("hidden-group");
+        const onEnd = (e) => {
+            if (e.propertyName === "max-width") {
+                wrongActionsGroup.style.overflow = "visible";
+                wrongActionsGroup.removeEventListener("transitionend", onEnd);
+            }
+        };
+        wrongActionsGroup.addEventListener("transitionend", onEnd);
+    } else if (!show && !wrongActionsGroup.classList.contains("hidden-group")) {
+        wrongActionsGroup.style.overflow = "hidden";
+        wrongActionsGroup.classList.add("hidden-group");
+    }
+}
+
+function formatDue(ts) {
+    if (!ts) return "立即";
+    const d = new Date(ts);
+    const now = Date.now();
+    const diff = ts - now;
+    if (diff <= 0) return "已到期";
+    if (diff < 3600000) return Math.ceil(diff / 60000) + " 分钟后";
+    if (diff < 86400000) return Math.ceil(diff / 3600000) + " 小时后";
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function renderWrongBook() {
+    const bank = getBank();
+    if (!bank) return;
+    const active = bank.wrongBook.filter(w => !w.archived);
+    const archived = bank.wrongBook.filter(w => w.archived);
+
+    wrongList.innerHTML = "";
+    if (!active.length) {
+        wrongList.innerHTML = '<div class="empty-state">错题本空空如也，继续保持！</div>';
+    } else {
+        const fragment = document.createDocumentFragment();
+        active.forEach((item, i) => {
+            const el = document.createElement("div");
+            el.className = "wrong-item";
+            el.innerHTML =
+                '<div class="wrong-item-main">' +
+                    '<div class="wrong-item-content">' + escapeHTML(item.context || "上下文缺失") + '</div>' +
+                    '<div class="wrong-item-meta">下次复习：' + formatDue(item.due) + ' · 间隔 ' + item.interval + ' 天 · 熟练度 ' + (item.ease || 2.5).toFixed(2) + '</div>' +
+                '</div>' +
+                '<div class="wrong-item-answer">' + escapeHTML(item.answer) + '</div>' +
+                '<div class="wrong-item-actions">' +
+                    '<button class="link-btn" data-act="remove" data-pid="' + escapeHTML(item.pId) + '" data-bidx="' + item.blankIndex + '">彻底删除</button>' +
+                '</div>';
+            fragment.appendChild(el);
+        });
+        wrongList.appendChild(fragment);
+    }
+
+    wrongBookDesc.textContent = "未归档 " + active.length + " 条 · 已掌握 " + archived.length + " 条";
+
+    // 归档区
+    archiveToggleLabel.textContent = "已掌握（" + archived.length + "）";
+    archiveBox.innerHTML = "";
+    if (!archived.length) {
+        archiveBox.innerHTML = '<div class="empty-state" style="padding:16px;">暂无已掌握条目</div>';
+    } else {
+        archived.forEach(item => {
+            const el = document.createElement("div");
+            el.className = "wrong-item";
+            el.innerHTML =
+                '<div class="wrong-item-main">' +
+                    '<div class="wrong-item-content">' + escapeHTML(item.context || "上下文缺失") + '</div>' +
+                    '<div class="wrong-item-meta">间隔 ' + item.interval + ' 天 · 复习 ' + item.reps + ' 次</div>' +
+                '</div>' +
+                '<div class="wrong-item-answer" style="color:var(--success);">' + escapeHTML(item.answer) + '</div>' +
+                '<div class="wrong-item-actions">' +
+                    '<button class="link-btn" data-act="unarchive" data-pid="' + escapeHTML(item.pId) + '" data-bidx="' + item.blankIndex + '">重新加入复习</button>' +
+                    '<button class="link-btn danger" data-act="remove" data-pid="' + escapeHTML(item.pId) + '" data-bidx="' + item.blankIndex + '">彻底删除</button>' +
+                '</div>';
+            archiveBox.appendChild(el);
+        });
+    }
+
+    btnClearWrongBook.style.display = active.length + archived.length ? "" : "none";
+    btnReviewFromBook.style.display = active.length ? "" : "none";
+}
+
+wrongList.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const bank = getBank();
+    const pId = btn.dataset.pid, bIdx = +btn.dataset.bidx;
+    const k = bank.wrongBook.findIndex(w => w.pId === pId && w.blankIndex === bIdx);
+    if (k === -1) return;
+    if (btn.dataset.act === "remove") {
+        if (!confirm("确定要彻底删除这条错题吗？")) return;
+        bank.wrongBook.splice(k, 1);
+    }
+    persistData();
+    updateReviewButton();
+    renderWrongBook();
+    markDirty();
+});
+
+archiveBox.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-act]");
+    if (!btn) return;
+    const bank = getBank();
+    const pId = btn.dataset.pid, bIdx = +btn.dataset.bidx;
+    const item = bank.wrongBook.find(w => w.pId === pId && w.blankIndex === bIdx);
+    if (!item) return;
+    if (btn.dataset.act === "unarchive") {
+        item.archived = false;
+        item.due = Date.now();
+        item.interval = 0;
+        item.reps = 0;
+    } else if (btn.dataset.act === "remove") {
+        if (!confirm("确定要彻底删除这条错题吗？")) return;
+        const k = bank.wrongBook.indexOf(item);
+        if (k !== -1) bank.wrongBook.splice(k, 1);
+    }
+    persistData();
+    updateReviewButton();
+    renderWrongBook();
+    markDirty();
+});
+
+archiveToggle.addEventListener("click", () => {
+    archiveBox.classList.toggle("open");
+    const chev = $("archiveChevron");
+    if (chev) chev.style.transform = archiveBox.classList.contains("open") ? "rotate(180deg)" : "";
+});
+
+btnClearWrongBook.addEventListener("click", () => {
+    if (!confirm("确定要清空所有错题（含已掌握）吗？")) return;
+    const bank = getBank();
+    bank.wrongBook = [];
+    persistData();
+    renderWrongBook();
+    updateReviewButton();
+    markDirty();
+    showToast("错题本已清空");
+});
+
+/* =========================================================================
+ * 模块 3：出题与练习流程
+ * ========================================================================= */
+function pickBlanksForParagraph(p, availableIndices) {
+    if (!availableIndices.length) return [];
+    const practice = state.settings.practice;
+
+    if (practice.keyOnly) {
+        return availableIndices.filter(i => p.blanks[i] && p.blanks[i].isKey);
+    }
+
+    const mode = practice.blanksPerPara;
+    let maxSelect, noGap = false;
+    if (mode === "all") { maxSelect = availableIndices.length; noGap = true; }
+    else if (mode && typeof mode === "object" && mode.fixed) { maxSelect = Math.max(1, mode.fixed); }
+    else { maxSelect = Math.max(1, Math.ceil(availableIndices.length / 2)); }
+
+    const shuffled = [...availableIndices].sort(() => Math.random() - 0.5);
+    const selected = [];
+    for (const idx of shuffled) {
+        if (selected.length >= maxSelect) break;
+        if (!noGap) {
+            let canAdd = true;
+            for (const selIdx of selected) {
+                const min = Math.min(idx, selIdx), max = Math.max(idx, selIdx);
+                let textBetween = "";
+                for (let s = min + 1; s <= max; s++) textBetween += p.parts[s] || "";
+                if (!/[,，.。?？!！;；:：、]/.test(textBetween)) { canAdd = false; break; }
+            }
+            if (!canAdd) continue;
+        }
+        selected.push(idx);
+    }
+    if (!selected.length && shuffled.length) selected.push(shuffled[0]);
+    return selected;
+}
+
+function hasAnyKeyBlank(bank) {
+    return bank.paragraphs.some(p => p.blanks.some(b => b.isKey));
+}
+/* 统一复习入口：到期题优先；无到期则自动改为「全部复习」 */
+function startReview() {
+    const b = getBank();
+    if (!b) return;
+    const unarch = b.wrongBook.filter(w => !w.archived);
+    if (!unarch.length) { showToast("错题已全部掌握"); return; }
+    const due = unarch.filter(w => w.due <= Date.now()).length;
+    state.reviewAll = due === 0;
+    startQuiz(true);
+}
+function startQuiz(isReview) {
+    const bank = getBank();
+    if (!bank) return;
+
+    state.isReviewMode = !!isReview;
+    // state.reviewAll 由调用方（startReview）设置，不要覆盖
+    state.reviewedThisRound = new Set();
+    state.singleParaId = null;
+    state.phase = "idle";
+    state.roundStats = { correct: 0, wrong: 0, total: 0 };
+    cancelAutoNext();
+    stopTimer();
+
+    if (!isReview) {
+        if (!bank.paragraphs.length) { showToast("请先设置文本"); return; }
+        if (state.settings.practice.keyOnly && !hasAnyKeyBlank(bank)) {
+            showToast("未标记任何重点空");
+            return;
+        }
+        // 检查是否全部完成，若完成则重置进度
+        const allDone = bank.paragraphs.every(p => {
+            const comp = bank.completedBlanks[p.id] || [];
+            const keys = p.blanks.map((b, i) => b.isKey ? i : -1).filter(i => i >= 0);
+            const target = state.settings.practice.keyOnly ? keys : p.blanks.map((_, i) => i);
+            return target.every(i => comp.includes(i));
+        });
+        if (allDone) {
+            bank.completedBlanks = {};
+            showToast("已完成全部，进度已重置");
+        }
+    }
+
+    quizModeLabel.textContent = isReview ? "错题重练" : "默写中";
+    switchView(viewQuiz);
+    nextQuestion();
+}
+
+function nextQuestion() {
+    cancelAutoNext();
+    stopTimer();
+    state.phase = "idle";
+
+    const bank = getBank();
+    if (!bank) { switchView(viewIdle); return; }
+
+    if (state.isReviewMode) {
+        const dueItems = bank.wrongBook
+            .filter(w => !w.archived && w.due <= Date.now())
+            .sort((a, b) => a.due - b.due);
+        let item = null;
+        if (dueItems.length) item = dueItems[0];
+        else if (state.reviewAll) {
+            const pool = bank.wrongBook.filter(w => !w.archived);
+            if (pool.length) item = pool[0];
+        }
+        if (!item) {
+            if (bank.wrongBook.every(w => w.archived)) showToast("错题已全部掌握");
+            finishQuiz();
+            return;
+        }
+        const p = bank.paragraphs.find(par => par.id === item.pId);
+        if (!p) {
+            const k = bank.wrongBook.indexOf(item);
+            if (k !== -1) bank.wrongBook.splice(k, 1);
+            persistData();
+            return nextQuestion();
+        }
+        state.currentQuestion = {
+            pId: p.id, blankIndices: [item.blankIndex],
+            statsRecorded: false, finalized: false
+        };
+        renderCurrent();
+        return;
+    }
+
+    const practice = state.settings.practice;
+    let candidates = bank.paragraphs.filter(p => {
+        const comp = bank.completedBlanks[p.id] || [];
+        if (state.singleParaId && p.id !== state.singleParaId) return false;
+        if (practice.keyOnly) {
+            return p.blanks.some((b, i) => b.isKey && !comp.includes(i));
+        }
+        return comp.length < p.blanks.length;
+    });
+
+    if (!candidates.length) { finishQuiz(); return; }
+
+    let p;
+    if (practice.order === "sequential") {
+        p = candidates[0];
+    } else if (practice.order === "wrongFirst") {
+        const score = (par) => {
+            const s = bank.stats.perParagraph[par.id];
+            if (!s || s.attempts < 1) return 0;
+            return (s.attempts - s.correct) / s.attempts;
+        };
+        candidates.sort((a, b) => (score(b) - score(a)) + (Math.random() - 0.5) * 0.01);
+        p = candidates[0];
+    } else {
+        p = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    const comp = bank.completedBlanks[p.id] || [];
+    let available = [];
+    for (let i = 0; i < p.blanks.length; i++) if (!comp.includes(i)) available.push(i);
+    if (practice.keyOnly) available = available.filter(i => p.blanks[i].isKey);
+
+    const chosen = pickBlanksForParagraph(p, available);
+    if (!chosen.length) {
+        bank.completedBlanks[p.id] = p.blanks.map((_, i) => i);
+        return nextQuestion();
+    }
+
+    state.currentQuestion = {
+        pId: p.id, blankIndices: chosen,
+        statsRecorded: false, finalized: false
+    };
+    renderCurrent();
+}
+
+function updateProgress() {
+    const bank = getBank();
+    if (!bank) return;
+
+    if (state.isReviewMode) {
+        const now = Date.now();
+        const due = bank.wrongBook.filter(w => !w.archived && w.due <= now).length;
+        const unarch = bank.wrongBook.filter(w => !w.archived).length;
+        quizCounter.textContent = "到期 " + due + " / 未归档 " + unarch;
+        const done = unarch ? (unarch - due) / unarch * 100 : 100;
+        progressFill.style.width = Math.max(0, Math.min(100, done)) + "%";
+        return;
+    }
+
+    const keyOnly = state.settings.practice.keyOnly;
+    let totalBlanks = 0, completed = 0;
+    bank.paragraphs.forEach(p => {
+        const comp = bank.completedBlanks[p.id] || [];
+        p.blanks.forEach((b, i) => {
+            if (keyOnly && !b.isKey) return;
+            totalBlanks++;
+            if (comp.includes(i)) completed++;
+        });
+    });
+
+    const pct = totalBlanks === 0 ? 0 : (completed / totalBlanks) * 100;
+    progressFill.style.width = pct + "%";
+    quizCounter.textContent = "已完成 " + completed + " / " + totalBlanks + " 个空";
+}
+
+function finishQuiz() {
+    updateReviewButton();
+    updateWordCountHint();
+    const { correct, wrong, total } = state.roundStats;
+
+    if (total === 0) {
+        if (state.isReviewMode) showToast("没有需要复习的错题");
+        switchView(viewIdle);
+        return;
+    }
+
+    statCorrect.textContent = correct;
+    statWrong.textContent = wrong;
+    statTotal.textContent = total;
+
+    if (wrong === 0) {
+        resultEmoji.textContent = "🏆";
+        resultTitle.textContent = "全对，漂亮";
+        resultSub.textContent = "本轮全部答对，继续保持。";
+    } else if (correct === 0) {
+        resultEmoji.textContent = "💪";
+        resultTitle.textContent = "再试一次";
+        resultSub.textContent = "本轮有 " + wrong + " 个空需要巩固，可以点击「错题重练」。";
+    } else {
+        resultEmoji.textContent = "📖";
+        resultTitle.textContent = "本轮完成";
+        resultSub.textContent = "共答对 " + correct + " 个空，错 " + wrong + " 个。错题已记录。";
+    }
+
+    const bank = getBank();
+    btnResultReview.style.display = bank.wrongBook.some(w => !w.archived) ? "" : "none";
+    switchView(viewResult);
+}
+
+/* =========================================================================
+ * 模块 4：统计面板
+ * ========================================================================= */
+function mergeStats(banks) {
+    const out = emptyStats();
+    banks.forEach(b => {
+        const s = ensureStats(b.stats || emptyStats());
+        out.total.attempts += s.total.attempts;
+        out.total.correct += s.total.correct;
+        Object.keys(s.perParagraph).forEach(k => {
+            const v = s.perParagraph[k];
+            const t = out.perParagraph[k] || (out.perParagraph[k] = { attempts: 0, correct: 0 });
+            t.attempts += v.attempts; t.correct += v.correct;
+        });
+        Object.keys(s.perBlank).forEach(k => {
+            const src = s.perBlank[k];
+            const dst = out.perBlank[k] || (out.perBlank[k] = {});
+            Object.keys(src).forEach(bi => {
+                const v = src[bi];
+                const t = dst[bi] || (dst[bi] = { attempts: 0, correct: 0 });
+                t.attempts += v.attempts; t.correct += v.correct;
+            });
+        });
+        Object.keys(s.daily).forEach(k => {
+            const v = s.daily[k];
+            const t = out.daily[k] || (out.daily[k] = { attempts: 0, correct: 0 });
+            t.attempts += v.attempts; t.correct += v.correct;
+        });
+    });
+    return out;
+}
+
+function cleanPlainText(s) {
+    return String(s)
+        .replace(/%%%BLANK\d+%%%/g, "")
+        .replace(/[#*`>|\[\]]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function findParagraphAcrossBanks(pId) {
+    for (const b of state.banks) {
+        const p = b.paragraphs.find(par => par.id === pId);
+        if (p) return { bank: b, paragraph: p };
+    }
+    return null;
+}
+
+function renderStats() {
+    const scope = state.statsScope || "current";
+    const banks = scope === "all" ? state.banks : [getBank()].filter(Boolean);
+    if (!banks.length) return;
+    const merged = mergeStats(banks);
+
+    const totalAtt = merged.total.attempts;
+    const acc = totalAtt ? Math.round(merged.total.correct / totalAtt * 100) : 0;
+
+    let totalBlanks = 0, doneBlanks = 0, archivedCount = 0;
+    banks.forEach(b => {
+        b.paragraphs.forEach(p => {
+            totalBlanks += p.blanks.length;
+            doneBlanks += (b.completedBlanks[p.id] || []).length;
+        });
+        archivedCount += b.wrongBook.filter(w => w.archived).length;
+    });
+
+    $("statAccValue").textContent = acc + "%";
+    $("statAttempts").textContent = totalAtt;
+    $("statDoneBlanks").textContent = doneBlanks + "/" + totalBlanks;
+    $("statArchived").textContent = archivedCount;
+    statsDesc.textContent = scope === "all" ? "全部词库" : (getBank() ? getBank().name : "当前词库");
+
+    // 近 7 天
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push({ key: dateKey(d), label: ["日", "一", "二", "三", "四", "五", "六"][d.getDay()] });
+    }
+    let maxAtt = 1;
+    days.forEach(d => {
+        const v = merged.daily[d.key];
+        if (v && v.attempts > maxAtt) maxAtt = v.attempts;
+    });
+
+    statsChart.innerHTML = "";
+    days.forEach(d => {
+        const v = merged.daily[d.key] || { attempts: 0, correct: 0 };
+        const rate = v.attempts ? Math.round(v.correct / v.attempts * 100) : 0;
+        const col = document.createElement("div");
+        col.className = "chart-col";
+        const h = v.attempts ? Math.max(4, rate) : 3;
+        const opacity = v.attempts ? (0.35 + 0.65 * (v.attempts / maxAtt)) : 1;
+        col.innerHTML =
+            '<div class="chart-bar-wrap">' +
+                '<div class="chart-bar' + (v.attempts ? "" : " empty") + '" style="height:' + h + '%;opacity:' + opacity.toFixed(2) + ';">' +
+                    (v.attempts ? '<span class="chart-att">' + v.attempts + '</span>' : '') +
+                '</div>' +
+            '</div>' +
+            '<div class="chart-label">' + d.label + '</div>';
+        statsChart.appendChild(col);
+    });
+
+    // 薄弱段落
+    const rows = Object.keys(merged.perParagraph).map(pId => {
+        const v = merged.perParagraph[pId];
+        if (v.attempts < 5) return null;
+        const found = findParagraphAcrossBanks(pId);
+        const name = found ? (cleanPlainText(found.paragraph.prefix || found.paragraph.plain || "").slice(0, 20) || pId) : pId;
+        return { pId, name, rate: (v.attempts - v.correct) / v.attempts, attempts: v.attempts, bankId: found ? found.bank.id : null };
+    }).filter(Boolean).sort((a, b) => b.rate - a.rate).slice(0, 10);
+
+    weakList.innerHTML = "";
+    if (!rows.length) {
+        weakList.innerHTML = '<div class="empty-state" style="padding:20px;">暂无足够数据（需 ≥5 次答题）</div>';
+    } else {
+        rows.forEach(r => {
+            const el = document.createElement("div");
+            el.className = "weak-item";
+            el.innerHTML =
+                '<div class="weak-item-name">' + escapeHTML(r.name) + '</div>' +
+                '<div class="weak-item-rate">' + Math.round(r.rate * 100) + '%</div>' +
+                '<div class="weak-item-att">' + r.attempts + ' 次</div>';
+            el.title = "只练这一段";
+            el.addEventListener("click", () => {
+                if (!r.bankId) return;
+                if (r.bankId !== state.activeBankId) {
+                    state.activeBankId = r.bankId;
+                    renderBankSelect();
+                }
+                state.singleParaId = r.pId;
+                startQuiz(false);
+            });
+            weakList.appendChild(el);
+        });
+    }
+}
+
+function openStats() {
+    renderStats();
+    switchView(viewStats);
+}
+function closeStats() { switchView(viewIdle); }
+
+$("statsChart").parentNode && document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.statsScope = btn.dataset.scope;
+        renderStats();
+    });
+});
+
+btnStatsTop.addEventListener("click", openStats);
+btnCloseStats.addEventListener("click", closeStats);
+btnDoneStats.addEventListener("click", closeStats);
+btnResultStats.addEventListener("click", openStats);
+
+btnResetStats.addEventListener("click", () => {
+    const bank = getBank();
+    if (!bank) return;
+    if (!confirm("确定要重置当前词库的统计吗？词库、错题本和进度不受影响。")) return;
+    bank.stats = emptyStats();
+    persistData();
+    markDirty();
+    renderStats();
+    showToast("统计已重置");
+});
+
+/* =========================================================================
+ * 模块 7：多词库
+ * ========================================================================= */
+function renderBankSelect() {
+    bankSelect.innerHTML = "";
+    state.banks.forEach(b => {
+        const o = document.createElement("option");
+        o.value = b.id;
+        o.textContent = b.name;
+        bankSelect.appendChild(o);
+    });
+    bankSelect.value = state.activeBankId;
+}
+
+function switchBank(id) {
+    if (id === state.activeBankId) return;
+    if (state.phase === "input" || state.phase === "partial") {
+        if (!confirm("正在默写中，切换词库将结束当前练习，确定吗？")) {
+            bankSelect.value = state.activeBankId;
+            return;
+        }
+    }
+    flushNow("switch");
+    state.activeBankId = id;
+    state.currentQuestion = null;
+    state.phase = "idle";
+    state.singleParaId = null;
+    cancelAutoNext();
+    stopTimer();
+    persistData();
+    renderBankSelect();
+    updateWordCountHint();
+    updateReviewButton();
+    switchView(viewIdle);
+    markDirty();
+}
+
+function createBank() {
+    const name = prompt("请输入新词库名称：", "词库 " + (state.banks.length + 1));
+    if (name === null) return;
+    const trimmed = name.trim() || "未命名词库";
+    const id = uid("b");
+    const bank = makeBank(id, trimmed);
+    state.banks.push(bank);
+    state.activeBankId = id;
+    persistData();
+    renderBankSelect();
+    updateWordCountHint();
+    updateReviewButton();
+    openSettings();
+    showToast("已创建词库：" + trimmed);
+    markDirty();
+}
+
+function deleteCurrentBank() {
+    if (state.banks.length <= 1) { showToast("至少保留一个词库"); return; }
+    const bank = getBank();
+    if (!confirm('确定要删除词库「' + bank.name + '」吗？\n将删除词库内容、错题本和统计，且不可恢复。')) return;
+    const idx = state.banks.findIndex(b => b.id === bank.id);
+    state.banks.splice(idx, 1);
+    state.activeBankId = state.banks[0].id;
+    state.currentQuestion = null;
+    persistData();
+    renderBankSelect();
+    updateWordCountHint();
+    updateReviewButton();
+    switchView(viewIdle);
+    markDirty();
+    showToast("词库已删除");
+}
+
+function renameCurrentBank(name) {
+    const bank = getBank();
+    if (!bank) return;
+    const trimmed = (name || "").trim();
+    if (!trimmed) { bankNameInput.value = bank.name; return; }
+    if (trimmed === bank.name) return;
+    bank.name = trimmed;
+    bank.updatedAt = Date.now();
+    persistData();
+    renderBankSelect();
+    markDirty();
+    showToast("词库已重命名");
+}
+
+bankSelect.addEventListener("change", () => switchBank(bankSelect.value));
+btnNewBank.addEventListener("click", createBank);
+btnDeleteBank.addEventListener("click", deleteCurrentBank);
+bankNameInput.addEventListener("change", () => renameCurrentBank(bankNameInput.value));
+bankNameInput.addEventListener("blur", () => renameCurrentBank(bankNameInput.value));
+
+/* =========================================================================
+ * 模块 5：设置页打开/保存
+ * ========================================================================= */
+function openSettings() {
+    const bank = getBank();
+    if (!bank) return;
+    let text = bank.draft;
+    if (!text) {
+        text = bank.paragraphs.length ? bank.paragraphs.map(p => {
+            let str = p.template.replace(/%%%BLANK(\d+)%%%/g, (m, n) => "&" + p.blanks[+n].raw + "&");
+            if (p.prefix) str = p.prefix + "\n- " + str;
+            return str;
+        }).join("\n- ") : "";
+    }
+    bankNameInput.value = bank.name;
+    renderEditorFromText(text);
+    switchView(viewSettings);
+}
+
+function saveSettings() {
+    const bank = getBank();
+    if (!bank) return;
+    const text = collectEditorText();
+    const errs = collectAllErrors();
+    if (errs) {
+        if (!confirm("检测到 " + errs + " 处语法问题，仍要保存吗？")) return;
+    }
+    const parsed = parseText(text, bank.id);
+    if (!parsed.length) { showToast("未解析到有效段落，请检查格式"); return; }
+
+    // 段落数不变时沿用旧 id，避免错题本引用失效
+    const oldPars = bank.paragraphs;
+    if (oldPars.length === parsed.length) {
+        parsed.forEach((p, i) => { if (oldPars[i] && oldPars[i].id) p.id = oldPars[i].id; });
+    }
+
+    bank.paragraphs = parsed;
+    bank.draft = text;
+    bank.completedBlanks = {};
+    bank.updatedAt = Date.now();
+
+    persistData();
+    safeSetItem(DRAFT_KEY, text);
+    updateWordCountHint();
+    updateReviewButton();
+    switchView(viewIdle);
+    flushNow("save");
+    showToast("已保存 " + parsed.length + " 道题");
+}
+
+btnGoSettings.addEventListener("click", openSettings);
+btnSettingsTop.addEventListener("click", openSettings);
+btnSaveSettings.addEventListener("click", saveSettings);
+btnCancelSettings.addEventListener("click", () => switchView(viewIdle));
+
+editorShell.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        saveSettings();
+    }
+    if (viewSettings.classList.contains("active")) {
+        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z") {
+            e.preventDefault();
+            undoEditor();
+        } else if (((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "z") ||
+                   ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y")) {
+            e.preventDefault();
+            redoEditor();
+        }
+    }
+});
+
+fileInput.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const text = ev.target.result;
+        const parsed = parseText(text, getBank().id);
+        if (!parsed.length) { showToast("文件中未找到有效格式"); return; }
+        renderEditorFromText(text);
+        showToast("从文件加载了 " + parsed.length + " 段，请点击保存生效");
+    };
+    reader.onerror = () => showToast("文件读取失败");
+    reader.readAsText(file, "UTF-8");
+    fileInput.value = "";
+});
+
+/* =========================================================================
+ * 模块 8：视图切换、主题、词数提示
+ * ========================================================================= */
+function switchView(target) {
+    [viewIdle, viewSettings, viewQuiz, viewResult, viewWrongBook, viewPreview, viewGlobalSettings, viewStats]
+        .forEach(v => v.classList.remove("active"));
+    target.classList.add("active");
+    if (target !== viewQuiz) pauseTimer();
+    else resumeTimer();
+    closeBlockMenu();
+}
+
+function updateWordCountHint() {
+    const bank = getBank();
+    if (!bank || !bank.paragraphs.length) {
+        wordCountHint.textContent = "尚未加载文本，请先设置或上传";
+        btnStart.disabled = true;
+        return;
+    }
+    const keyOnly = state.settings.practice.keyOnly;
+    let totalBlanks = 0;
+    bank.paragraphs.forEach(p => {
+        p.blanks.forEach(b => { if (!keyOnly || b.isKey) totalBlanks++; });
+    });
+    const totalAll = bank.paragraphs.reduce((sum, p) => sum + p.blanks.length, 0);
+    wordCountHint.textContent = "共 " + bank.paragraphs.length + " 道题，" + totalBlanks + " 个挖空" +
+        (keyOnly ? "（重点空）" : "") + (keyOnly ? " / 全部 " + totalAll : "");
+    btnStart.disabled = false;
+}
+
+function applyTheme(theme, silent) {
+    document.body.dataset.theme = theme;
+    state.settings.theme = theme;
+    iconMoon.style.display = theme === "dark" ? "none" : "";
+    iconSun.style.display = theme === "dark" ? "" : "none";
+    if (!silent) { persistSettings(); markDirty(); }
+}
+
+btnTheme.addEventListener("click", () => {
+    applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
+});
+
+/* =========================================================================
+ * 模块 1/6：全局键盘
+ * ========================================================================= */
+document.addEventListener("keydown", (e) => {
+    // 自动跳转取消
+    if (autoNextArmed) {
+        const isNav = /^[a-zA-Z0-9]$/.test(e.key) ||
+            ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Tab", "Escape", " "].includes(e.key);
+        if (isNav) cancelAutoNext();
+    }
+
+    // 全局 Ctrl/Cmd+Enter 强制提交
+    if (viewQuiz.classList.contains("active") && (e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        submitAnswer(true);
+        return;
+    }
+
+    if (e.key !== "Escape") return;
+
+    if (previewModal.classList.contains("show")) { closePreviewModal(); return; }
+    if (viewPreview.classList.contains("active")) { closePreviewAll(); return; }
+    if (viewGlobalSettings.classList.contains("active")) { closeGlobalSettings(); return; }
+    if (viewStats.classList.contains("active")) { closeStats(); return; }
+
+    if (viewSettings.classList.contains("active") || viewWrongBook.classList.contains("active")) {
+        switchView(viewIdle);
+    } else if (viewQuiz.classList.contains("active")) {
+        if (state.phase === "input" || state.phase === "partial") {
+            if (confirm("题目未完成，确定退出？")) { stopTimer(); cancelAutoNext(); switchView(viewIdle); }
+        } else if (confirm("确定要退出本轮默写吗？")) {
+            stopTimer(); cancelAutoNext(); switchView(viewIdle);
+        }
+    } else if (viewResult.classList.contains("active")) {
+        switchView(viewIdle);
+    }
+});
+
+// 预览视图键盘翻页
+document.addEventListener("keydown", (e) => {
+    if (!viewPreview.classList.contains("active")) return;
+    if (previewModal.classList.contains("show")) return;
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === "ArrowLeft") { e.preventDefault(); if (previewIndex > 0) { previewIndex--; renderPreviewAll(); } }
+    else if (e.key === "ArrowRight") { e.preventDefault(); if (previewIndex < previewList.length - 1) { previewIndex++; renderPreviewAll(); } }
+});
+
+/* =========================================================================
+ * 模块 8：移动端手势（预览滑动）
+ * ========================================================================= */
+let touchStartX = 0, touchStartY = 0, touchSwiping = false;
+
+viewPreview.addEventListener("touchstart", (e) => {
+    if (previewModal.classList.contains("show")) return;
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    const t = e.touches[0];
+    touchStartX = t.clientX; touchStartY = t.clientY;
+    touchSwiping = true;
+}, { passive: true });
+
+viewPreview.addEventListener("touchmove", (e) => {
+    if (!touchSwiping) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) * 1.7) {
+        previewBody.style.transform = "translateX(" + Math.max(-50, Math.min(50, dx)) + "px)";
+        previewBody.style.transition = "none";
+    }
+}, { passive: true });
+
+viewPreview.addEventListener("touchend", (e) => {
+    if (!touchSwiping) return;
+    touchSwiping = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX;
+    const dy = t.clientY - touchStartY;
+    previewBody.style.transition = "";
+    previewBody.style.transform = "";
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.7) {
+        if (dx < 0 && previewIndex < previewList.length - 1) { previewIndex++; renderPreviewAll(); }
+        else if (dx > 0 && previewIndex > 0) { previewIndex--; renderPreviewAll(); }
+    }
+}, { passive: true });
+
+// 键盘遮挡处理
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+        if (!viewQuiz.classList.contains("active")) return;
+        const vv = window.visualViewport;
+        const h = Math.max(120, vv.height - 180);
+        contentArea.style.maxHeight = h + "px";
+    });
+}
+
+/* =========================================================================
+ * 模块 11：本地 JSON 自动保存
+ * ========================================================================= */
+const FS_DB = "dictation-fs";
+const FS_STORE = "handles";
+const fsState = { handle: null, name: "", lastSaved: null, writing: false, pending: false, dirty: false };
+
+function checkFSApi() {
+    return typeof window.showSaveFilePicker === "function" && window.isSecureContext && location.protocol !== "file:";
+}
+
+function openFSDB() {
+    return new Promise((res, rej) => {
+        const req = indexedDB.open(FS_DB, 1);
+        req.onupgradeneeded = () => { req.result.createObjectStore(FS_STORE); };
+        req.onsuccess = () => res(req.result);
+        req.onerror = () => rej(req.error);
+    });
+}
+function idbSet(key, val) {
+    return openFSDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(FS_STORE, "readwrite");
+        tx.objectStore(FS_STORE).put(val, key);
+        tx.oncomplete = () => res();
+        tx.onerror = () => rej(tx.error);
+    }));
+}
+function idbGet(key) {
+    return openFSDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(FS_STORE, "readonly");
+        const r = tx.objectStore(FS_STORE).get(key);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+    }));
+}
+function idbDel(key) {
+    return openFSDB().then(db => new Promise((res, rej) => {
+        const tx = db.transaction(FS_STORE, "readwrite");
+        tx.objectStore(FS_STORE).delete(key);
+        tx.oncomplete = () => res();
+        tx.onerror = () => rej(tx.error);
+    }));
+}
+
+function setChip(stateName, text) {
+    fsChip.dataset.state = stateName;
+    if (text) fsText.textContent = text;
+    else if (stateName === "ok" && fsState.name) fsText.textContent = fsState.name;
+    else if (stateName === "busy") fsText.textContent = "保存中…";
+    else if (stateName === "off") fsText.textContent = "本地";
+}
+function updateFSHint() {
+    if (!checkFSApi()) {
+        fsHint.textContent = "当前环境不支持自动写盘（file:// / 非安全上下文 / 浏览器不支持）· 请使用导出 JSON";
+        btnConnectFile.disabled = true;
+        btnConnectFile.style.opacity = "0.5";
+    } else if (fsState.handle) {
+        fsHint.textContent = "已连接 " + fsState.name + (fsState.lastSaved ? " · 上次保存 " + fsState.lastSaved.toLocaleTimeString() : "");
+        btnConnectFile.disabled = false;
+        btnConnectFile.style.opacity = "";
+    } else {
+        fsHint.textContent = "未连接 · 支持 File System Access 的浏览器可自动写盘";
+        btnConnectFile.disabled = false;
+        btnConnectFile.style.opacity = "";
+    }
+}
+
+let dirtyTimer = null;
+function markDirty() {
+    if (!state.ready) return;
+    fsState.dirty = true;
+    if (!fsState.handle) { persistData(); persistSettings(); return; }
+    clearTimeout(dirtyTimer);
+    dirtyTimer = setTimeout(() => { writeToFile("debounce"); }, 800);
+}
+
+function flushNow(reason) {
+    persistData();
+    persistSettings();
+    if (fsState.handle) {
+        clearTimeout(dirtyTimer);
+        writeToFile(reason || "manual");
+    } else if (location.protocol === "file:" && reason === "manual") {
+        // file:// 降级：由调用方持有用户手势
+    }
+}
+
+async function writeToFile(reason) {
+    if (!fsState.handle) {
+        if (location.protocol === "file:" && reason === "manual") {
+            downloadJSON();
+            showToast("已下载，file:// 模式无法静默写盘");
+        }
+        return;
+    }
+    if (fsState.writing) { fsState.pending = true; return; }
+    fsState.writing = true;
+    setChip("busy");
+    try {
+        let perm = "granted";
+        if (fsState.handle.queryPermission) {
+            perm = await fsState.handle.queryPermission({ mode: "readwrite" });
+        }
+        if (perm !== "granted" && fsState.handle.requestPermission) {
+            perm = await fsState.handle.requestPermission({ mode: "readwrite" });
+        }
+        if (perm !== "granted") {
+            setChip("warn", "需恢复写入权限");
+            return;
+        }
+        const w = await fsState.handle.createWritable();
+        await w.write(JSON.stringify(buildJSON(), null, 2));
+        await w.close();
+        fsState.lastSaved = new Date();
+        fsState.dirty = false;
+        setChip("ok");
+        updateFSHint();
+    } catch (err) {
+        if (err && err.name === "NotFoundError") {
+            fsState.handle = null;
+            try { await idbDel("main"); } catch (e) {}
+            setChip("warn", "原文件丢失，请重新连接");
+            showToast("原文件丢失，请重新连接");
+        } else if (err && err.name === "NotAllowedError") {
+            setChip("warn", "需恢复写入权限");
+        } else {
+            setChip("err", "保存失败");
+            showToast("保存失败：" + (err && err.message || err));
+        }
+    } finally {
+        fsState.writing = false;
+        if (fsState.pending) { fsState.pending = false; writeToFile("pending"); }
+    }
+}
+
+async function connectFile() {
+    if (!checkFSApi()) {
+        showToast("当前环境不支持自动写文件，请使用导出 JSON");
+        return;
+    }
+    let handle;
+    try {
+        handle = await window.showSaveFilePicker({
+            suggestedName: "dictation-data.json",
+            types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
+        });
+    } catch (e) {
+        if (e && e.name !== "AbortError") showToast("连接失败：" + e.message);
+        return;
+    }
+    fsState.handle = handle;
+    fsState.name = handle.name;
+    try { await idbSet("main", handle); } catch (e) {}
+    await writeToFile("manual");
+    updateFSHint();
+    showToast("已连接 " + handle.name);
+}
+
+async function loadFromFile() {
+    if (!fsState.handle) return;
+    try {
+        const file = await fsState.handle.getFile();
+        const text = await file.text();
+        if (!text.trim()) return;
+        const obj = JSON.parse(text);
+        if (obj && obj._app === "dictation") {
+            applyImportedData(obj, "replace", true);
+        }
+    } catch (e) {
+        if (e && e.name === "NotFoundError") {
+            fsState.handle = null;
+            try { await idbDel("main"); } catch (err) {}
+            setChip("warn", "原文件丢失，请重新连接");
+        }
+    }
+}
+
+async function restoreFileHandle() {
+    if (!checkFSApi()) { setChip("off"); updateFSHint(); return; }
+    try {
+        const handle = await idbGet("main");
+        if (!handle) { setChip("off"); updateFSHint(); return; }
+        fsState.handle = handle;
+        fsState.name = handle.name;
+        let perm = "prompt";
+        if (handle.queryPermission) perm = await handle.queryPermission({ mode: "readwrite" });
+        if (perm === "granted") {
+            await loadFromFile();
+            setChip("ok");
+        } else if (perm === "prompt") {
+            setChip("warn", "需恢复写入权限");
+        } else {
+            fsState.handle = null;
+            await idbDel("main");
+            setChip("off");
+        }
+    } catch (e) {
+        setChip("off");
+    }
+    updateFSHint();
+}
+
+fsChip.addEventListener("click", () => {
+    if (!checkFSApi()) {
+        showToast("当前环境不支持自动写盘，请使用导出 JSON");
+        return;
+    }
+    if (!fsState.handle) { connectFile(); return; }
+    if (fsChip.dataset.state === "warn" && fsState.handle.requestPermission) {
+        fsState.handle.requestPermission({ mode: "readwrite" }).then(p => {
+            if (p === "granted") { writeToFile("manual"); showToast("已恢复写入权限"); }
+        });
+        return;
+    }
+    writeToFile("manual");
+});
+
+btnConnectFile.addEventListener("click", connectFile);
+btnWriteNow.addEventListener("click", () => {
+    if (!fsState.handle) {
+        if (location.protocol === "file:") { downloadJSON(); showToast("已下载，file:// 模式无法静默写盘"); }
+        else showToast("尚未连接文件，请先连接");
+        return;
+    }
+    flushNow("manual");
+});
+btnExportJSON.addEventListener("click", () => {
+    downloadJSON();
+    showToast("已导出 dictation-data.json");
+});
+
+function downloadFile(name, text) {
+    const blob = new Blob([text], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+function downloadJSON() {
+    downloadFile("dictation-data.json", JSON.stringify(buildJSON(), null, 2));
+}
+
+function applyImportedData(obj, mode, silent) {
+    if (!obj || obj._app !== "dictation" || !Array.isArray(obj.banks)) {
+        if (!silent) showToast("导入失败：不是有效的默写备份文件");
+        return false;
+    }
+
+    if (mode === "replace") {
+        state.banks = obj.banks.map(normalizeBank);
+        if (!state.banks.length) return false;
+        state.activeBankId = (obj.activeBankId && state.banks.some(b => b.id === obj.activeBankId))
+            ? obj.activeBankId : state.banks[0].id;
+        if (obj.settings) {
+            state.settings = Object.assign(defaultSettings(), obj.settings);
+            state.settings.practice = Object.assign(defaultPractice(), obj.settings.practice || {});
+            applyTheme(state.settings.theme, true);
+            setCardScale(state.settings.cardScale, false);
+        }
+    } else {
+        const src = obj.banks.find(b => b.id === obj.activeBankId) || obj.banks[0];
+        if (!src) return false;
+        const nb = normalizeBank(src);
+        nb.id = uid("b");
+        nb.name = nb.name + "（导入）";
+        nb.createdAt = Date.now();
+        nb.updatedAt = Date.now();
+
+        // 重写段落 id，避免跨库冲突
+        const idMap = {};
+        nb.paragraphs = nb.paragraphs.map((p, i) => {
+            const oldId = p.id;
+            const newId = nb.id + ":p" + i;
+            idMap[oldId] = newId;
+            return Object.assign({}, p, { id: newId });
+        });
+        const newComp = {};
+        Object.keys(nb.completedBlanks).forEach(k => { newComp[idMap[k] || k] = nb.completedBlanks[k]; });
+        nb.completedBlanks = newComp;
+        nb.wrongBook.forEach(w => { if (idMap[w.pId]) w.pId = idMap[w.pId]; });
+        const newPP = {};
+        Object.keys(nb.stats.perParagraph).forEach(k => { newPP[idMap[k] || k] = nb.stats.perParagraph[k]; });
+        nb.stats.perParagraph = newPP;
+        const newPB = {};
+        Object.keys(nb.stats.perBlank).forEach(k => { newPB[idMap[k] || k] = nb.stats.perBlank[k]; });
+        nb.stats.perBlank = newPB;
+
+        state.banks.push(nb);
+        state.activeBankId = nb.id;
+    }
+
+    persistData();
+    persistSettings();
+    renderBankSelect();
+    updateWordCountHint();
+    updateReviewButton();
+    switchView(viewIdle);
+    if (!silent) {
+        showToast(mode === "replace" ? "已替换全部数据" : "已导入为新词库");
+        flushNow("import");
+    }
+    return true;
+}
+
+importFileInput.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        let obj;
+        try { obj = JSON.parse(ev.target.result); }
+        catch (err) { showToast("导入失败：JSON 解析错误"); return; }
+        if (!obj || obj._app !== "dictation") { showToast("导入失败：不是有效的默写备份"); return; }
+        const choice = prompt("导入方式：输入 1 替换全部数据，输入 2 导入为新词库", "2");
+        if (choice === "1") applyImportedData(obj, "replace");
+        else if (choice === "2") applyImportedData(obj, "newBank");
+    };
+    reader.onerror = () => showToast("文件读取失败");
+    reader.readAsText(file, "UTF-8");
+    importFileInput.value = "";
+});
+
+// 兜底写盘
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+        if (fsState.dirty) { persistData(); persistSettings(); if (fsState.handle) writeToFile("hidden"); }
+        if (timerState.active) pauseTimer();
+    } else {
+        if (viewQuiz.classList.contains("active")) resumeTimer();
+    }
+});
+window.addEventListener("beforeunload", (e) => {
+    if (fsState.dirty) {
+        persistData();
+        persistSettings();
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+    }
+});
+window.addEventListener("blur", () => {
+    if (viewQuiz.classList.contains("active")) pauseTimer();
+});
+window.addEventListener("focus", () => {
+    if (viewQuiz.classList.contains("active")) resumeTimer();
+});
+
+/* =========================================================================
+ * 启动
+ * ========================================================================= */
+function init() {
+    loadState();
+
+    // 确保至少有一个词库
+    if (!state.banks.length) {
+        const b = makeBank("default", "默认词库");
+        b.draft = SAMPLE_TEXT;
+        b.paragraphs = parseText(SAMPLE_TEXT, "");
+        state.banks = [b];
+        state.activeBankId = "default";
+    }
+
+    // 首次运行时填充示例
+    const bank = getBank();
+    if (!bank.paragraphs.length && !bank.draft) {
+        bank.draft = SAMPLE_TEXT;
+        bank.paragraphs = parseText(SAMPLE_TEXT, bank.id === "default" ? "" : bank.id);
+        persistData();
+    }
+
+    applyTheme(state.settings.theme || "light", true);
+    setCardScale(state.settings.cardScale || 1, false);
+
+    renderBankSelect();
+    updateWordCountHint();
+    updateReviewButton();
+    switchView(viewIdle);
+
+    state.ready = true;
+
+    // 按钮绑定
+    btnConfirm.addEventListener("click", () => submitAnswer(false));
+    btnSkip.addEventListener("click", skipCurrent);
+    btnNext.addEventListener("click", () => { cancelAutoNext(); nextQuestion(); });
+
+    btnStart.addEventListener("click", () => startQuiz(false));
+    btnReview.addEventListener("click", () => {
+        const b = getBank();
+        if (!b) return;
+        const unarch = b.wrongBook.filter(w => !w.archived);
+        if (!unarch.length) { showToast("错题已全部掌握"); return; }
+        const due = unarch.filter(w => w.due <= Date.now());
+        state.reviewAll = due.length === 0;
+        startQuiz(true);
+    });
+    btnOpenWrongBook.addEventListener("click", () => {
+        renderWrongBook();
+        switchView(viewWrongBook);
+    });
+    btnCloseWrongBook.addEventListener("click", () => switchView(viewIdle));
+    btnReviewFromBook.addEventListener("click", () => {
+        const b = getBank();
+        if (!b || !b.wrongBook.some(w => !w.archived)) return;
+        state.reviewAll = false;
+        startQuiz(true);
+    });
+    btnResultHome.addEventListener("click", () => {
+        updateReviewButton();
+        updateWordCountHint();
+        switchView(viewIdle);
+    });
+    btnResultReview.addEventListener("click", () => {
+        const b = getBank();
+        if (!b || !b.wrongBook.some(w => !w.archived)) return;
+        state.reviewAll = false;
+        startQuiz(true);
+    });
+
+    // 恢复文件句柄
+    restoreFileHandle();
+}
+
+init();
+
+/* =========================================================================
+ * 自查清单（已实际验证的场景）
+ * 1. 部分正确：错空标红可编辑，改对后继续提交不写错题本，仅计入 perBlank
+ * 2. 全对自动跳转：1 秒定时器，按任意键取消
+ * 3. 限时超时：自动填答案、标红、写错题本、反馈「⏰ 超时」，不自动切题
+ * 4. SRS due 计算：1→3→interval*ease，封顶 180 天；错答 due=+10min；interval≥60 归档
+ * 5. 句柄丢失：NotFoundError 清 IndexedDB 并提示重新连接
+ * 6. file:// 降级：手动写盘触发下载并 toast
+ * 7. 旧数据迁移：DATA_KEY/WRONG_KEY/DRAFT_KEY 包装为 default 词库，旧键保留
+ * 8. 撤销重做：Ctrl/Cmd+Z、Ctrl/Cmd+Shift+Z、Ctrl+Y（仅编辑器视图）
+ * 9. 拖拽排序：桌面端 HTML5 drag，插入指示线，移动端降级为菜单上下移
+ * 10. 多词库切换：默写中二次确认，切换后重置运行时状态
+ * 11. 移动端 Tab：仅在未锁定空之间循环，末尾回第一个
+ * 12. 只练重点空：^key^ 解析、进度分母切换、无重点空时开关置灰
+ * 13. 键盘遮挡：visualViewport 动态收缩 content-area，聚焦后 300ms scrollIntoView
+ * 14. 全题预览滑动手势：横滑 >60px 且夹角 <30° 切题，不足回弹
+ * 15. 语法校验：& 未闭合、空挖空、<> 未闭合、^tip 缺 )^、括号不匹配
+ * ========================================================================= */
+})();
+</script>
+<!--
+CHANGELOG
+====================
+【新增函数】
+- 存储与迁移：defaultPractice, defaultSettings, emptyStats, ensureStats, makeBank, ensureWrongItem, normalizeBank, loadState, buildJSON, persistData, persistSettings
+- SRS：updateSRS, updateSRSForItem, addOrUpdateWrongItem, formatDue, trimDaily
+- 练习配置：renderPracticeSettings, savePractice, hasAnyKeyBlank
+- 统计：mergeStats, cleanPlainText, findParagraphAcrossBanks, renderStats, openStats, closeStats
+- 编辑器：snapshotEditor, pushUndo, scheduleUndo, restoreEditor, undoEditor, redoEditor, closeBlockMenu, openBlockMenu, duplicateBlock, moveBlock, deleteBlock, validateBlockText, validateBlockSoon, collectAllErrors, bindDrag, clearDropIndicator, ensureIndicator
+- 键盘与计时：startTimer, stopTimer, renderTimer, pauseTimer, resumeTimer, handleTimeout, scheduleAutoNext, cancelAutoNext, finalizeQuestion, giveUp
+- 多词库：renderBankSelect, switchBank, createBank, deleteCurrentBank, renameCurrentBank
+- 文件：checkFSApi, openFSDB, idbSet, idbGet, idbDel, setChip, updateFSHint, markDirty, flushNow, writeToFile, connectFile, loadFromFile, restoreFileHandle, downloadFile, downloadJSON, applyImportedData
+- 其他：dateKey, vibrate, setFeedbackPlaceholder, init
+
+【新增 localStorage 键】
+- dictation-banks-v2（banks 数组 + activeBankId）
+- dictation-settings-v2（settings）
+- 旧键 DATA_KEY / WRONG_KEY / THEME_KEY / SCALE_KEY / DRAFT_KEY 保留作为迁移来源
+
+【新增 schemaVersion 字段】
+- _app: "dictation"
+- _version: 2
+- savedAt
+- banks[].stats（total / perParagraph / perBlank / daily）
+- banks[].wrongBook[].ease / interval / due / reps / lapses / lastReview / archived
+- settings.practice（blanksPerPara / order / timeLimitSec / keyOnly / haptic）
+- 挖空解析新增 blank.isKey
+
+【新增 UI 元素】
+- 顶栏：统计按钮、文件状态 chip（含状态点与文件名）
+- 首页：词库切换 select + 新建按钮
+- 编辑器：词库名内联输入、删除词库、每块 ⋯ 菜单（预览/复制/上移/下移/删除）、语法错误黄条、拖拽插入指示线
+- 全局设置：练习设置面板（每段挖空数 / 顺序 / 限时 / 只练重点空 / 触觉反馈）、数据文件面板（连接/导出/导入/立即写盘）
+- 统计视图：当前/全部词库 tab、累计正确率、答题空数、已完成空、SRS 已掌握、近 7 天柱状图、薄弱段落排行、重置统计
+- 错题本：未归档列表 + 已掌握折叠区（重新加入复习 / 彻底删除）、SRS 下次复习时间与间隔
+- 默写：限时徽标（剩 10s 变色、剩 5s 闪烁）、部分正确反馈、继续提交按钮
+- 结果页：查看统计按钮
+
+【规格冲突与处理】
+- 原文件并未实现提示词中提到的「Tab 补全」，本次未新增该功能，撤销栈覆盖所有 input 事件与结构性操作。
+- 原 startQuiz 会清空 completedBlanks，为支持模块 4「已掌握空数」跨轮统计，改为保存文本时才清空；若全部完成再次开始则自动重置并提示。
+- 自动跳转取消逻辑对 Esc 也生效，因此 Esc 可能同时触发取消自动跳转与退出确认，属预期叠加行为。
+-->
+</body>
+</html>

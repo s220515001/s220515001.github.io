@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>初中物理实验室 · Rapier 2D</title>
+<style>
+  :root {
+    --bg: #f8fafc; --panel: #ffffff; --border: #e2e8f0;
+    --text: #0f172a; --muted: #64748b; --accent: #2563eb;
+    --accent-soft: #eff6ff; --danger: #dc2626;
+    --toolbar-h: 48px; --status-h: 30px;
+    --lib-w: 220px; --prop-w: 280px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; font-size: 13px; color: var(--text); background: var(--bg); }
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; font-size: 12px; }
+
+  #toolbar { height: var(--toolbar-h); display: flex; align-items: center; gap: 2px; padding: 0 8px; background: var(--panel); border-bottom: 1px solid var(--border); overflow-x: auto; white-space: nowrap; user-select: none; position: relative; z-index: 10; }
+  #toolbar .tb-group { display: flex; align-items: center; gap: 1px; margin-right: 4px; }
+  .tb-btn { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text); font-size: 12px; transition: background .12s; }
+  .tb-btn:hover { background: #f1f5f9; }
+  .tb-btn.active { background: var(--accent-soft); border-color: #bfdbfe; color: var(--accent); }
+  .tb-btn.danger:hover { background: #fef2f2; color: var(--danger); }
+  .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+
+  #main { display: flex; height: calc(100vh - var(--toolbar-h) - var(--status-h)); }
+
+  #library { width: var(--lib-w); flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 6px; }
+  .lib-group { margin-bottom: 10px; }
+  .lib-group-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; padding: 4px 6px; margin-bottom: 4px; }
+  .lib-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .lib-item { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 54px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; font-size: 11px; cursor: grab; transition: all .12s; user-select: none; text-align: center; line-height: 1.2; padding: 2px; }
+  .lib-item:hover { border-color: #93c5fd; background: var(--accent-soft); }
+  .lib-item.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px #bfdbfe; }
+  .lib-item .lib-icon { font-size: 18px; margin-bottom: 2px; }
+  .lib-item .lib-star { font-size: 9px; color: #f59e0b; }
+
+  #canvas-wrap { flex: 1; position: relative; overflow: hidden; background: #fff; cursor: default; }
+  #canvas-wrap.mode-pan { cursor: grab; }
+  #canvas-wrap.mode-pan.dragging { cursor: grabbing; }
+  #canvas-wrap.mode-place { cursor: crosshair; }
+  #canvas-wrap.mode-force { cursor: cell; }
+  #canvas-wrap.mode-resize { cursor: ew-resize; }
+  #canvas { display: block; width: 100%; height: 100%; }
+
+  #properties { width: var(--prop-w); flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--border); overflow-y: auto; padding: 10px; font-size: 12px; }
+  .prop-section { margin-bottom: 12px; }
+  .prop-section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; padding-bottom: 4px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+  .prop-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .prop-row label { flex: 0 0 70px; color: var(--muted); font-size: 11px; }
+  .prop-row input, .prop-row select { flex: 1; min-width: 0; height: 26px; padding: 0 6px; border: 1px solid var(--border); border-radius: 4px; background: #fff; color: var(--text); font-size: 11px; }
+  .prop-row input:focus, .prop-row select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px #dbeafe; }
+  .prop-readonly { color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
+  .prop-empty { color: #94a3b8; text-align: center; padding: 30px 10px; font-size: 12px; line-height: 1.6; }
+  .prop-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 5px; background: #fff; color: var(--text); font-size: 11px; }
+  .prop-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+  .prop-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .prop-btn.primary:hover { background: #1d4ed8; }
+  .prop-btn.danger { color: var(--danger); }
+  .prop-btn.danger:hover { background: #fef2f2; border-color: #fecaca; }
+  .force-list-item { display: flex; align-items: center; gap: 4px; padding: 4px 6px; background: #f8fafc; border-radius: 5px; margin-bottom: 3px; font-size: 11px; }
+  .force-list-item input { width: 48px; height: 22px; padding: 0 4px; border: 1px solid var(--border); border-radius: 3px; font-size: 11px; }
+  .force-list-item .del { margin-left: auto; color: var(--danger); background: none; border: none; font-size: 14px; cursor: pointer; padding: 0 2px; }
+
+  #statusbar { height: var(--status-h); display: flex; align-items: center; gap: 16px; padding: 0 12px; background: var(--panel); border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); font-family: ui-monospace, monospace; user-select: none; }
+  #statusbar .sb-item { display: flex; align-items: center; gap: 4px; }
+  #statusbar .sb-val { color: var(--text); font-weight: 600; }
+  #statusbar .sb-warn { color: #f59e0b; display: none; }
+  #statusbar .sb-warn.on { display: inline; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.2); width: 100%; max-width: 720px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .modal-header h3 { font-size: 15px; }
+  .modal-close { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; line-height: 1; padding: 0 4px; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--border); }
+  .modal-footer .prop-btn { height: 32px; padding: 0 16px; font-size: 12px; }
+
+  .example-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .example-cat-btn { padding: 5px 12px; border: 1px solid var(--border); border-radius: 20px; background: #fff; font-size: 12px; cursor: pointer; }
+  .example-cat-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .example-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .example-card { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; cursor: pointer; transition: all .12s; }
+  .example-card:hover { border-color: #93c5fd; background: var(--accent-soft); }
+  .example-card strong { display: block; font-size: 12px; margin-bottom: 2px; }
+  .example-card span { font-size: 11px; color: var(--muted); }
+
+  .json-textarea { width: 100%; min-height: 260px; font-family: ui-monospace, monospace; font-size: 11px; line-height: 1.5; padding: 10px; border: 1px solid var(--border); border-radius: 6px; resize: vertical; background: #f8fafc; color: var(--text); }
+  .json-textarea:focus { outline: none; border-color: var(--accent); }
+
+  .gravity-form .prop-row { margin-bottom: 10px; }
+  .gravity-form .prop-row label { flex: 0 0 90px; font-size: 12px; }
+  .gravity-form .prop-row input, .gravity-form .prop-row select { height: 30px; font-size: 12px; }
+
+  .toast { position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%) translateY(10px); background: #0f172a; color: #fff; padding: 8px 18px; border-radius: 8px; font-size: 12px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 200; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .assumption-bar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,.92); border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-size: 10px; color: var(--muted); pointer-events: none; white-space: nowrap; z-index: 5; backdrop-filter: blur(4px); }
+  .assumption-bar b { color: #334155; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="tb-group">
+    <button class="tb-btn" id="btnPan" title="平移观察 (按住空格)">✋ 平移</button>
+    <button class="tb-btn" id="btnPlay" title="播放/暂停 (单击空格)">▶ 播放</button>
+    <button class="tb-btn" id="btnStep" title="单步前进 (.)">⏭ 单步</button>
+    <button class="tb-btn" id="btnSlow" title="慢放切换 (-)">🐢 1x</button>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="tb-btn" id="btnForces" title="受力分析 (F)">🔴 受力</button>
+    <button class="tb-btn" id="btnVectors" title="速度矢量 (V)">➡ 矢量</button>
+    <button class="tb-btn" id="btnTrail" title="轨迹拖尾 (T)">📈 轨迹</button>
+    <button class="tb-btn active" id="btnGrid" title="网格 (G)">📐 网格</button>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="tb-btn" id="btnRotate" title="单击 R 旋转 90°；按住 R 拖动 = 无极旋转">↺ 旋转</button>
+    <button class="tb-btn danger" id="btnDelete" title="删除 (Del)">🗑 删除</button>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="tb-btn" id="btnGravity" title="重力环境">🌍 重力</button>
+    <button class="tb-btn" id="btnExamples" title="示例库">📚 示例</button>
+    <button class="tb-btn" id="btnJSON" title="JSON 导入导出">💾 JSON</button>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <button class="tb-btn" id="btnUndo" title="撤销 (Ctrl+Z)">↩ 撤销</button>
+    <button class="tb-btn danger" id="btnClear" title="清空画布">清空</button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="library"></div>
+  <div id="canvas-wrap" class="mode-place">
+    <canvas id="canvas"></canvas>
+    <div class="assumption-bar">初中物理简化假设：g=10 N/kg · 忽略空气阻力 · 绳不可伸长、质量忽略 · 滑轮摩擦忽略 · 物体不变形</div>
+  </div>
+  <div id="properties">
+    <div class="prop-empty">选中一个物体<br>或从左侧元件库添加</div>
+  </div>
+</div>
+
+<div id="statusbar">
+  <span class="sb-item">刚体 <span class="sb-val" id="sbBodies">0</span></span>
+  <span class="sb-item">约束 <span class="sb-val" id="sbConstraints">0</span></span>
+  <span class="sb-item">接触 <span class="sb-val" id="sbContacts">0</span></span>
+  <span class="sb-item">仿真时间 <span class="sb-val" id="sbTime">0.00</span> s</span>
+  <span class="sb-warn" id="sbEnergyWarn">⚠ 能量异常</span>
+</div>
+
+<div class="modal-overlay" id="modalExamples">
+  <div class="modal">
+    <div class="modal-header"><h3>📚 示例库</h3><button class="modal-close" data-close="modalExamples">×</button></div>
+    <div class="modal-body" id="examplesBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGravity">
+  <div class="modal">
+    <div class="modal-header"><h3>🌍 重力环境设置</h3><button class="modal-close" data-close="modalGravity">×</button></div>
+    <div class="modal-body">
+      <div class="gravity-form">
+        <div class="prop-row"><label>星球预设</label>
+          <select id="gravityPlanet">
+            <option value="earth">地球 (g = 10 N/kg)</option>
+            <option value="moon">月球 (g = 1.6 N/kg)</option>
+            <option value="mars">火星 (g = 3.7 N/kg)</option>
+            <option value="jupiter">木星 (g = 24.8 N/kg)</option>
+            <option value="sun">太阳 (g = 274 N/kg)</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+        <div class="prop-row"><label>g (N/kg)</label><input type="number" id="gravityCustomG" min="0" max="500" step="0.1" value="10"></div>
+        <div class="prop-row"><label>重力方向</label>
+          <select id="gravityDirection">
+            <option value="down">竖直向下</option>
+            <option value="right">水平向右（演示用）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="prop-btn" data-close="modalGravity">取消</button>
+      <button class="prop-btn primary" id="gravityApply">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalJSON">
+  <div class="modal">
+    <div class="modal-header"><h3>💾 JSON 导入 / 导出</h3><button class="modal-close" data-close="modalJSON">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">导出当前场景为 JSON，或粘贴 JSON 后导入（会校验数据并提示错误）。</p>
+      <textarea class="json-textarea" id="jsonText"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="prop-btn" id="jsonExport">导出</button>
+      <button class="prop-btn primary" id="jsonImport">导入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+/* ═════════════ 0. 启动 Rapier ═════════════ */
+let RAPIER = null;
+try {
+  RAPIER = await import('https://cdn.jsdelivr.net/npm/@dimforge/rapier2d-compat@0.19.3/rapier.mjs');
+  await RAPIER.init();
+} catch (e) {
+  document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#b91c1c;"><h2>物理引擎加载失败</h2><p>请检查网络连接后刷新页面。</p><pre style="font-size:11px;color:#64748b;">' + (e && e.message ? e.message : e) + '</pre></div>';
+  throw e;
+}
+
+/* ═════════════ 1. 常量与工具 ═════════════ */
+const PX_PER_M = 100;
+const GRID_PX = 20;
+const FIXED_DT = 1 / 120;
+const MAX_TRAIL = 200;
+const MAX_UNDO = 60;
+const FORCE_ARROW_SCALE = 8;
+const GRAVITY_PRESETS = { earth: 10, moon: 1.6, mars: 3.7, jupiter: 24.8, sun: 274 };
+const FORCE_COLORS = {
+  gravity: '#1e40af', normal: '#15803d', friction: '#b91c1c',
+  tension: '#c2410c', spring: '#7e22ce', buoyancy: '#0e7490', external: '#a16207'
+};
+
+let nextId = 1;
+function uid() { return nextId++; }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function snap(v) { return Math.round(v / GRID_PX) * GRID_PX; }
+function fmt(n, d = 1) { return Number(n).toFixed(d); }
+
+/* ═════════════ 2. Engine 适配层 ═════════════ */
+const Engine = {
+  world: null,
+  eventQueue: null,
+  gravity: { g: 10, direction: 'down' },
+  _contactForceCache: new Map(),
+  _jointForceCache: new Map(),
+  _bodyMap: new Map(),
+  _colliderMap: new Map(),
+  _constraintMap: new Map(),
+  _lastStepContacts: 0,
+
+  init(g, dir) {
+    if (this.world) this.world.free();
+    const gv = this._gravityVector(g, dir);
+    this.world = new RAPIER.World({ x: gv.x, y: gv.y });
+    this.world.timestep = FIXED_DT;
+    this.eventQueue = new RAPIER.EventQueue(true);
+    this.gravity = { g, direction: dir };
+    this._contactForceCache.clear();
+    this._jointForceCache.clear();
+    this._bodyMap.clear();
+    this._colliderMap.clear();
+    this._constraintMap.clear();
+  },
+
+  _gravityVector(g, dir) {
+    return dir === 'right' ? { x: g, y: 0 } : { x: 0, y: -g };
+  },
+
+  setGravity(g, dir) {
+    this.gravity = { g, direction: dir };
+    const gv = this._gravityVector(g, dir);
+    this.world.gravity = { x: gv.x, y: gv.y };
+    this._bodyMap.forEach(rb => { if (rb.isDynamic()) rb.wakeUp(); });
+  },
+
+  createBody(opts) {
+    const { id, type, x, y, w, h, radius, mass, mu, restitution, isStatic, angle } = opts;
+    const rbDesc = isStatic
+      ? RAPIER.RigidBodyDesc.fixed().setTranslation(x, y).setRotation(angle || 0)
+      : RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y).setRotation(angle || 0);
+    if (type === 'float') rbDesc.setLinearDamping(1.5);
+    const rb = this.world.createRigidBody(rbDesc);
+    if (isStatic) rb.wakeUp();
+
+    let colliderDesc = null;
+    if (type === 'ball') {
+      colliderDesc = RAPIER.ColliderDesc.ball(Math.max(0.01, (radius || 18) / PX_PER_M));
+    } else if (type === 'pulley' || type === 'pulley_mov') {
+      colliderDesc = RAPIER.ColliderDesc.ball(Math.max(0.01, (radius || 18) / PX_PER_M));
+    } else if (type === 'incline') {
+      const hw = (w / 2) / PX_PER_M, hh = (h / 2) / PX_PER_M;
+      const verts = new Float32Array([ -hw, -hh, hw, -hh, hw, hh ]);
+      colliderDesc = RAPIER.ColliderDesc.convexHull(verts);
+      if (!colliderDesc) colliderDesc = RAPIER.ColliderDesc.cuboid(hw, hh);
+    } else if (type === 'liquid') {
+      const hw = ((w || 160) / 2) / PX_PER_M, hh = ((h || 140) / 2) / PX_PER_M;
+      colliderDesc = RAPIER.ColliderDesc.cuboid(hw, hh);
+      colliderDesc.setSensor(true); 
+    } else {
+      const hw = ((w || 40) / 2) / PX_PER_M, hh = ((h || 40) / 2) / PX_PER_M;
+      colliderDesc = RAPIER.ColliderDesc.cuboid(Math.max(0.005, hw), Math.max(0.005, hh));
+    }
+
+    colliderDesc.setFriction(mu != null ? mu : 0.5);
+    colliderDesc.setRestitution(restitution != null ? restitution : 0.1);
+    colliderDesc.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS);
+    colliderDesc.setContactForceEventThreshold(0.01);
+    if (mass != null && !isStatic && type !== 'liquid') {
+      try { colliderDesc.setMass(Math.max(0.001, mass)); } catch (_) {}
+    }
+
+    const collider = this.world.createCollider(colliderDesc, rb);
+    this._bodyMap.set(id, rb);
+    this._colliderMap.set(collider.handle, id);
+
+    if (!isStatic && opts.vx != null && opts.vy != null) {
+      rb.setLinvel({ x: opts.vx, y: opts.vy }, true);
+    }
+    return rb;
+  },
+
+  removeBody(id) {
+    const rb = this._bodyMap.get(id);
+    if (!rb) return;
+    for (const [cid, c] of this._constraintMap) {
+      if (c.bodyA === id || c.bodyB === id) {
+        try { this.world.removeImpulseJoint(c.joint, true); } catch (_) {}
+        this._constraintMap.delete(cid);
+      }
+    }
+    this.world.removeRigidBody(rb);
+    this._bodyMap.delete(id);
+    for (const [ch, bid] of this._colliderMap) {
+      if (bid === id) this._colliderMap.delete(ch);
+    }
+  },
+
+  createRope(bodyAId, bodyBId, anchorA, anchorB, length, maxForce) {
+    const rbA = this._bodyMap.get(bodyAId);
+    const rbB = this._bodyMap.get(bodyBId);
+    if (!rbA || !rbB) return null;
+    const desc = RAPIER.JointData.rope(length, anchorA, anchorB);
+    const joint = this.world.createImpulseJoint(desc, rbA, rbB, true);
+    const cid = uid();
+    this._constraintMap.set(cid, { joint, bodyA: bodyAId, bodyB: bodyBId, type: 'rope', anchorA, anchorB, length, maxForce });
+    return cid;
+  },
+
+  createSpring(bodyAId, bodyBId, anchorA, anchorB, restLength, stiffness, damping) {
+    const rbA = this._bodyMap.get(bodyAId);
+    const rbB = this._bodyMap.get(bodyBId);
+    if (!rbA || !rbB) return null;
+    const desc = RAPIER.JointData.spring(restLength, stiffness, damping != null ? damping : 0.5, anchorA, anchorB);
+    const joint = this.world.createImpulseJoint(desc, rbA, rbB, true);
+    const cid = uid();
+    this._constraintMap.set(cid, { joint, bodyA: bodyAId, bodyB: bodyBId, type: 'spring', anchorA, anchorB, restLength, stiffness, damping });
+    return cid;
+  },
+
+  removeConstraint(cid) {
+    const c = this._constraintMap.get(cid);
+    if (!c) return;
+    try { this.world.removeImpulseJoint(c.joint, true); } catch (_) {}
+    this._constraintMap.delete(cid);
+  },
+
+  step() {
+    if (!this.world) return;
+    this.world.step(this.eventQueue);
+
+    this._contactForceCache.clear();
+    let contactCount = 0;
+    const contactPairs = new Map();
+
+    this.eventQueue.drainContactForceEvents(event => {
+      contactCount++;
+      const h1 = event.collider1(), h2 = event.collider2();
+      const id1 = this._colliderMap.get(h1), id2 = this._colliderMap.get(h2);
+      if (id1 == null || id2 == null) return;
+
+      const tf = event.totalForce();
+      const mag = Math.hypot(tf.x, tf.y);
+      if (mag < 1e-3) return;
+
+      let nx = 0, ny = 1;
+      try {
+        const m = event.maxForceDirection();
+        if (m && Math.hypot(m.x, m.y) > 1e-6) {
+          const l = Math.hypot(m.x, m.y);
+          nx = m.x / l; ny = m.y / l;
+        }
+      } catch (_) {}
+
+      const nProj = tf.x * nx + tf.y * ny;
+      if (nProj < 0) { nx = -nx; ny = -ny; }
+
+      const tx = -ny, ty = nx;
+      const nForce = Math.abs(nProj);
+      const tForce = Math.abs(tf.x * tx + tf.y * ty);
+
+      for (const [selfId, otherId, sign] of [[id1, id2, 1], [id2, id1, -1]]) {
+        const key = `${selfId}-${otherId}`;
+        if (!contactPairs.has(key)) {
+          contactPairs.set(key, { selfId, otherId, nForce: 0, tForce: 0, nx: nx * sign, ny: ny * sign });
+        }
+        const rec = contactPairs.get(key);
+        rec.nForce += nForce;
+        rec.tForce += tForce;
+      }
+    });
+
+    for (const rec of contactPairs.values()) {
+      if (!this._contactForceCache.has(rec.selfId)) this._contactForceCache.set(rec.selfId, []);
+      this._contactForceCache.get(rec.selfId).push({
+        normalForce: rec.nForce,
+        tangentForce: rec.tForce,
+        normal: { x: rec.nx, y: rec.ny },
+        tangent: { x: -rec.ny, y: rec.nx },
+        otherId: rec.otherId
+      });
+    }
+    this._lastStepContacts = contactCount;
+
+    this._jointForceCache.clear();
+    for (const [cid, c] of this._constraintMap) {
+      const rbA = this._bodyMap.get(c.bodyA), rbB = this._bodyMap.get(c.bodyB);
+      if (!rbA || !rbB) continue;
+      const pA = rbA.translation(), pB = rbB.translation();
+      const dx = pB.x - pA.x, dy = pB.y - pA.y;
+      const dist = Math.hypot(dx, dy) || 1e-6;
+      const dir = { x: dx / dist, y: dy / dist };
+      let forceMag = 0;
+      if (c.type === 'spring') {
+        const delta = dist - c.restLength;
+        forceMag = Math.abs(c.stiffness * delta);
+      } else if (c.type === 'rope') {
+        if (dist > c.length * 1.001) {
+          const vA = rbA.linvel(), vB = rbB.linvel();
+          const relV = Math.abs((vB.x - vA.x) * dir.x + (vB.y - vA.y) * dir.y);
+          const mAvg = (rbA.mass() + rbB.mass()) / 2;
+          forceMag = Math.min(c.maxForce || 1000, Math.max(1, relV * 50 + mAvg * 10));
+        }
+      }
+      this._jointForceCache.set(cid, { force: forceMag, direction: dir, type: c.type });
+    }
+  },
+
+  getBodyState(id) {
+    const rb = this._bodyMap.get(id);
+    if (!rb) return null;
+    const t = rb.translation(), v = rb.linvel(), a = rb.angvel();
+    return { x: t.x, y: t.y, vx: v.x, vy: v.y, angle: rb.rotation(), angvel: a, mass: rb.mass(), isSleeping: rb.isSleeping() };
+  },
+
+  getContactForces(id) { return this._contactForceCache.get(id) || []; },
+
+  getJointForces(id) {
+    const out = [];
+    for (const [cid, c] of this._constraintMap) {
+      if (c.bodyA === id || c.bodyB === id) {
+        const f = this._jointForceCache.get(cid);
+        if (f) out.push({ constraintId: cid, ...f, bodyA: c.bodyA, bodyB: c.bodyB });
+      }
+    }
+    return out;
+  },
+
+  applyForce(id, fx, fy, wake = true) {
+    const rb = this._bodyMap.get(id);
+    if (rb && rb.isDynamic()) rb.addForce({ x: fx, y: fy }, wake);
+  },
+
+  applyImpulse(id, ix, iy, wake = true) {
+    const rb = this._bodyMap.get(id);
+    if (rb && rb.isDynamic()) rb.applyImpulse({ x: ix, y: iy }, wake);
+  },
+
+  setVelocity(id, vx, vy) {
+    const rb = this._bodyMap.get(id);
+    if (rb) rb.setLinvel({ x: vx, y: vy }, true);
+  },
+
+  wakeAll() { this._bodyMap.forEach(rb => rb.wakeUp()); },
+  getContactCount() { return this._lastStepContacts; }
+};
+
+/* ═════════════ 3. 场景数据模型 ═════════════ */
+const Scene = {
+  bodies: [],
+  constraints: [],
+  forces: [],
+  settings: {
+    showForces: false, showVectors: false, showTrail: false, showGrid: true,
+    playing: false, timeScale: 1
+  },
+  gravity: { g: 10, direction: 'down', planet: 'earth' },
+  time: 0,
+  trails: new Map(),
+  selectedIds: new Set(),
+  nextId: 1,
+
+  reset() {
+    this.bodies = [];
+    this.constraints = [];
+    this.forces = [];
+    this.time = 0;
+    this.trails.clear();
+    this.selectedIds.clear();
+    this.nextId = 1;
+    Engine.init(this.gravity.g, this.gravity.direction);
+    
+    // 自动添加一个极其宽大的系统地面 (无限延伸)
+    this.addBody({ 
+      type: 'ground', name: '大地', x: 0, y: -0.5, w: 100000, h: 1, isStatic: true, mu: 0.5, color: '#94a3b8', isSystem: true 
+    });
+  },
+
+  allocId() { return this.nextId++; },
+
+  addBody(body) {
+    body.id = this.allocId();
+    this.bodies.push(body);
+    Engine.createBody({ ...body, id: body.id });
+    return body;
+  },
+
+  removeBody(id) {
+    const affected = this.constraints.filter(c => c.bodyA === id || c.bodyB === id);
+    for (const c of affected) Engine.removeConstraint(c.id);
+    this.constraints = this.constraints.filter(c => c.bodyA !== id && c.bodyB !== id);
+    this.bodies = this.bodies.filter(b => b.id !== id);
+    this.forces = this.forces.filter(f => f.targetId !== id);
+    Engine.removeBody(id);
+    this.trails.delete(id);
+    this.selectedIds.delete(id);
+  },
+
+  getBody(id) { return this.bodies.find(b => b.id === id); }
+};
+
+/* ═════════════ 4. 教学语义层 ═════════════ */
+const Pedagogical = {
+  getForces(bodyId) {
+    const body = Scene.getBody(bodyId);
+    if (!body) return [];
+    const state = Engine.getBodyState(bodyId);
+    if (!state) return [];
+    const forces = [];
+    const g = Scene.gravity.g;
+    const gDir = Scene.gravity.direction === 'right' ? { x: 1, y: 0 } : { x: 0, y: -1 };
+
+    if (!body.isStatic && body.mass) {
+      forces.push({ type: 'gravity', label: 'G', magnitude: body.mass * g, direction: { ...gDir }, color: FORCE_COLORS.gravity, point: { x: state.x, y: state.y } });
+    }
+
+    const contacts = Engine.getContactForces(bodyId);
+    for (const c of contacts) {
+      let normX = c.normal.x, normY = c.normal.y;
+      const otherBody = Scene.getBody(c.otherId);
+      
+      // 几何法线修正：地面/墙壁/斜面
+      if (otherBody && (otherBody.isStatic || otherBody.isSystem)) {
+        if (otherBody.type === 'ground') { normX = 0; normY = 1; }
+        else if (otherBody.type === 'wall') {
+          const s1 = state, s2 = Engine.getBodyState(otherBody.id);
+          normX = (s1 && s2 && s1.x > s2.x) ? 1 : -1; normY = 0;
+        } else if (otherBody.type === 'incline') {
+          const a = otherBody.angle || 0;
+          normX = -Math.sin(a); normY = Math.cos(a);
+        }
+      }
+
+      if (c.normalForce > 0.05) {
+        forces.push({ type: 'normal', label: 'N', magnitude: c.normalForce, direction: { x: normX, y: normY }, color: FORCE_COLORS.normal, point: { x: state.x, y: state.y } });
+      }
+      if (c.tangentForce > 0.05) {
+        let tanX = -normY, tanY = normX;
+        const relV = { x: state.vx, y: state.vy };
+        const dot = relV.x * tanX + relV.y * tanY;
+        if (dot < 0) { tanX = -tanX; tanY = -tanY; }
+        forces.push({ type: 'friction', label: 'f', magnitude: c.tangentForce, direction: { x: tanX, y: tanY }, color: FORCE_COLORS.friction, point: { x: state.x, y: state.y } });
+      }
+    }
+
+    const jointForces = Engine.getJointForces(bodyId);
+    for (const jf of jointForces) {
+      if (jf.force < 0.05) continue;
+      const isA = jf.bodyA === bodyId;
+      const dir = isA ? { x: jf.direction.x, y: jf.direction.y } : { x: -jf.direction.x, y: -jf.direction.y };
+      if (jf.type === 'rope') forces.push({ type: 'tension', label: 'T', magnitude: jf.force, direction: dir, color: FORCE_COLORS.tension, point: { x: state.x, y: state.y } });
+      else if (jf.type === 'spring') forces.push({ type: 'spring', label: 'F弹', magnitude: jf.force, direction: dir, color: FORCE_COLORS.spring, point: { x: state.x, y: state.y } });
+    }
+
+    const buoy = this._computeBuoyancy(body, state);
+    if (buoy && buoy.magnitude > 0.05) {
+      forces.push({ type: 'buoyancy', label: 'F浮', magnitude: buoy.magnitude, direction: { x: 0, y: 1 }, color: FORCE_COLORS.buoyancy, point: { x: state.x, y: state.y } });
+    }
+
+    const userForces = Scene.forces.filter(f => f.targetId === bodyId);
+    for (const uf of userForces) {
+      const rad = uf.angle * Math.PI / 180;
+      forces.push({ type: 'external', label: `F${uf.id}`, magnitude: uf.magnitude, direction: { x: Math.cos(rad), y: Math.sin(rad) }, color: FORCE_COLORS.external, point: { x: state.x, y: state.y } });
+    }
+    return forces;
+  },
+
+  _computeBuoyancy(body, state) {
+    if (body.type === 'liquid' || body.isStatic) return null;
+    const liquid = Scene.bodies.find(b => b.type === 'liquid');
+    if (!liquid) return null;
+    const surfaceY = liquid.y + (liquid.h || 140) / 2 / PX_PER_M;
+    if (state.y >= surfaceY) return null;
+    let submergedArea = 0;
+    if (body.type === 'ball') {
+      const r = (body.radius || 18) / PX_PER_M;
+      const depth = surfaceY - state.y;
+      if (depth >= 2 * r) submergedArea = Math.PI * r * r;
+      else if (depth > 0) submergedArea = 2 * r * Math.min(depth, 2 * r) * 0.8;
+    } else {
+      const w = (body.w || 40) / PX_PER_M;
+      const h = (body.h || 40) / PX_PER_M;
+      const topY = state.y + h / 2;
+      const bottomY = state.y - h / 2;
+      const subTop = Math.min(topY, surfaceY);
+      const subBottom = Math.max(bottomY, -Infinity);
+      const depth = Math.max(0, subTop - subBottom);
+      submergedArea = w * depth;
+    }
+    const rho = liquid.density || 1000;
+    return { magnitude: rho * Scene.gravity.g * submergedArea * 0.005 };
+  },
+
+  getNetForce(bodyId) {
+    const forces = this.getForces(bodyId);
+    let fx = 0, fy = 0;
+    for (const f of forces) { fx += f.direction.x * f.magnitude; fy += f.direction.y * f.magnitude; }
+    return { x: fx, y: fy, magnitude: Math.hypot(fx, fy) };
+  },
+
+  classifyMotion(bodyId) {
+    const state = Engine.getBodyState(bodyId);
+    if (!state || state.isSleeping) return '静止';
+    const speed = Math.hypot(state.vx, state.vy);
+    const net = this.getNetForce(bodyId);
+    if (speed < 0.05 && net.magnitude < 0.1) return '静止';
+    if (speed > 0.05 && net.magnitude < 0.1) return '匀速';
+    return null;
+  }
+};
+
+/* ═════════════ 5. 渲染器 ═════════════ */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const canvasWrap = document.getElementById('canvas-wrap');
+let view = { panX: 0, panY: 0, scale: 1 };
+let isPanning = false, panStart = null;
+let activeResizeHandle = null;
+
+function resizeCanvas() {
+  const rect = canvasWrap.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = rect.height * devicePixelRatio;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function toScreen(wx, wy) {
+  return {
+    x: view.panX + wx * PX_PER_M * view.scale,
+    y: view.panY - wy * PX_PER_M * view.scale
+  };
+}
+function toWorld(sx, sy) {
+  return {
+    x: (sx - view.panX) / (PX_PER_M * view.scale),
+    y: (view.panY - sy) / (PX_PER_M * view.scale)
+  };
+}
+
+function drawInfiniteGround() {
+  const p0 = toScreen(0, 0); // y=0 的屏幕 y
+  const w = canvas.width / devicePixelRatio, h = canvas.height / devicePixelRatio;
+  
+  if (p0.y < h) {
+    ctx.save();
+    // 天空背景
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, p0.y);
+    // 地面背景
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(0, p0.y, w, h - p0.y);
+    // 分界线
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, p0.y); ctx.lineTo(w, p0.y); ctx.stroke();
+    
+    // 土壤斜纹
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    for (let x = -((p0.y % 15) + 15); x < w; x += 15) {
+      ctx.beginPath();
+      ctx.moveTo(x, p0.y + 15);
+      ctx.lineTo(x + 15, p0.y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function drawGrid() {
+  if (!Scene.settings.showGrid) return;
+  const step = GRID_PX * view.scale;
+  if (step < 4) return;
+  const w = canvas.width / devicePixelRatio, h = canvas.height / devicePixelRatio;
+  const p0 = toScreen(0, 0);
+  
+  ctx.save();
+  ctx.strokeStyle = '#f1f5f9'; ctx.lineWidth = 1;
+  const offX = ((view.panX % step) + step) % step;
+  const offY = ((view.panY % step) + step) % step;
+  ctx.beginPath();
+  
+  // 只画地面以上的网格
+  const maxGridY = Math.min(h, p0.y);
+  for (let x = offX; x < w; x += step) { 
+     ctx.moveTo(x, 0); 
+     ctx.lineTo(x, maxGridY); 
+  }
+  for (let y = offY; y < maxGridY; y += step) { 
+     ctx.moveTo(0, y); 
+     ctx.lineTo(w, y); 
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+  c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+  c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y);
+  c.closePath();
+}
+
+function drawBody(body) {
+  if (body.isSystem) return; // 系统级大地不画，由 drawInfiniteGround 替代
+
+  const state = Engine.getBodyState(body.id);
+  if (!state) return;
+  const p = toScreen(state.x, state.y);
+  const selected = Scene.selectedIds.has(body.id);
+
+  ctx.save();
+  if (selected) {
+    ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+    if (body.type === 'ball' || body.type === 'pulley' || body.type === 'pulley_mov') {
+      const r = (body.radius || 18) * view.scale;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      const w = (body.w || 40) * view.scale, h = (body.h || 40) * view.scale;
+      ctx.strokeRect(p.x - w / 2 - 6, p.y - h / 2 - 6, w + 12, h + 12);
+      
+      // 绘制两侧拉伸端点 (Handles)
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#3b82f6';
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      const handles = getResizeHandles(body);
+      for (const h of handles) {
+        ctx.beginPath();
+        ctx.arc(h.sx, h.sy, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  ctx.rotate(-state.angle);
+
+  if (body.type === 'ball') {
+    const r = (body.radius || 18) * view.scale;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = body.color || '#e2e8f0'; ctx.fill();
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5; ctx.stroke();
+  } else if (body.type === 'incline') {
+    const w = (body.w || 100) * view.scale, h = (body.h || 60) * view.scale;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, h / 2); ctx.lineTo(w / 2, h / 2); ctx.lineTo(w / 2, -h / 2); ctx.closePath();
+    ctx.fillStyle = body.color || '#e2e8f0'; ctx.fill();
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5; ctx.stroke();
+  } else if (body.type === 'ground') {
+    const w = (body.w || 400) * view.scale, h = (body.h || 10) * view.scale;
+    ctx.fillStyle = '#f1f5f9'; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2); ctx.lineTo(w / 2, -h / 2); ctx.stroke();
+    ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+    for (let x = -w / 2; x < w / 2; x += 8) {
+      ctx.beginPath(); ctx.moveTo(x, -h / 2); ctx.lineTo(x + 6, -h / 2 + 6); ctx.stroke();
+    }
+  } else if (body.type === 'wall') {
+    const w = (body.w || 10) * view.scale, h = (body.h || 200) * view.scale;
+    ctx.fillStyle = '#f1f5f9'; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2, -h / 2, w, h);
+  } else if (body.type === 'liquid') {
+    const w = (body.w || 160) * view.scale, h = (body.h || 140) * view.scale;
+    ctx.fillStyle = 'rgba(14,116,144,0.18)'; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.strokeRect(-w / 2, -h / 2, w, h);
+    ctx.strokeStyle = '#0e7490'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(-w / 2, -h / 2 + 4); ctx.lineTo(w / 2, -h / 2 + 4); ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (body.type === 'pulley' || body.type === 'pulley_mov') {
+    const r = (body.radius || 18) * view.scale;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#f8fafc'; ctx.fill();
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fillStyle = '#0f172a'; ctx.fill();
+  } else {
+    const w = (body.w || 40) * view.scale, h = (body.h || 40) * view.scale;
+    roundRect(ctx, -w / 2, -h / 2, w, h, 3 * view.scale);
+    ctx.fillStyle = body.color || '#e2e8f0'; ctx.fill();
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  ctx.restore();
+
+  if (body.name) {
+    ctx.save();
+    ctx.font = `11px monospace`;
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    const halfH = (body.h || (body.radius ? body.radius * 2 : 40)) * view.scale / 2;
+    ctx.fillText(body.name, p.x, p.y - halfH - 8);
+    ctx.restore();
+  }
+}
+
+// 获取物体两端的控制点
+function getResizeHandles(body) {
+  if (body.type === 'ball' || body.type === 'pulley' || body.type === 'pulley_mov') return [];
+  const s = Engine.getBodyState(body.id);
+  if (!s) return [];
+  
+  const w = body.w || 40;
+  const a = s.angle;
+  const cosA = Math.cos(a), sinA = Math.sin(a);
+  
+  const leftWX = s.x + (-w / 2) * cosA;
+  const leftWY = s.y + (-w / 2) * sinA;
+  const rightWX = s.x + (w / 2) * cosA;
+  const rightWY = s.y + (w / 2) * sinA;
+  
+  const leftScreen = toScreen(leftWX, leftWY);
+  const rightScreen = toScreen(rightWX, rightWY);
+  
+  return [
+    { id: 'left', sx: leftScreen.x, sy: leftScreen.y, wx: leftWX, wy: leftWY },
+    { id: 'right', sx: rightScreen.x, sy: rightScreen.y, wx: rightWX, wy: rightWY }
+  ];
+}
+
+function drawConstraint(c) {
+  const rbA = Scene.getBody(c.bodyA), rbB = Scene.getBody(c.bodyB);
+  if (!rbA || !rbB) return;
+  const sA = Engine.getBodyState(c.bodyA), sB = Engine.getBodyState(c.bodyB);
+  if (!sA || !sB) return;
+  const pA = toScreen(sA.x + (c.anchorA?.x || 0), sA.y + (c.anchorA?.y || 0));
+  const pB = toScreen(sB.x + (c.anchorB?.x || 0), sB.y + (c.anchorB?.y || 0));
+  ctx.save();
+  if (c.type === 'rope') {
+    ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(pA.x, pA.y); ctx.lineTo(pB.x, pB.y); ctx.stroke();
+  } else if (c.type === 'spring') {
+    drawSpring(pA, pB);
+  }
+  ctx.restore();
+}
+
+function drawSpring(pA, pB) {
+  const dx = pB.x - pA.x, dy = pB.y - pA.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const nx = -uy, ny = ux;
+  const coils = 8, amp = 6;
+  ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let i = 0; i <= coils * 2; i++) {
+    const frac = i / (coils * 2);
+    const bx = pA.x + ux * len * frac, by = pA.y + uy * len * frac;
+    const off = (i % 2 === 0 ? 1 : -1) * amp * Math.sin(frac * Math.PI);
+    const x = bx + nx * off, y = by + ny * off;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function drawForceArrow(ox, oy, fx, fy, color, label, mag) {
+  const len = Math.hypot(fx, fy);
+  if (len < 1e-6) return;
+  const scale = FORCE_ARROW_SCALE * view.scale;
+  const ux = fx / len, uy = fy / len;
+  const arrowLen = Math.min(200, mag * scale);
+  const ax = ox + ux * arrowLen;
+  const ay = oy - uy * arrowLen;
+  const headLen = Math.min(12, arrowLen * 0.4);
+  ctx.save();
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ax, ay); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax - ux * headLen + uy * headLen * 0.5, ay + uy * headLen + ux * headLen * 0.5);
+  ctx.lineTo(ax - ux * headLen - uy * headLen * 0.5, ay + uy * headLen - ux * headLen * 0.5);
+  ctx.closePath(); ctx.fill();
+  if (label) {
+    ctx.font = `11px monospace`;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${label}=${fmt(mag)}N`, ax + 6, ay - 6);
+  }
+  ctx.restore();
+}
+
+function drawForces(bodyId) {
+  if (!Scene.settings.showForces) return;
+  const body = Scene.getBody(bodyId);
+  const state = Engine.getBodyState(bodyId);
+  if (!body || !state || body.isSystem) return;
+  const forces = Pedagogical.getForces(bodyId);
+  const p = toScreen(state.x, state.y);
+  for (const f of forces) drawForceArrow(p.x, p.y, f.direction.x, f.direction.y, f.color, f.label, f.magnitude);
+  const cls = Pedagogical.classifyMotion(bodyId);
+  if (cls) {
+    ctx.save();
+    ctx.font = `10px sans-serif`;
+    ctx.fillStyle = cls === '静止' ? '#64748b' : '#059669';
+    ctx.textAlign = 'center';
+    const halfH = (body.h || (body.radius ? body.radius * 2 : 40)) * view.scale / 2;
+    ctx.fillText(cls, p.x, p.y + halfH + 16);
+    ctx.restore();
+  }
+}
+
+function drawVectors(bodyId) {
+  if (!Scene.settings.showVectors) return;
+  const state = Engine.getBodyState(bodyId);
+  if (!state) return;
+  const p = toScreen(state.x, state.y);
+  const speed = Math.hypot(state.vx, state.vy);
+  if (speed > 0.05) {
+    const scale = 20 * view.scale;
+    ctx.save();
+    ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + state.vx * scale, p.y - state.vy * scale); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#16a34a'; ctx.font = `10px monospace`;
+    ctx.fillText(`v=${fmt(speed)}m/s`, p.x + state.vx * scale + 4, p.y - state.vy * scale - 4);
+    ctx.restore();
+  }
+}
+
+function drawTrails() {
+  if (!Scene.settings.showTrail) return;
+  ctx.save();
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1; ctx.globalAlpha = 0.6;
+  for (const [, pts] of Scene.trails) {
+    if (pts.length < 2) continue;
+    ctx.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const p = toScreen(pts[i].x, pts[i].y);
+      if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function render() {
+  const w = canvas.width / devicePixelRatio, h = canvas.height / devicePixelRatio;
+  ctx.clearRect(0, 0, w, h);
+  
+  drawInfiniteGround();
+  drawGrid();
+  drawTrails();
+  
+  for (const body of Scene.bodies) drawBody(body);
+  for (const c of Scene.constraints) drawConstraint(c);
+  for (const body of Scene.bodies) { drawForces(body.id); drawVectors(body.id); }
+  
+  if (Scene.settings.playing) updateStatusBar();
+}
+
+/* ═════════════ 6. 仿真循环 ═════════════ */
+let accumulator = 0;
+let lastTime = performance.now();
+
+function applyContinuousForces() {
+  for (const f of Scene.forces) {
+    if (!f.continuous) continue;
+    const rad = f.angle * Math.PI / 180;
+    Engine.applyForce(f.targetId, Math.cos(rad) * f.magnitude, Math.sin(rad) * f.magnitude, true);
+  }
+}
+
+function applyBuoyancyForces() {
+  const liquid = Scene.bodies.find(b => b.type === 'liquid');
+  if (!liquid) return;
+  for (const body of Scene.bodies) {
+    if (body.isStatic || body.type === 'liquid') continue;
+    const state = Engine.getBodyState(body.id);
+    if (!state) continue;
+    const buoy = Pedagogical._computeBuoyancy(body, state);
+    if (buoy && buoy.magnitude > 0) {
+      Engine.applyForce(body.id, 0, buoy.magnitude, true);
+      const rb = Engine._bodyMap.get(body.id);
+      if (rb) {
+        const lv = rb.linvel();
+        Engine.applyForce(body.id, -lv.x * body.mass * 2, -lv.y * body.mass * 2, true);
+      }
+    }
+  }
+}
+
+function simulationTick(now) {
+  requestAnimationFrame(simulationTick);
+  const dtReal = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime = now;
+
+  if (Scene.settings.playing) {
+    accumulator += dtReal * Scene.settings.timeScale;
+    let steps = 0;
+    while (accumulator >= FIXED_DT && steps < 10) {
+      applyContinuousForces();
+      applyBuoyancyForces();
+      Engine.step();
+      Scene.time += FIXED_DT;
+      accumulator -= FIXED_DT;
+      steps++;
+      if (Scene.settings.showTrail) {
+        for (const body of Scene.bodies) {
+          if (body.isStatic) continue;
+          const s = Engine.getBodyState(body.id);
+          if (!s) continue;
+          if (!Scene.trails.has(body.id)) Scene.trails.set(body.id, []);
+          const arr = Scene.trails.get(body.id);
+          arr.push({ x: s.x, y: s.y });
+          if (arr.length > MAX_TRAIL) arr.shift();
+        }
+      }
+    }
+  }
+  render();
+}
+
+/* ═════════════ 7. UI 与交互 ═════════════ */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+const LIBRARY_GROUPS = [
+  { title: '基础物体', items: [
+    { type: 'box', label: '方块', icon: '■', star: 3, defaults: { w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.2, color: '#e2e8f0' } },
+    { type: 'ball', label: '圆球', icon: '●', star: 3, defaults: { radius: 20, mass: 1, mu: 0.3, restitution: 0.4, color: '#e2e8f0' } },
+    { type: 'incline', label: '斜面', icon: '◺', star: 3, defaults: { w: 140, h: 70, mass: 0, mu: 0.3, isStatic: true, angle: 0, color: '#e2e8f0' } },
+    { type: 'ground', label: '平台', icon: '▬', star: 3, defaults: { w: 200, h: 10, mass: 0, mu: 0.5, isStatic: true, color: '#f1f5f9' } },
+    { type: 'wall', label: '竖直墙', icon: '▮', star: 2, defaults: { w: 10, h: 240, mass: 0, mu: 0.4, isStatic: true, color: '#f1f5f9' } },
+    { type: 'baffle', label: '挡板', icon: '▬', star: 1, defaults: { w: 60, h: 8, mass: 0, mu: 0.4, isStatic: true, color: '#f1f5f9' } },
+  ]},
+  { title: '连接与支撑', items: [
+    { type: 'rope', label: '轻绳', icon: '〰', star: 3, isConstraint: true, defaults: { length: 1.5, maxForce: 1000 } },
+    { type: 'spring', label: '弹簧', icon: '⌇', star: 2, isConstraint: true, defaults: { restLength: 1.0, stiffness: 200, damping: 0.5 } },
+    { type: 'pulley', label: '定滑轮', icon: '◉', star: 2, defaults: { radius: 18, mass: 0, isStatic: true, mu: 0.1 } },
+    { type: 'pulley_mov', label: '动滑轮', icon: '◎', star: 2, defaults: { radius: 18, mass: 0.5, isStatic: false, mu: 0.1 } },
+  ]},
+  { title: '液体与浮力', items: [
+    { type: 'liquid', label: '液体容器', icon: '▤', star: 2, defaults: { w: 200, h: 160, density: 1000, mass: 0, isStatic: true, mu: 0 } },
+    { type: 'float', label: '浮块', icon: '▭', star: 2, defaults: { w: 50, h: 40, mass: 0.3, mu: 0.2, restitution: 0, color: '#fde68a' } },
+  ]},
+  { title: '施力工具', items: [
+    { type: 'force_tool', label: '外力箭头', icon: '➡', star: 3, isTool: true },
+    { type: 'velocity_tool', label: '速度箭头', icon: '⇢', star: 2, isTool: true },
+    { type: 'impulse_tool', label: '冲量', icon: '⚡', star: 1, isTool: true },
+  ]},
+];
+
+let activeTool = 'place';
+let pendingPlaceType = null;
+let pendingPlaceDefaults = null;
+let pendingConstraint = null;
+
+function buildLibrary() {
+  const lib = document.getElementById('library');
+  lib.innerHTML = '';
+  for (const group of LIBRARY_GROUPS) {
+    const g = document.createElement('div'); g.className = 'lib-group';
+    const title = document.createElement('div'); title.className = 'lib-group-title'; title.textContent = group.title;
+    g.appendChild(title);
+    const grid = document.createElement('div'); grid.className = 'lib-grid';
+    for (const item of group.items) {
+      const el = document.createElement('div');
+      el.className = 'lib-item';
+      el.dataset.type = item.type;
+      el.innerHTML = `<span class="lib-icon">${item.icon}</span><span>${item.label}</span><span class="lib-star">${'★'.repeat(item.star)}</span>`;
+      el.addEventListener('click', () => {
+        document.querySelectorAll('.lib-item').forEach(x => x.classList.remove('active'));
+        pendingConstraint = null;
+        if (item.isTool) {
+          activeTool = item.type;
+          el.classList.add('active');
+          canvasWrap.className = 'mode-force';
+          toast(`工具：${item.label}`);
+        } else if (item.isConstraint) {
+          activeTool = 'place';
+          canvasWrap.className = 'mode-place';
+          pendingConstraint = { type: item.type, bodyA: null, defaults: item.defaults || {} };
+          el.classList.add('active');
+          toast(`点击第一个物体（A）`);
+        } else {
+          pendingPlaceType = item.type;
+          pendingPlaceDefaults = item.defaults || {};
+          activeTool = 'place';
+          canvasWrap.className = 'mode-place';
+          el.classList.add('active');
+          toast(`点击画布放置「${item.label}」`);
+        }
+      });
+      grid.appendChild(el);
+    }
+    g.appendChild(grid);
+    lib.appendChild(g);
+  }
+}
+
+let mouseDown = false, mouseStart = null, dragBodyId = null, dragOffset = null;
+let forceDrag = null;
+let spaceHeld = false, spaceUsedForPan = false, spaceDownTime = 0;
+let rHeld = false, rDragging = false, rotatingBodyId = null, rotatingStart = null;
+let resizingBodyId = null, resizingHandle = null, resizeStartData = null;
+
+canvasWrap.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const w = toWorld(sx, sy);
+
+  if (spaceHeld || activeTool === 'pan' || e.button === 1) {
+    isPanning = true;
+    if (spaceHeld) spaceUsedForPan = true;
+    panStart = { x: sx, y: sy, px: view.panX, py: view.panY };
+    canvasWrap.classList.add('dragging');
+    return;
+  }
+
+  // ── 处理端点拉伸 (Resize) ──
+  if (Scene.selectedIds.size === 1 && activeTool === 'place' && !rHeld) {
+    const id = [...Scene.selectedIds][0];
+    const body = Scene.getBody(id);
+    if (body && !body.isSystem) {
+      const handles = getResizeHandles(body);
+      for (const h of handles) {
+        if (Math.hypot(sx - h.sx, sy - h.sy) < 12) {
+          resizingBodyId = id;
+          resizingHandle = h.id;
+          resizeStartData = { x: body.x, y: body.y, w: body.w, h: body.h, angle: body.angle };
+          pushUndo();
+          mouseDown = true;
+          canvasWrap.className = 'mode-resize';
+          return;
+        }
+      }
+    }
+  }
+
+  if (rHeld && e.button === 0) {
+    const hit = hitTest(sx, sy);
+    if (hit && !hit.isStatic && !hit.isSystem) {
+      const state = Engine.getBodyState(hit.id);
+      if (state) {
+        const p = toScreen(state.x, state.y);
+        rotatingBodyId = hit.id;
+        rDragging = true;
+        rotatingStart = {
+          startMouseAngle: Math.atan2(sy - p.y, sx - p.x),
+          initialBodyAngle: state.angle, cx: p.x, cy: p.y
+        };
+        mouseDown = true;
+        Scene.selectedIds.clear(); Scene.selectedIds.add(hit.id);
+        refreshProperties();
+        return;
+      }
+    }
+  }
+
+  if (pendingPlaceType) {
+    placeBodyAt(pendingPlaceType, pendingPlaceDefaults, w.x, w.y);
+    pendingPlaceType = null; pendingPlaceDefaults = null;
+    document.querySelectorAll('.lib-item').forEach(x => x.classList.remove('active'));
+    return;
+  }
+
+  if (pendingConstraint) {
+    const hit = hitTest(sx, sy);
+    if (!hit) {
+      if (pendingConstraint.bodyA) { pendingConstraint = null; toast('已取消创建约束'); }
+      return;
+    }
+    if (pendingConstraint.bodyA === null) {
+      pendingConstraint.bodyA = hit.id;
+      toast(`A = ${hit.name}，请点击第二个物体（B）`);
+    } else if (hit.id !== pendingConstraint.bodyA) {
+      createConstraintBetween(pendingConstraint, hit.id);
+      pendingConstraint = null;
+      document.querySelectorAll('.lib-item').forEach(x => x.classList.remove('active'));
+    }
+    return;
+  }
+
+  if (activeTool === 'force_tool' || activeTool === 'velocity_tool' || activeTool === 'impulse_tool') {
+    const hit = hitTest(sx, sy);
+    if (hit) {
+      forceDrag = { bodyId: hit.id, startX: sx, startY: sy, curX: sx, curY: sy, mode: activeTool };
+      mouseDown = true;
+    }
+    return;
+  }
+
+  const hit = hitTest(sx, sy);
+  if (hit) {
+    if (e.shiftKey) {
+      forceDrag = { bodyId: hit.id, startX: sx, startY: sy, curX: sx, curY: sy, mode: 'force_tool' };
+      mouseDown = true;
+      return;
+    }
+    if (!Scene.selectedIds.has(hit.id)) {
+      if (!e.ctrlKey && !e.metaKey) Scene.selectedIds.clear();
+      Scene.selectedIds.add(hit.id);
+    }
+    dragBodyId = hit.id;
+    pushUndo();
+    const s = Engine.getBodyState(hit.id);
+    dragOffset = { x: s.x - w.x, y: s.y - w.y };
+    mouseDown = true;
+    refreshProperties();
+  } else {
+    if (!e.ctrlKey && !e.metaKey) Scene.selectedIds.clear();
+    refreshProperties();
+    mouseDown = true; mouseStart = { x: sx, y: sy };
+  }
+});
+
+canvasWrap.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+
+  if (isPanning && panStart) {
+    view.panX = panStart.px + (sx - panStart.x);
+    view.panY = panStart.py + (sy - panStart.y);
+    
+    // 限制平移范围：地平线不能太高，也不能完全拖出屏幕
+    const ch = canvas.height / devicePixelRatio;
+    view.panY = clamp(view.panY, ch * 0.3, ch * 1.5);
+    return;
+  }
+
+  if (resizingBodyId && resizeStartData) {
+    const body = Scene.getBody(resizingBodyId);
+    if (!body) return;
+    const curW = toWorld(sx, sy);
+    const a = resizeStartData.angle;
+    const cosA = Math.cos(a), sinA = Math.sin(a);
+    
+    if (resizingHandle === 'left') {
+      const rightX = resizeStartData.x + (resizeStartData.w / 2) * cosA;
+      const rightY = resizeStartData.y + (resizeStartData.w / 2) * sinA;
+      
+      const dx = curW.x - rightX;
+      const dy = curW.y - rightY;
+      const newW = -(dx * cosA + dy * sinA);
+      
+      if (newW > 10 / PX_PER_M) {
+        body.w = newW;
+        body.x = rightX - (newW / 2) * cosA;
+        body.y = rightY - (newW / 2) * sinA;
+      }
+    } else if (resizingHandle === 'right') {
+      const leftX = resizeStartData.x - (resizeStartData.w / 2) * cosA;
+      const leftY = resizeStartData.y - (resizeStartData.w / 2) * sinA;
+      
+      const dx = curW.x - leftX;
+      const dy = curW.y - leftY;
+      const newW = (dx * cosA + dy * sinA);
+      
+      if (newW > 10 / PX_PER_M) {
+        body.w = newW;
+        body.x = leftX + (newW / 2) * cosA;
+        body.y = leftY + (newW / 2) * sinA;
+      }
+    }
+    
+    const rb = Engine._bodyMap.get(resizingBodyId);
+    if (rb) rb.setTranslation({ x: body.x, y: body.y }, true);
+    return;
+  }
+
+  if (rotatingBodyId && rotatingStart) {
+    const curAngle = Math.atan2(sy - rotatingStart.cy, sx - rotatingStart.cx);
+    const deltaScreen = curAngle - rotatingStart.startMouseAngle;
+    const newAngle = rotatingStart.initialBodyAngle - deltaScreen;
+    const body = Scene.getBody(rotatingBodyId);
+    if (body) body.angle = newAngle;
+    const rb = Engine._bodyMap.get(rotatingBodyId);
+    if (rb) { rb.setRotation(newAngle, true); rb.wakeUp(); }
+    return;
+  }
+
+  if (forceDrag) { forceDrag.curX = sx; forceDrag.curY = sy; return; }
+
+  if (mouseDown && dragBodyId) {
+    const w = toWorld(sx, sy);
+    const body = Scene.getBody(dragBodyId);
+    if (body) {
+      const nx = snap((w.x + dragOffset.x) * PX_PER_M) / PX_PER_M;
+      const ny = snap((w.y + dragOffset.y) * PX_PER_M) / PX_PER_M;
+      const rb = Engine._bodyMap.get(dragBodyId);
+      if (rb) { rb.setTranslation({ x: nx, y: ny }, true); rb.wakeUp(); }
+      body.x = nx; body.y = ny;
+    }
+  }
+});
+
+window.addEventListener('mouseup', e => {
+  if (isPanning) { isPanning = false; panStart = null; canvasWrap.classList.remove('dragging'); }
+  if (rotatingBodyId) { rotatingBodyId = null; rotatingStart = null; mouseDown = false; }
+
+  if (resizingBodyId) {
+    rebuildBodyAndConstraints(resizingBodyId);
+    resizingBodyId = null;
+    resizingHandle = null;
+    resizeStartData = null;
+    mouseDown = false;
+    canvasWrap.className = 'mode-' + (activeTool === 'pan' ? 'pan' : 'place');
+    refreshProperties();
+    return;
+  }
+
+  if (forceDrag) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const dx = sx - forceDrag.startX, dy = sy - forceDrag.startY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 10) {
+      pushUndo();
+      const mag = Math.round((dist / 20) * 10) / 10;
+      const angle = Math.atan2(-dy, dx) * 180 / Math.PI;
+      if (forceDrag.mode === 'force_tool') {
+        Scene.forces.push({ id: uid(), targetId: forceDrag.bodyId, magnitude: mag, angle: Math.round(angle * 10) / 10, continuous: true });
+        toast(`已施加 ${fmt(mag)} N 力`);
+        refreshProperties();
+      } else if (forceDrag.mode === 'velocity_tool') {
+        Engine.setVelocity(forceDrag.bodyId, dx / 60, -dy / 60);
+        toast(`设置速度 v=(${fmt(dx / 60)}, ${fmt(-dy / 60)}) m/s`);
+      } else if (forceDrag.mode === 'impulse_tool') {
+        Engine.applyImpulse(forceDrag.bodyId, dx / 40, -dy / 40);
+        toast(`施加冲量`);
+      }
+    }
+    forceDrag = null;
+  }
+
+  if (mouseDown && !dragBodyId && mouseStart) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+    const x1 = Math.min(mouseStart.x, sx), x2 = Math.max(mouseStart.x, sx);
+    const y1 = Math.min(mouseStart.y, sy), y2 = Math.max(mouseStart.y, sy);
+    if (Math.abs(x2 - x1) > 5 && Math.abs(y2 - y1) > 5) {
+      for (const body of Scene.bodies) {
+        if (body.isSystem) continue;
+        const s = Engine.getBodyState(body.id);
+        if (!s) continue;
+        const p = toScreen(s.x, s.y);
+        if (p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2) Scene.selectedIds.add(body.id);
+      }
+      refreshProperties();
+    }
+  }
+
+  mouseDown = false; dragBodyId = null; dragOffset = null; mouseStart = null;
+});
+
+canvasWrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  
+  const wx = (sx - view.panX) / (PX_PER_M * view.scale);
+  const wy = (view.panY - sy) / (PX_PER_M * view.scale);
+  
+  view.scale = clamp(view.scale * factor, 0.1, 3);
+  
+  view.panX = sx - wx * PX_PER_M * view.scale;
+  view.panY = sy + wy * PX_PER_M * view.scale;
+  
+  const ch = canvas.height / devicePixelRatio;
+  view.panY = clamp(view.panY, ch * 0.3, ch * 1.5);
+}, { passive: false });
+
+function hitTest(sx, sy) {
+  for (let i = Scene.bodies.length - 1; i >= 0; i--) {
+    const body = Scene.bodies[i];
+    if (body.isSystem) continue;
+    const s = Engine.getBodyState(body.id);
+    if (!s) continue;
+    const p = toScreen(s.x, s.y);
+    if (body.type === 'ball' || body.type === 'pulley' || body.type === 'pulley_mov') {
+      const r = (body.radius || 18) * view.scale;
+      if ((sx - p.x) ** 2 + (sy - p.y) ** 2 <= r * r) return body;
+    } else {
+      const dx = sx - p.x, dy = sy - p.y;
+      const cosA = Math.cos(s.angle), sinA = Math.sin(s.angle);
+      const lx = dx * cosA - dy * sinA;
+      const ly = dx * sinA + dy * cosA;
+      const hw = (body.w || 40) * view.scale / 2;
+      const hh = (body.h || 40) * view.scale / 2;
+      if (Math.abs(lx) <= hw && Math.abs(ly) <= hh) return body;
+    }
+  }
+  return null;
+}
+
+function createConstraintBetween(pending, bodyB) {
+  const bodyA = pending.bodyA;
+  const d = pending.defaults || {};
+  let cid = null;
+  if (pending.type === 'rope') {
+    const sA = Engine.getBodyState(bodyA), sB = Engine.getBodyState(bodyB);
+    const autoLen = Math.hypot(sB.x - sA.x, sB.y - sA.y);
+    const len = Math.max(0.2, autoLen * 1.05);
+    cid = Engine.createRope(bodyA, bodyB, { x: 0, y: 0 }, { x: 0, y: 0 }, len, d.maxForce || 1000);
+    if (cid) { Scene.constraints.push({ id: cid, type: 'rope', bodyA, bodyB, anchorA: { x: 0, y: 0 }, anchorB: { x: 0, y: 0 }, length: len, maxForce: d.maxForce || 1000 }); toast(`已创建轻绳（长 ${fmt(len)}m）`); }
+  } else if (pending.type === 'spring') {
+    const sA = Engine.getBodyState(bodyA), sB = Engine.getBodyState(bodyB);
+    const autoLen = Math.hypot(sB.x - sA.x, sB.y - sA.y);
+    const rl = Math.max(0.2, autoLen);
+    cid = Engine.createSpring(bodyA, bodyB, { x: 0, y: 0 }, { x: 0, y: 0 }, rl, d.stiffness || 200, d.damping || 0.5);
+    if (cid) { Scene.constraints.push({ id: cid, type: 'spring', bodyA, bodyB, anchorA: { x: 0, y: 0 }, anchorB: { x: 0, y: 0 }, restLength: rl, stiffness: d.stiffness || 200, damping: d.damping || 0.5 }); toast(`已创建弹簧（自然长 ${fmt(rl)}m）`); }
+  }
+  if (!cid) toast('约束创建失败');
+  updateStatusBar(); render();
+}
+
+function placeBodyAt(type, defaults, wx, wy) {
+  const x = snap(wx * PX_PER_M) / PX_PER_M;
+  const y = snap(wy * PX_PER_M) / PX_PER_M;
+  pushUndo();
+  const body = { type, x, y, ...JSON.parse(JSON.stringify(defaults)), vx: 0, vy: 0, angle: defaults.angle || 0 };
+  body.name = autoName(type);
+  body.mass = defaults.mass != null ? defaults.mass : (defaults.isStatic ? 0 : 1);
+  body.mu = defaults.mu != null ? defaults.mu : 0.3;
+  body.restitution = defaults.restitution != null ? defaults.restitution : 0.1;
+  body.isStatic = !!defaults.isStatic;
+  if (type === 'liquid') body.density = defaults.density || 1000;
+  Scene.addBody(body);
+  Scene.selectedIds.clear(); Scene.selectedIds.add(body.id);
+  refreshProperties(); updateStatusBar();
+}
+
+function autoName(type) {
+  const prefix = { box: 'M', ball: 'B', incline: 'S', ground: 'P', wall: 'W', baffle: 'D', pulley: 'P', pulley_mov: 'P', liquid: 'L', float: 'B' }[type] || 'X';
+  const count = Scene.bodies.filter(b => b.type === type && !b.isSystem).length + 1;
+  return prefix + count;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!spaceHeld) { spaceHeld = true; spaceUsedForPan = false; spaceDownTime = performance.now(); }
+    return;
+  }
+  if (e.key.toLowerCase() === 'r') { if (!rHeld) { rHeld = true; rDragging = false; } return; }
+  if (e.key === '.') { e.preventDefault(); stepOnce(); }
+  else if (e.key.toLowerCase() === 'f') { e.preventDefault(); toggleForces(); }
+  else if (e.key.toLowerCase() === 'v') { e.preventDefault(); toggleVectors(); }
+  else if (e.key.toLowerCase() === 't') { e.preventDefault(); toggleTrail(); }
+  else if (e.key.toLowerCase() === 'g') { e.preventDefault(); toggleGrid(); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
+  else if (e.key === '-' || e.key === '_') { e.preventDefault(); cycleSlow(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+  else if (e.key === 'Escape') {
+    pendingPlaceType = null; pendingConstraint = null; activeTool = 'place';
+    canvasWrap.className = 'mode-place';
+    document.querySelectorAll('.lib-item').forEach(x => x.classList.remove('active'));
+  }
+});
+
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space') {
+    if (spaceHeld && !spaceUsedForPan && performance.now() - spaceDownTime < 300) togglePlay();
+    spaceHeld = false;
+  }
+  if (e.key.toLowerCase() === 'r') {
+    if (!rDragging) rotateSelected();
+    rHeld = false; rotatingBodyId = null; rotatingStart = null;
+  }
+});
+
+function togglePlay() {
+  Scene.settings.playing = !Scene.settings.playing;
+  document.getElementById('btnPlay').classList.toggle('active', Scene.settings.playing);
+  document.getElementById('btnPlay').textContent = Scene.settings.playing ? '⏸ 暂停' : '▶ 播放';
+  if (Scene.settings.playing) Engine.wakeAll();
+}
+function stepOnce() { applyContinuousForces(); applyBuoyancyForces(); Engine.step(); Scene.time += FIXED_DT; render(); updateStatusBar(); }
+function toggleForces() { Scene.settings.showForces = !Scene.settings.showForces; document.getElementById('btnForces').classList.toggle('active', Scene.settings.showForces); }
+function toggleVectors() { Scene.settings.showVectors = !Scene.settings.showVectors; document.getElementById('btnVectors').classList.toggle('active', Scene.settings.showVectors); }
+function toggleTrail() { Scene.settings.showTrail = !Scene.settings.showTrail; document.getElementById('btnTrail').classList.toggle('active', Scene.settings.showTrail); }
+function toggleGrid() { Scene.settings.showGrid = !Scene.settings.showGrid; document.getElementById('btnGrid').classList.toggle('active', Scene.settings.showGrid); }
+
+const SPEEDS = [1, 0.5, 0.25, 0.1];
+let speedIdx = 0;
+function cycleSlow() {
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  Scene.settings.timeScale = SPEEDS[speedIdx];
+  document.getElementById('btnSlow').textContent = `🐢 ${SPEEDS[speedIdx]}x`;
+}
+
+function rotateSelected() {
+  if (Scene.selectedIds.size === 0) return;
+  pushUndo();
+  for (const id of Scene.selectedIds) {
+    const body = Scene.getBody(id);
+    if (!body || body.isStatic || body.isSystem) continue;
+    body.angle = (body.angle || 0) + Math.PI / 2;
+    const rb = Engine._bodyMap.get(id);
+    if (rb) { rb.setRotation(body.angle, true); rb.wakeUp(); }
+  }
+  render();
+}
+
+function deleteSelected() {
+  if (Scene.selectedIds.size === 0) return;
+  pushUndo();
+  for (const id of [...Scene.selectedIds]) {
+    const b = Scene.getBody(id);
+    if (b && b.isSystem) continue;
+    Scene.removeBody(id);
+  }
+  Scene.selectedIds.clear();
+  refreshProperties(); updateStatusBar(); render();
+}
+
+document.getElementById('btnPan').addEventListener('click', () => {
+  activeTool = activeTool === 'pan' ? 'place' : 'pan';
+  document.getElementById('btnPan').classList.toggle('active', activeTool === 'pan');
+  canvasWrap.className = 'mode-' + (activeTool === 'pan' ? 'pan' : 'place');
+});
+document.getElementById('btnPlay').addEventListener('click', togglePlay);
+document.getElementById('btnStep').addEventListener('click', stepOnce);
+document.getElementById('btnSlow').addEventListener('click', cycleSlow);
+document.getElementById('btnForces').addEventListener('click', toggleForces);
+document.getElementById('btnVectors').addEventListener('click', toggleVectors);
+document.getElementById('btnTrail').addEventListener('click', toggleTrail);
+document.getElementById('btnGrid').addEventListener('click', toggleGrid);
+document.getElementById('btnRotate').addEventListener('click', rotateSelected);
+document.getElementById('btnDelete').addEventListener('click', deleteSelected);
+document.getElementById('btnClear').addEventListener('click', () => { if (confirm('清空画布？')) { pushUndo(); Scene.reset(); refreshProperties(); updateStatusBar(); render(); resetView(); } });
+document.getElementById('btnUndo').addEventListener('click', undo);
+
+/* 撤销栈 */
+const undoStack = [];
+function pushUndo() {
+  try { undoStack.push(JSON.stringify(serializeScene())); if (undoStack.length > MAX_UNDO) undoStack.shift(); } catch (_) {}
+}
+function undo() {
+  if (undoStack.length === 0) return toast('没有可撤销的操作');
+  const json = undoStack.pop();
+  try { loadSceneFromJSON(JSON.parse(json)); toast('已撤销'); } catch (_) { toast('撤销失败'); }
+}
+
+/* 属性面板 */
+function typeLabel(t) {
+  return { box: '方块', ball: '圆球', incline: '斜面', ground: '平台', wall: '墙', baffle: '挡板', liquid: '液体', float: '浮块', pulley: '定滑轮', pulley_mov: '动滑轮' }[t] || t;
+}
+
+function refreshProperties() {
+  const panel = document.getElementById('properties');
+  if (Scene.selectedIds.size === 0) {
+    panel.innerHTML = '<div class="prop-empty">选中一个物体<br>或从左侧元件库添加</div>';
+    return;
+  }
+  if (Scene.selectedIds.size > 1) {
+    panel.innerHTML = `<div class="prop-empty">已选中 ${Scene.selectedIds.size} 个物体<br>拖动可整体移动</div>`;
+    return;
+  }
+  const id = [...Scene.selectedIds][0];
+  const body = Scene.getBody(id);
+  if (!body) { panel.innerHTML = '<div class="prop-empty">物体不存在</div>'; return; }
+  const state = Engine.getBodyState(id);
+  const forces = Pedagogical.getForces(id);
+
+  let html = '';
+  html += `<div class="prop-section"><div class="prop-section-title">${body.name} · ${typeLabel(body.type)}</div>`;
+  html += `<div class="prop-row"><label>名称</label><input value="${body.name}" onchange="window.__renameBody(${id}, this.value)"></div>`;
+
+  if (!body.isStatic) {
+    html += `<div class="prop-row"><label>质量 m (kg)</label><input type="number" value="${body.mass}" min="0.1" max="100" step="0.1" onchange="window.__setBodyProp(${id}, 'mass', this.value)"></div>`;
+  }
+  html += `<div class="prop-row"><label>摩擦 μ</label><input type="number" value="${body.mu}" min="0" max="1" step="0.05" onchange="window.__setBodyProp(${id}, 'mu', this.value)"></div>`;
+  if (!body.isStatic) {
+    html += `<div class="prop-row"><label>弹性 e</label><input type="number" value="${body.restitution}" min="0" max="1" step="0.05" onchange="window.__setBodyProp(${id}, 'restitution', this.value)"></div>`;
+    html += `<div class="prop-row"><label>固定</label><input type="checkbox" ${body.isStatic ? 'checked' : ''} onchange="window.__setBodyProp(${id}, 'isStatic', this.checked)"></div>`;
+    html += `<div class="prop-row"><label>初速度 vx</label><input type="number" value="${body.vx || 0}" step="0.1" onchange="window.__setVelocity(${id}, 'vx', this.value)"></div>`;
+    html += `<div class="prop-row"><label>初速度 vy</label><input type="number" value="${body.vy || 0}" step="0.1" onchange="window.__setVelocity(${id}, 'vy', this.value)"></div>`;
+  }
+  if (body.type === 'incline') {
+    html += `<div class="prop-row"><label>角度 (°)</label><input type="number" value="${fmt((body.angle || 0) * 180 / Math.PI, 0)}" min="0" max="360" step="1" onchange="window.__setInclineAngle(${id}, this.value)"></div>`;
+  }
+  if (body.type === 'liquid') {
+    html += `<div class="prop-row"><label>密度 ρ</label><input type="number" value="${body.density || 1000}" step="50" onchange="window.__setBodyProp(${id}, 'density', this.value)"></div>`;
+  }
+
+  if (!body.isStatic) {
+    html += `<div class="prop-section-title" style="margin-top:10px;">施加力</div>`;
+    const ufs = Scene.forces.filter(f => f.targetId === id);
+    for (const f of ufs) {
+      html += `<div class="force-list-item">F${f.id} <input type="number" value="${f.magnitude}" step="0.5" onchange="window.__setForceMag(${f.id}, this.value)"> N <input type="number" value="${f.angle}" step="5" onchange="window.__setForceAngle(${f.id}, this.value)"> ° <button class="del" onclick="window.__deleteForce(${f.id})">×</button></div>`;
+    }
+    html += `<button class="prop-btn" onclick="window.__addForce(${id})" style="margin-top:4px;">+ 添加力</button>`;
+  }
+
+  if (state) {
+    html += `<div class="prop-section-title" style="margin-top:10px;">实时读数</div>`;
+    html += `<div class="prop-row"><label>位置</label><span class="prop-readonly">(${fmt(state.x)}, ${fmt(state.y)}) m</span></div>`;
+    html += `<div class="prop-row"><label>速度</label><span class="prop-readonly">(${fmt(state.vx)}, ${fmt(state.vy)}) m/s</span></div>`;
+    html += `<div class="prop-row"><label>速率</label><span class="prop-readonly">${fmt(Math.hypot(state.vx, state.vy))} m/s</span></div>`;
+    html += `<div class="prop-row"><label>角度</label><span class="prop-readonly">${fmt(state.angle * 180 / Math.PI, 1)}°</span></div>`;
+    for (const f of forces) {
+      html += `<div class="prop-row"><label style="color:${f.color}">${f.label}</label><span class="prop-readonly" style="color:${f.color}">${fmt(f.magnitude)} N</span></div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<div style="margin-top:8px;"><button class="prop-btn danger" style="width:100%;" onclick="window.__deleteSelected()">删除此物体</button></div>`;
+  panel.innerHTML = html;
+}
+
+function rebuildBodyAndConstraints(id) {
+  const body = Scene.getBody(id);
+  if (!body) return;
+  const state = Engine.getBodyState(id);
+  if (state) { body.x = state.x; body.y = state.y; body.vx = state.vx; body.vy = state.vy; body.angle = state.angle; }
+  
+  const affected = Scene.constraints.filter(c => c.bodyA === id || c.bodyB === id);
+  for (const c of affected) Engine.removeConstraint(c.id);
+  Scene.constraints = Scene.constraints.filter(c => c.bodyA !== id && c.bodyB !== id);
+  Engine.removeBody(id);
+  Engine.createBody({ ...body, id });
+  for (const c of affected) {
+    let cid = null;
+    if (c.type === 'rope') cid = Engine.createRope(c.bodyA, c.bodyB, c.anchorA, c.anchorB, c.length, c.maxForce);
+    else if (c.type === 'spring') cid = Engine.createSpring(c.bodyA, c.bodyB, c.anchorA, c.anchorB, c.restLength, c.stiffness, c.damping);
+    if (cid) Scene.constraints.push({ ...c, id: cid });
+  }
+}
+
+window.__renameBody = (id, v) => { const b = Scene.getBody(id); if (b) { pushUndo(); b.name = v; refreshProperties(); } };
+window.__setBodyProp = (id, k, v) => {
+  const b = Scene.getBody(id); if (!b) return;
+  pushUndo();
+  if (k === 'mass' || k === 'mu' || k === 'restitution' || k === 'density') b[k] = parseFloat(v);
+  else if (k === 'isStatic') b.isStatic = !!v;
+  else b[k] = v;
+  rebuildBodyAndConstraints(id);
+  refreshProperties();
+};
+window.__setInclineAngle = (id, deg) => {
+  const b = Scene.getBody(id); if (!b) return;
+  pushUndo(); b.angle = parseFloat(deg) * Math.PI / 180;
+  const rb = Engine._bodyMap.get(id);
+  if (rb) { rb.setRotation(b.angle, true); rb.wakeUp(); }
+  refreshProperties();
+};
+window.__setVelocity = (id, k, v) => { const b = Scene.getBody(id); if (b) { b[k] = parseFloat(v); Engine.setVelocity(id, b.vx || 0, b.vy || 0); } };
+window.__addForce = (id) => { pushUndo(); Scene.forces.push({ id: uid(), targetId: id, magnitude: 10, angle: 0, continuous: true }); refreshProperties(); };
+window.__deleteForce = (fid) => { pushUndo(); Scene.forces = Scene.forces.filter(f => f.id !== fid); refreshProperties(); };
+window.__setForceMag = (fid, v) => { const f = Scene.forces.find(x => x.id === fid); if (f) f.magnitude = parseFloat(v); };
+window.__setForceAngle = (fid, v) => { const f = Scene.forces.find(x => x.id === fid); if (f) f.angle = parseFloat(v); };
+window.__deleteSelected = () => deleteSelected();
+
+function updateStatusBar() {
+  document.getElementById('sbBodies').textContent = Scene.bodies.filter(b => !b.isStatic && !b.isSystem).length;
+  document.getElementById('sbConstraints').textContent = Scene.constraints.length;
+  document.getElementById('sbContacts').textContent = Engine.getContactCount();
+  document.getElementById('sbTime').textContent = fmt(Scene.time, 2);
+  let warn = false;
+  for (const b of Scene.bodies) {
+    if (b.isStatic) continue;
+    const s = Engine.getBodyState(b.id);
+    if (s && Math.hypot(s.vx, s.vy) > 50) warn = true;
+  }
+  document.getElementById('sbEnergyWarn').classList.toggle('on', warn);
+}
+
+/* 示例库 */
+const EXAMPLES = {
+  '基础力学': [
+    { name: '水平面推物块', desc: '物块在水平面上受推力加速', build: () => {
+      const box = addBody({ type: 'box', name: 'M1', x: -1, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1 });
+      Scene.forces.push({ id: uid(), targetId: box.id, magnitude: 15, angle: 0, continuous: true });
+    }},
+    { name: '斜向上拉物块', desc: '拉力分解为水平与竖直分量', build: () => {
+      const box = addBody({ type: 'box', name: 'M1', x: -1, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1 });
+      Scene.forces.push({ id: uid(), targetId: box.id, magnitude: 12, angle: 30, continuous: true });
+    }},
+    { name: '自由滑行减速', desc: '仅摩擦力使物块减速', build: () => {
+      addBody({ type: 'box', name: 'M1', x: -2, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1, vx: 4, vy: 0 });
+    }},
+    { name: '静止在水平面', desc: '重物静止，支持力与重力平衡', build: () => {
+      addBody({ type: 'box', name: 'M1', x: 0, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.5, restitution: 0.1 });
+    }},
+  ],
+  '斜面问题': [
+    { name: '斜面静止', desc: '斜面上物块静止，静摩擦平衡重力分量', build: () => {
+      addBody({ type: 'incline', name: 'S1', x: 0, y: 0.8, w: 180, h: 90, isStatic: true, mu: 0.6, angle: 0 });
+      addBody({ type: 'box', name: 'M1', x: 0, y: 1.2, w: 30, h: 30, mass: 1, mu: 0.6, restitution: 0.1 });
+    }},
+    { name: '斜面加速下滑', desc: '倾角较大，重力分量大于摩擦', build: () => {
+      addBody({ type: 'incline', name: 'S1', x: 0, y: 1, w: 200, h: 100, isStatic: true, mu: 0.2, angle: 0 });
+      addBody({ type: 'box', name: 'M1', x: 0.2, y: 1.5, w: 30, h: 30, mass: 1, mu: 0.2, restitution: 0.1 });
+    }},
+    { name: '光滑斜面下滑', desc: '无摩擦，a = g·sinθ', build: () => {
+      addBody({ type: 'incline', name: 'S1', x: 0, y: 1, w: 200, h: 100, isStatic: true, mu: 0, angle: 0 });
+      addBody({ type: 'box', name: 'M1', x: 0.2, y: 1.5, w: 30, h: 30, mass: 1, mu: 0, restitution: 0.1 });
+    }},
+  ],
+  '悬挂与连接': [
+    { name: '单绳悬挂', desc: '绳拉力等于重力，二力平衡', build: () => {
+      const anchor = addBody({ type: 'ground', name: '天花板', x: 0, y: 3.5, w: 200, h: 10, isStatic: true, mass: 0, mu: 0 });
+      const box = addBody({ type: 'box', name: 'M1', x: 0, y: 1.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1 });
+      const len = 2.0;
+      const cid = Engine.createRope(box.id, anchor.id, { x: 0, y: 0.2 }, { x: 0, y: 0 }, len, 1000);
+      if (cid) Scene.constraints.push({ id: cid, type: 'rope', bodyA: box.id, bodyB: anchor.id, anchorA: { x: 0, y: 0.2 }, anchorB: { x: 0, y: 0 }, length: len, maxForce: 1000 });
+    }},
+    { name: '弹簧测力计', desc: '弹簧伸长量反映拉力大小', build: () => {
+      const anchor = addBody({ type: 'ground', name: '天花板', x: 0, y: 3.5, w: 200, h: 10, isStatic: true, mass: 0, mu: 0 });
+      const box = addBody({ type: 'box', name: 'M1', x: 0, y: 1.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1 });
+      const restLen = 1.8;
+      const cid = Engine.createSpring(box.id, anchor.id, { x: 0, y: 0.2 }, { x: 0, y: 0 }, restLen, 150, 0.8);
+      if (cid) Scene.constraints.push({ id: cid, type: 'spring', bodyA: box.id, bodyB: anchor.id, anchorA: { x: 0, y: 0.2 }, anchorB: { x: 0, y: 0 }, restLength: restLen, stiffness: 150, damping: 0.8 });
+    }},
+  ],
+  '滑轮系统': [
+    { name: '定滑轮', desc: '定滑轮不省力但改变力的方向', build: () => {
+      const pulley = addBody({ type: 'pulley', name: 'P1', x: 0, y: 3, radius: 18, isStatic: true, mass: 0, mu: 0.1 });
+      const box = addBody({ type: 'box', name: 'M1', x: -1, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.1 });
+      const len = Math.hypot(box.x - pulley.x, box.y - pulley.y) * 1.05;
+      const cid = Engine.createRope(box.id, pulley.id, { x: 0, y: 0 }, { x: -0.18, y: 0.18 }, len, 1000);
+      if (cid) Scene.constraints.push({ id: cid, type: 'rope', bodyA: box.id, bodyB: pulley.id, anchorA: { x: 0, y: 0 }, anchorB: { x: -0.18, y: 0.18 }, length: len, maxForce: 1000 });
+    }},
+    { name: '动滑轮', desc: '动滑轮省一半力但费距离', build: () => {
+      const p1 = addBody({ type: 'pulley', name: 'P1', x: 0, y: 3, radius: 18, isStatic: true, mass: 0, mu: 0.1 });
+      const p2 = addBody({ type: 'pulley_mov', name: 'P2', x: 0, y: 1.5, radius: 18, mass: 0.3, isStatic: false, mu: 0.1 });
+      const box = addBody({ type: 'box', name: 'M1', x: 0, y: 0.5, w: 30, h: 30, mass: 2, mu: 0.3, restitution: 0.1 });
+      const len1 = Math.hypot(p2.x - p1.x, p2.y - p1.y) * 1.02;
+      const c1 = Engine.createRope(p2.id, p1.id, { x: 0, y: 0 }, { x: 0, y: -0.18 }, len1, 1000);
+      if (c1) Scene.constraints.push({ id: c1, type: 'rope', bodyA: p2.id, bodyB: p1.id, anchorA: { x: 0, y: 0 }, anchorB: { x: 0, y: -0.18 }, length: len1, maxForce: 1000 });
+      const len2 = Math.hypot(box.x - p2.x, box.y - p2.y) * 1.02;
+      const c2 = Engine.createRope(box.id, p2.id, { x: 0, y: 0.15 }, { x: 0, y: 0 }, len2, 1000);
+      if (c2) Scene.constraints.push({ id: c2, type: 'rope', bodyA: box.id, bodyB: p2.id, anchorA: { x: 0, y: 0.15 }, anchorB: { x: 0, y: 0 }, length: len2, maxForce: 1000 });
+    }},
+  ],
+  '浮力': [
+    { name: '木块漂浮', desc: '木块密度小于水，漂浮在液面', build: () => {
+      addBody({ type: 'liquid', name: 'L1', x: 0, y: 1.6, w: 220, h: 160, density: 1000, isStatic: true, mass: 0, mu: 0 });
+      addBody({ type: 'float', name: 'B1', x: 0, y: 1.8, w: 40, h: 30, mass: 0.3, mu: 0.2, restitution: 0, color: '#fde68a' });
+    }},
+    { name: '铁块沉底', desc: '密度大于液体，沉底后受支持力', build: () => {
+      addBody({ type: 'liquid', name: 'L1', x: 0, y: 1.6, w: 220, h: 160, density: 1000, isStatic: true, mass: 0, mu: 0 });
+      addBody({ type: 'ground', name: 'G1', x: 0, y: 0.8, w: 220, h: 10, isStatic: true, mass: 0, mu: 0.5 });
+      addBody({ type: 'box', name: 'M1', x: 0, y: 1.3, w: 30, h: 30, mass: 3, mu: 0.3, restitution: 0.1, color: '#94a3b8' });
+    }},
+  ],
+  '运动学': [
+    { name: '自由落体', desc: '初速度为零，仅受重力', build: () => {
+      addBody({ type: 'ball', name: 'B1', x: 0, y: 4, radius: 18, mass: 1, mu: 0.3, restitution: 0.3 });
+    }},
+    { name: '平抛运动', desc: '水平初速度，竖直方向自由落体', build: () => {
+      addBody({ type: 'ball', name: 'B1', x: -3, y: 4, radius: 18, mass: 1, mu: 0.3, restitution: 0.3, vx: 4, vy: 0 });
+    }},
+  ],
+  '碰撞': [
+    { name: '完全弹性碰撞', desc: 'e≈1，动量和动能都守恒', build: () => {
+      addBody({ type: 'ball', name: 'B1', x: -2, y: 0.5, radius: 18, mass: 1, mu: 0, restitution: 0.95, vx: 5, vy: 0 });
+      addBody({ type: 'ball', name: 'B2', x: 0.5, y: 0.5, radius: 18, mass: 1, mu: 0, restitution: 0.95 });
+    }},
+  ],
+  '重力环境演示': [
+    { name: '月球自由落体', desc: 'g=1.6，下落更慢', build: () => {
+      Scene.gravity = { g: 1.6, direction: 'down', planet: 'moon' };
+      Engine.setGravity(1.6, 'down');
+      addBody({ type: 'ball', name: 'B1', x: 0, y: 4, radius: 18, mass: 1, mu: 0.3, restitution: 0.3 });
+    }},
+  ],
+};
+
+function openExamples() {
+  const modal = document.getElementById('modalExamples');
+  const body = document.getElementById('examplesBody');
+  body.innerHTML = '';
+  const cats = Object.keys(EXAMPLES);
+  const catBar = document.createElement('div'); catBar.className = 'example-cats';
+  const grid = document.createElement('div'); grid.className = 'example-grid';
+
+  function renderCat(cat) {
+    catBar.querySelectorAll('.example-cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+    grid.innerHTML = '';
+    for (const ex of EXAMPLES[cat]) {
+      const card = document.createElement('div');
+      card.className = 'example-card';
+      card.innerHTML = `<strong>${ex.name}</strong><span>${ex.desc}</span>`;
+      card.addEventListener('click', () => {
+        pushUndo();
+        Scene.reset();
+        Scene.gravity = { g: 10, direction: 'down', planet: 'earth' };
+        Engine.setGravity(10, 'down');
+        ex.build();
+        Scene.settings.showForces = true;
+        document.getElementById('btnForces').classList.add('active');
+        resetView();
+        modal.classList.remove('open');
+        refreshProperties();
+        updateStatusBar();
+        toast(`已加载：${ex.name}`);
+      });
+      grid.appendChild(card);
+    }
+  }
+
+  for (const cat of cats) {
+    const btn = document.createElement('button');
+    btn.className = 'example-cat-btn' + (cat === cats[0] ? ' active' : '');
+    btn.dataset.cat = cat;
+    btn.textContent = cat;
+    btn.addEventListener('click', () => renderCat(cat));
+    catBar.appendChild(btn);
+  }
+  body.appendChild(catBar);
+  body.appendChild(grid);
+  renderCat(cats[0]);
+  modal.classList.add('open');
+}
+
+function resetView() {
+  const cw = canvas.width / devicePixelRatio, ch = canvas.height / devicePixelRatio;
+  view.scale = 1;
+  view.panX = cw / 2; // 水平居中
+  view.panY = ch - 80; // 底部往上 80px 处是地面 (y=0)
+}
+
+function addBody(opts) {
+  const body = { ...opts, vx: opts.vx || 0, vy: opts.vy || 0, angle: opts.angle || 0 };
+  body.name = body.name || autoName(body.type);
+  body.mass = opts.mass != null ? opts.mass : (opts.isStatic ? 0 : 1);
+  body.mu = opts.mu != null ? opts.mu : 0.3;
+  body.restitution = opts.restitution != null ? opts.restitution : 0.1;
+  body.isStatic = !!opts.isStatic;
+  Scene.addBody(body);
+  return body;
+}
+
+function serializeScene() {
+  return {
+    version: 1, gravity: Scene.gravity,
+    bodies: Scene.bodies.filter(b => !b.isSystem).map(b => ({ id: b.id, type: b.type, name: b.name, x: b.x, y: b.y, w: b.w, h: b.h, radius: b.radius, mass: b.mass, mu: b.mu, restitution: b.restitution, static: b.isStatic, vx: b.vx || 0, vy: b.vy || 0, angle: b.angle || 0, density: b.density, color: b.color })),
+    constraints: Scene.constraints.map(c => ({ type: c.type, bodyA: c.bodyA, bodyB: c.bodyB, anchorA: c.anchorA, anchorB: c.anchorB, length: c.length, maxForce: c.maxForce, restLength: c.restLength, stiffness: c.stiffness, damping: c.damping })),
+    forces: Scene.forces.map(f => ({ id: f.id, targetId: f.targetId, magnitude: f.magnitude, angle: f.angle, continuous: f.continuous })),
+    settings: { showForces: Scene.settings.showForces, showVectors: Scene.settings.showVectors, showTrail: Scene.settings.showTrail, showGrid: Scene.settings.showGrid, timeScale: Scene.settings.timeScale }
+  };
+}
+
+function loadSceneFromJSON(data) {
+  if (!data || typeof data !== 'object') throw new Error('无效的 JSON 对象');
+  if (data.version !== 1) throw new Error('不支持的版本号');
+  if (!Array.isArray(data.bodies)) throw new Error('bodies 必须是数组');
+
+  Scene.reset();
+  if (data.gravity) { Scene.gravity = { g: data.gravity.g || 10, direction: data.gravity.direction || 'down', planet: data.gravity.planet || 'earth' }; Engine.setGravity(Scene.gravity.g, Scene.gravity.direction); }
+
+  for (const b of data.bodies) {
+    if (!b.type) continue;
+    const body = {
+      id: b.id || Scene.allocId(), type: b.type, name: b.name || autoName(b.type), x: b.x || 0, y: b.y || 0, w: b.w, h: b.h, radius: b.radius,
+      mass: b.mass != null ? b.mass : 1, mu: b.mu != null ? b.mu : 0.3, restitution: b.restitution != null ? b.restitution : 0.1,
+      isStatic: !!b.static, vx: b.vx || 0, vy: b.vy || 0, angle: b.angle || 0, density: b.density, color: b.color
+    };
+    Scene.bodies.push(body);
+    Scene.nextId = Math.max(Scene.nextId, body.id + 1);
+    Engine.createBody({ ...body, id: body.id });
+  }
+
+  for (const c of (data.constraints || [])) {
+    let cid = null;
+    if (c.type === 'rope') cid = Engine.createRope(c.bodyA, c.bodyB, c.anchorA || { x: 0, y: 0 }, c.anchorB || { x: 0, y: 0 }, c.length || 1, c.maxForce || 1000);
+    else if (c.type === 'spring') cid = Engine.createSpring(c.bodyA, c.bodyB, c.anchorA || { x: 0, y: 0 }, c.anchorB || { x: 0, y: 0 }, c.restLength || 1, c.stiffness || 200, c.damping || 0.5);
+    if (cid) Scene.constraints.push({ ...c, id: cid });
+  }
+
+  for (const f of (data.forces || [])) {
+    Scene.forces.push({ id: f.id || uid(), targetId: f.targetId, magnitude: f.magnitude || 0, angle: f.angle || 0, continuous: f.continuous !== false });
+  }
+
+  if (data.settings) {
+    Object.assign(Scene.settings, { showForces: false, showVectors: false, showTrail: false, showGrid: true, playing: false });
+    Object.assign(Scene.settings, data.settings);
+    Scene.settings.playing = false;
+    document.getElementById('btnForces').classList.toggle('active', Scene.settings.showForces);
+    document.getElementById('btnVectors').classList.toggle('active', Scene.settings.showVectors);
+    document.getElementById('btnTrail').classList.toggle('active', Scene.settings.showTrail);
+    document.getElementById('btnGrid').classList.toggle('active', Scene.settings.showGrid);
+    document.getElementById('btnPlay').classList.remove('active');
+    document.getElementById('btnPlay').textContent = '▶ 播放';
+  }
+
+  refreshProperties(); updateStatusBar(); render();
+}
+
+document.querySelectorAll('[data-close]').forEach(btn => { btn.addEventListener('click', () => document.getElementById(btn.dataset.close).classList.remove('open')); });
+document.querySelectorAll('.modal-overlay').forEach(m => { m.addEventListener('mousedown', e => { if (e.target === m) m.classList.remove('open'); }); });
+
+document.getElementById('btnGravity').addEventListener('click', () => {
+  const sel = document.getElementById('gravityPlanet');
+  sel.value = Scene.gravity.planet || 'earth';
+  document.getElementById('gravityCustomG').value = Scene.gravity.g;
+  document.getElementById('gravityDirection').value = Scene.gravity.direction;
+  document.getElementById('modalGravity').classList.add('open');
+});
+document.getElementById('gravityPlanet').addEventListener('change', e => {
+  if (e.target.value !== 'custom') document.getElementById('gravityCustomG').value = GRAVITY_PRESETS[e.target.value];
+});
+document.getElementById('gravityApply').addEventListener('click', () => {
+  const planet = document.getElementById('gravityPlanet').value;
+  const g = planet === 'custom' ? parseFloat(document.getElementById('gravityCustomG').value) : GRAVITY_PRESETS[planet];
+  const dir = document.getElementById('gravityDirection').value;
+  if (isNaN(g) || g < 0 || g > 500) { toast('g 值必须在 0~500 之间'); return; }
+  pushUndo(); Scene.gravity = { g, direction: dir, planet }; Engine.setGravity(g, dir);
+  document.getElementById('modalGravity').classList.remove('open');
+  toast(`重力环境：g=${g} N/kg，${dir === 'down' ? '竖直向下' : '水平向右'}`);
+});
+
+document.getElementById('btnExamples').addEventListener('click', openExamples);
+
+document.getElementById('btnJSON').addEventListener('click', () => {
+  document.getElementById('jsonText').value = JSON.stringify(serializeScene(), null, 2);
+  document.getElementById('modalJSON').classList.add('open');
+});
+document.getElementById('jsonExport').addEventListener('click', () => {
+  document.getElementById('jsonText').value = JSON.stringify(serializeScene(), null, 2);
+  toast('已导出到文本框');
+});
+document.getElementById('jsonImport').addEventListener('click', () => {
+  const raw = document.getElementById('jsonText').value.trim();
+  if (!raw) { toast('请先粘贴 JSON'); return; }
+  try {
+    const data = JSON.parse(raw);
+    pushUndo(); loadSceneFromJSON(data);
+    document.getElementById('modalJSON').classList.remove('open');
+    toast('导入成功');
+  } catch (e) { toast('导入失败：' + (e.message || 'JSON 格式错误')); }
+});
+
+Scene.reset();
+buildLibrary();
+resizeCanvas();
+updateStatusBar();
+resetView();
+
+(function initDemo() {
+  addBody({ type: 'box', name: 'M1', x: 0, y: 0.5, w: 40, h: 40, mass: 2, mu: 0.3, restitution: 0.2 });
+  Scene.selectedIds.add(Scene.bodies[Scene.bodies.length - 1].id);
+  refreshProperties();
+})();
+
+requestAnimationFrame(simulationTick);
+</script>
+</body>
+</html>

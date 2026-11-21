@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, user-scalable=yes" />
+    <title>纯净全屏阅读</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden;
+            background: transparent;
+            transition: background-color 0.6s ease;
+        }
+
+        /* ===== 输入视图 ===== */
+        #input-view {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 24px;
+            z-index: 10;
+            transition: background-color 0.6s ease, color 0.6s ease, opacity 0.4s ease, transform 0.4s ease;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        #input-view.hidden {
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+        }
+
+        .input-wrapper {
+            width: 100%;
+            max-width: 820px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 主题指示器 */
+        #theme-indicator {
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+            opacity: 0.7;
+            transition: color 0.6s ease;
+            user-select: none;
+        }
+
+        #text-input {
+            width: 100%;
+            height: 58vh;
+            min-height: 200px;
+            padding: 24px 28px;
+            font-size: 18px;
+            line-height: 1.8;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            outline: none;
+            resize: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.6s ease, color 0.6s ease;
+            color: inherit;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            backdrop-filter: blur(2px);
+        }
+        #text-input:focus {
+            border-color: rgba(0, 0, 0, 0.35);
+            box-shadow: 0 4px 28px rgba(0, 0, 0, 0.06);
+        }
+        #text-input::placeholder {
+            color: rgba(0, 0, 0, 0.35);
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+
+        .hint {
+            margin-top: 20px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            opacity: 0.6;
+            transition: color 0.6s ease;
+            user-select: none;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .hint kbd {
+            display: inline-block;
+            padding: 0 8px;
+            font-family: inherit;
+            background: rgba(0, 0, 0, 0.08);
+            border-radius: 4px;
+            font-weight: 500;
+            margin: 0 2px;
+        }
+
+        /* ===== 显示视图（全屏纯文本） ===== */
+        #display-view {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 40px 32px;
+            z-index: 9999;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            transition: background-color 0.6s ease, color 0.6s ease;
+            background-color: #0b0b0b;
+            color: #ececec;
+        }
+        #display-view.active {
+            display: flex;
+        }
+
+        /* 隐藏滚动条 */
+        #display-view::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+            background: transparent;
+        }
+        #display-view {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        #display-text {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            font-family: "Georgia", "Times New Roman", "Songti SC", serif;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            letter-spacing: 0.02em;
+            text-rendering: optimizeLegibility;
+            font-size: 2.2rem;
+            transition: color 0.6s ease;
+            color: inherit;
+            margin: 0;
+            height: auto;
+            min-height: 100%;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 640px) {
+            #input-view {
+                padding: 24px 16px;
+            }
+            #text-input {
+                height: 50vh;
+                min-height: 160px;
+                padding: 18px 20px;
+                font-size: 16px;
+                border-radius: 12px;
+            }
+            #display-view {
+                padding: 24px 16px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            #display-view {
+                padding: 16px 12px;
+            }
+            #display-text {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* ===== 进入动画 ===== */
+        #display-view.active {
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 输入视图 ===== -->
+    <div id="input-view">
+        <div class="input-wrapper">
+            <div id="theme-indicator">📖 当前主题：黑白</div>
+            <textarea id="text-input" placeholder="在此输入要全屏显示的文本…"></textarea>
+            <div class="hint">
+                <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> 切换主题 &nbsp;·&nbsp; <kbd>Ctrl</kbd> + <kbd>Enter</kbd> 全屏显示
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 显示视图（全屏纯文本） ===== -->
+    <div id="display-view">
+        <div id="display-text"></div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ---- DOM 引用 ----
+            const inputView = document.getElementById('input-view');
+            const displayView = document.getElementById('display-view');
+            const displayText = document.getElementById('display-text');
+            const textInput = document.getElementById('text-input');
+            const themeIndicator = document.getElementById('theme-indicator');
+
+            // ---- 主题定义 ----
+            const themes = [{
+                name: '黑白',
+                bg: '#ffffff',
+                text: '#000000'
+            }, {
+                name: '白黑',
+                bg: '#1a1a1a',
+                text: '#eaeaea'
+            }, {
+                name: '暖色（阅读色）',
+                bg: '#f9f3e4',
+                text: '#3a2c1b'
+            }];
+
+            let currentThemeIndex = 0; // 默认黑白
+
+            // ---- 应用主题（柔和过渡） ----
+            function applyTheme(index) {
+                const theme = themes[index];
+                if (!theme) return;
+
+                // 同时修改输入视图和显示视图的背景和文字颜色
+                inputView.style.backgroundColor = theme.bg;
+                inputView.style.color = theme.text;
+
+                // 如果显示视图处于活动状态，也修改
+                if (displayView.classList.contains('active')) {
+                    displayView.style.backgroundColor = theme.bg;
+                    displayView.style.color = theme.text;
+                }
+
+                // 更新指示器
+                themeIndicator.textContent = '📖 当前主题：' + theme.name;
+
+                currentThemeIndex = index;
+            }
+
+            // ---- 切换主题（柔和） ----
+            function switchTheme(delta) {
+                let newIndex = (currentThemeIndex + delta) % themes.length;
+                if (newIndex < 0) newIndex += themes.length;
+                applyTheme(newIndex);
+            }
+
+            // ---- 设置主题（直接指定） ----
+            function setTheme(index) {
+                if (index >= 0 && index < themes.length) {
+                    applyTheme(index);
+                }
+            }
+
+            // ---- 进入全屏 ----
+            function enterFullscreen() {
+                const text = textInput.value;
+                if (!text || !text.trim()) {
+                    textInput.focus();
+                    textInput.style.borderColor = '#e74c3c';
+                    setTimeout(() => {
+                        textInput.style.borderColor = '';
+                    }, 1500);
+                    return;
+                }
+
+                // 隐藏输入视图
+                inputView.classList.add('hidden');
+
+                // 设置文本
+                displayText.textContent = text;
+
+                // 应用当前主题到显示视图（确保同步）
+                const theme = themes[currentThemeIndex];
+                displayView.style.backgroundColor = theme.bg;
+                displayView.style.color = theme.text;
+
+                // 显示显示视图
+                displayView.classList.add('active');
+
+                // 自适应字号
+                adjustFontSizeToFit();
+
+                // 请求浏览器全屏
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(function(err) {
+                        console.debug('Fullscreen request denied:', err);
+                    });
+                }
+            }
+
+            // ---- 退出全屏 ----
+            function exitFullscreen() {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(function() {});
+                }
+                displayView.classList.remove('active');
+                inputView.classList.remove('hidden');
+                displayView.scrollTop = 0;
+                // 恢复输入视图的主题（已保持）
+                setTimeout(() => {
+                    textInput.focus();
+                }, 100);
+            }
+
+            // ---- 自适应字体大小 ----
+            let isAdjusting = false;
+            let currentFontSize = 22;
+
+            function adjustFontSizeToFit() {
+                if (!displayView.classList.contains('active')) return;
+                if (isAdjusting) return;
+                isAdjusting = true;
+
+                requestAnimationFrame(() => {
+                    const container = displayView;
+                    const textEl = displayText;
+
+                    const containerStyle = getComputedStyle(container);
+                    const padX = parseFloat(containerStyle.paddingLeft) + parseFloat(containerStyle.paddingRight);
+                    const padY = parseFloat(containerStyle.paddingTop) + parseFloat(containerStyle.paddingBottom);
+                    const containerWidth = container.clientWidth - padX;
+                    const containerHeight = container.clientHeight - padY;
+
+                    if (containerWidth <= 0 || containerHeight <= 0) {
+                        isAdjusting = false;
+                        return;
+                    }
+
+                    textEl.style.width = containerWidth + 'px';
+                    const testSize = 20;
+                    textEl.style.fontSize = testSize + 'px';
+                    let baseHeight = textEl.scrollHeight;
+                    if (!textEl.textContent || !textEl.textContent.trim()) {
+                        textEl.style.fontSize = '2.2rem';
+                        isAdjusting = false;
+                        return;
+                    }
+
+                    let low = 8,
+                        high = 300,
+                        best = testSize;
+                    for (let i = 0; i < 25; i++) {
+                        let mid = (low + high) / 2;
+                        textEl.style.fontSize = mid + 'px';
+                        let h = textEl.scrollHeight;
+                        if (h <= containerHeight) {
+                            best = mid;
+                            low = mid;
+                        } else {
+                            high = mid;
+                        }
+                        if (high - low < 0.5) break;
+                    }
+                    if (best < 12) best = 12;
+                    textEl.style.fontSize = best + 'px';
+                    currentFontSize = best;
+                    isAdjusting = false;
+                });
+            }
+
+            function changeFontSize(delta) {
+                if (!displayView.classList.contains('active')) return;
+                let newSize = currentFontSize + delta;
+                newSize = Math.min(400, Math.max(8, newSize));
+                if (newSize === currentFontSize) return;
+                currentFontSize = newSize;
+                displayText.style.fontSize = newSize + 'px';
+            }
+
+            function resetFontSize() {
+                if (!displayView.classList.contains('active')) return;
+                adjustFontSizeToFit();
+            }
+
+            // ===== 键盘事件 =====
+            document.addEventListener('keydown', function(e) {
+                // 如果在输入框中，数字键用于输入，不切换主题
+                if (e.target === textInput) {
+                    // 但 Ctrl+Enter 依然生效
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        enterFullscreen();
+                    }
+                    return;
+                }
+
+                // 全局数字键切换主题（包括全屏和输入视图的非输入框区域）
+                if (e.key === '1') {
+                    e.preventDefault();
+                    setTheme(0);
+                } else if (e.key === '2') {
+                    e.preventDefault();
+                    setTheme(1);
+                } else if (e.key === '3') {
+                    e.preventDefault();
+                    setTheme(2);
+                }
+
+                // 全屏视图下的其他快捷键
+                if (displayView.classList.contains('active')) {
+                    if (e.key === '+' || e.key === '=') {
+                        e.preventDefault();
+                        changeFontSize(2);
+                    } else if (e.key === '-') {
+                        e.preventDefault();
+                        changeFontSize(-2);
+                    } else if (e.key === '0') {
+                        e.preventDefault();
+                        resetFontSize();
+                    } else if (e.key === 'Escape') {
+                        if (document.fullscreenElement) {
+                            document.exitFullscreen().catch(function() {});
+                        }
+                        exitFullscreen();
+                    }
+                }
+            });
+
+            // ---- 全屏变化事件 ----
+            document.addEventListener('fullscreenchange', function() {
+                if (!document.fullscreenElement && displayView.classList.contains('active')) {
+                    exitFullscreen();
+                }
+            });
+            ['webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+                document.addEventListener(evt, function() {
+                    if (!document[evt.replace('change', '') + 'Element'] && displayView.classList.contains(
+                            'active')) {
+                        exitFullscreen();
+                    }
+                });
+            });
+
+            // ---- 窗口尺寸变化重新适配 ----
+            let resizeTimer = null;
+            window.addEventListener('resize', function() {
+                if (displayView.classList.contains('active')) {
+                    if (resizeTimer) clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function() {
+                        adjustFontSizeToFit();
+                        resizeTimer = null;
+                    }, 200);
+                }
+            });
+
+            // ---- 双击重置字号（全屏时） ----
+            displayText.addEventListener('dblclick', function(e) {
+                e.stopPropagation();
+                resetFontSize();
+            });
+
+            // ---- 双击显示视图空白退出 ----
+            displayView.addEventListener('dblclick', function(e) {
+                if (e.target === displayText) return;
+                if (displayView.classList.contains('active')) {
+                    exitFullscreen();
+                }
+            });
+
+            // ---- 初始化 ----
+            applyTheme(0); // 默认为黑白
+            textInput.focus();
+
+            // 暴露 API 方便调试
+            window.__fullscreenText = {
+                enter: enterFullscreen,
+                exit: exitFullscreen,
+                setTheme: setTheme,
+                adjust: adjustFontSizeToFit,
+                changeSize: changeFontSize,
+                reset: resetFontSize
+            };
+
+            console.log('📝 纯净全屏阅读工具已就绪。\n' +
+                '• 按 1、2、3 切换主题（柔和过渡，全屏也支持）\n' +
+                '• 在输入框按 Ctrl+Enter 全屏显示\n' +
+                '• 全屏后按 +/- 调整字号，0 重置自动适配\n' +
+                '• 双击文本重置字号，双击空白边缘退出');
+        })();
+    </script>
+</body>
+</html>
