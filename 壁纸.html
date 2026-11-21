@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bing 历史壁纸 · 虚拟轮播</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1d23;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #fff;
+        }
+
+        /* ===== 轮播容器 ===== */
+        .carousel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #1a1d23;
+            overflow: hidden;
+        }
+        .track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            will-change: transform;
+            transform: translateX(-100%);
+            /* 默认显示中间 slide */;
+        }
+        .slide {
+            flex: 0 0 100%;
+            height: 100%;
+            background: #1a1d23;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            will-change: opacity;
+            contain: layout style paint;
+        }
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            contain: paint;
+        }
+        .slide .placeholder {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #2a2e36, #1a1d23);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.06);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            will-change: opacity;
+        }
+        .slide img.loaded+.placeholder {
+            opacity: 0;
+        }
+
+        /* ===== 加载进度 ===== */
+        .loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.04);
+            z-index: 200;
+            width: 100%;
+            pointer-events: none;
+        }
+        .loading-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255, 255, 255, 0.25);
+            transition: width 0.3s ease;
+            will-change: width;
+        }
+
+        /* ===== 控制栏 ===== */
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: rgba(20, 22, 28, 0.5);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 10px 24px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            user-select: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            max-width: 90vw;
+        }
+        .controls.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            pointer-events: none;
+        }
+        .info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-right: 14px;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+        .counter {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 0.6px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px 14px;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        .title {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.78rem;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+            max-width: 240px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.25);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            flex-shrink: 0;
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .nav-btn:active {
+            transform: scale(0.92);
+        }
+        .nav-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        .dots {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0 4px;
+            overflow: hidden;
+            max-width: 200px;
+            flex-shrink: 1;
+            flex-wrap: nowrap;
+        }
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+        }
+        .dot.active {
+            background: rgba(255, 255, 255, 0.5);
+            width: 20px;
+        }
+        .toggle-auto {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.65rem;
+            font-weight: 400;
+            letter-spacing: 0.6px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            padding-left: 14px;
+            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .toggle-auto:hover {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .toggle-auto .switch {
+            width: 32px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            position: relative;
+            transition: 0.25s ease;
+        }
+        .toggle-auto .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transition: 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .toggle-auto.active .switch {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .toggle-auto.active .switch::after {
+            transform: translateX(16px);
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .settings-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding-left: 6px;
+            flex-shrink: 0;
+        }
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .settings-btn:active {
+            transform: scale(0.92);
+        }
+        .settings-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ===== 设置面板 ===== */
+        .settings-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        .settings-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .settings-panel {
+            background: rgba(30, 34, 42, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 32px;
+            padding: 36px 40px 32px;
+            max-width: 520px;
+            width: 94%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+            transform: scale(0.94) translateY(12px);
+            transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s ease;
+            opacity: 0;
+        }
+        .settings-overlay.open .settings-panel {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        .settings-panel h2 {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 14px;
+            text-align: center;
+        }
+        .setting-group {
+            margin-bottom: 20px;
+        }
+        .setting-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .setting-group select {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+        .setting-group select:focus {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .search-row {
+            display: flex;
+            gap: 10px;
+        }
+        .search-row input {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-row input:focus {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .search-row input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
+        .search-row button {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .search-row button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .search-row button:active {
+            transform: scale(0.96);
+        }
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 3px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            outline: none;
+        }
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .setting-group input[type="range"]::-webkit-slider-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .setting-group input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+        }
+        .range-display {
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 0.6rem;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+        .range-value {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        .effect-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .effect-options button {
+            flex: 1;
+            min-width: 56px;
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+        .effect-options button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .effect-options button.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .effect-options button:active {
+            transform: scale(0.96);
+        }
+
+        /* ===== 电台 ===== */
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.02);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .radio-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .radio-item.active {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .radio-item .dot-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+        .radio-item.active .dot-indicator {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .radio-item .radio-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .radio-item .radio-name {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.78rem;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+        .radio-item .radio-desc {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 0.6rem;
+            margin-top: 2px;
+            letter-spacing: 0.2px;
+        }
+        .radio-item .radio-status {
+            font-size: 0.55rem;
+            color: rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+        .radio-item.active .radio-status {
+            color: rgba(100, 220, 150, 0.6);
+        }
+        .radio-toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 0 4px 0;
+        }
+        .radio-toggle-row label {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+        .radio-toggle-row .switch {
+            width: 40px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: 0.25s ease;
+            flex-shrink: 0;
+        }
+        .radio-toggle-row .switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            transition: 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .radio-toggle-row .switch.active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        .radio-toggle-row .switch.active::after {
+            transform: translateX(20px);
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .radio-toggle-row .switch-label {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 0.6rem;
+            letter-spacing: 0.5px;
+        }
+        .radio-toggle-row .switch-label.on {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .settings-close {
+            margin-top: 24px;
+            width: 100%;
+            padding: 11px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+        .settings-close:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .settings-close:active {
+            transform: scale(0.98);
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.04);
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            font-weight: 400;
+            z-index: 50;
+            pointer-events: none;
+            transition: opacity 2s ease;
+            white-space: nowrap;
+        }
+
+        .settings-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+        .settings-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .settings-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .controls {
+                bottom: 24px;
+                padding: 8px 14px;
+                gap: 10px;
+                border-radius: 40px;
+            }
+            .info {
+                gap: 8px;
+                padding-right: 8px;
+            }
+            .title {
+                max-width: 80px;
+                font-size: 0.55rem;
+            }
+            .counter {
+                font-size: 0.5rem;
+                padding: 2px 10px;
+            }
+            .nav-btn {
+                width: 30px;
+                height: 30px;
+            }
+            .nav-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .dots {
+                max-width: 120px;
+                gap: 3px;
+            }
+            .dot {
+                width: 4px;
+                height: 4px;
+            }
+            .dot.active {
+                width: 14px;
+            }
+            .toggle-auto {
+                font-size: 0.45rem;
+                padding-left: 8px;
+                gap: 6px;
+            }
+            .toggle-auto .switch {
+                width: 26px;
+                height: 14px;
+            }
+            .toggle-auto .switch::after {
+                width: 10px;
+                height: 10px;
+            }
+            .settings-btn {
+                width: 30px;
+                height: 30px;
+            }
+            .settings-btn svg {
+                width: 16px;
+                height: 16px;
+            }
+            .settings-panel {
+                padding: 24px 18px 20px;
+                border-radius: 24px;
+            }
+            .hint {
+                display: none;
+            }
+            .search-row input {
+                font-size: 0.65rem;
+                padding: 8px 12px;
+            }
+            .search-row button {
+                font-size: 0.55rem;
+                padding: 8px 14px;
+            }
+            .radio-item {
+                padding: 6px 12px;
+            }
+            .radio-item .radio-name {
+                font-size: 0.7rem;
+            }
+            .radio-item .radio-desc {
+                font-size: 0.55rem;
+            }
+            .radio-toggle-row .switch {
+                width: 34px;
+                height: 18px;
+            }
+            .radio-toggle-row .switch::after {
+                width: 14px;
+                height: 14px;
+            }
+            .radio-toggle-row .switch.active::after {
+                transform: translateX(16px);
+            }
+        }
+        @media (max-width: 480px) {
+            .controls {
+                bottom: 16px;
+                padding: 6px 10px;
+                gap: 6px;
+                border-radius: 30px;
+            }
+            .title {
+                max-width: 50px;
+                font-size: 0.45rem;
+            }
+            .counter {
+                font-size: 0.4rem;
+                padding: 2px 8px;
+            }
+            .nav-btn {
+                width: 26px;
+                height: 26px;
+            }
+            .nav-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .dots {
+                max-width: 80px;
+                gap: 2px;
+            }
+            .dot {
+                width: 3px;
+                height: 3px;
+            }
+            .dot.active {
+                width: 10px;
+            }
+            .settings-btn {
+                width: 26px;
+                height: 26px;
+            }
+            .settings-btn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .settings-panel {
+                padding: 18px 14px 16px;
+                border-radius: 20px;
+            }
+            .setting-group {
+                margin-bottom: 14px;
+            }
+            .radio-item {
+                padding: 4px 10px;
+            }
+            .radio-item .radio-name {
+                font-size: 0.65rem;
+            }
+            .radio-item .radio-desc {
+                font-size: 0.5rem;
+            }
+            .radio-toggle-row .switch {
+                width: 30px;
+                height: 16px;
+            }
+            .radio-toggle-row .switch::after {
+                width: 12px;
+                height: 12px;
+            }
+            .radio-toggle-row .switch.active::after {
+                transform: translateX(14px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 加载进度条 ===== -->
+    <div class="loading-bar"><div class="fill" id="loadFill"></div></div>
+
+    <!-- ===== 轮播 ===== -->
+    <div class="carousel">
+        <div class="track" id="track">
+            <!-- 3 个 slide 由 JS 动态创建 -->
+        </div>
+    </div>
+
+    <!-- ===== 提示 ===== -->
+    <div class="hint" id="hint">T 切换控制栏 · S 设置 · ← → 切换 · 空格 暂停</div>
+
+    <!-- ===== 控制栏 ===== -->
+    <div class="controls" id="controls">
+        <div class="info">
+            <span class="counter" id="counter">0 / 0</span>
+            <span class="title" id="title">加载中...</span>
+        </div>
+        <button class="nav-btn" id="prevBtn">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="dots" id="dots"></div>
+        <button class="nav-btn" id="nextBtn">
+            <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <div class="toggle-auto active" id="toggleAuto">
+            <span>自动</span>
+            <span class="switch"></span>
+        </div>
+        <button class="settings-btn" id="settingsBtn">
+            <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+    </div>
+
+    <!-- ===== 设置面板 ===== -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+            <h2>设 置</h2>
+
+            <div class="setting-group">
+                <label>年份筛选</label>
+                <select id="yearSelect">
+                    <option value="all">全部 (2009-2024)</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                    <option value="2014">2014</option>
+                    <option value="2013">2013</option>
+                    <option value="2012">2012</option>
+                    <option value="2011">2011</option>
+                    <option value="2010">2010</option>
+                    <option value="2009">2009</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>搜索日期 (如 2024-01)</label>
+                <div class="search-row">
+                    <input type="text" id="searchInput" placeholder="输入日期，例如 2024-01" />
+                    <button id="searchBtn">搜索</button>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>切换间隔</label>
+                <input type="range" id="intervalSlider" min="2" max="20" step="0.5" value="5">
+                <div class="range-display"><span>2 秒</span><span class="range-value" id="intervalDisplay">5.0 秒</span><span>20 秒</span></div>
+            </div>
+
+            <div class="setting-group">
+                <label>切换动效</label>
+                <div class="effect-options" id="effectOptions">
+                    <button data-effect="slide" class="active">滑动</button>
+                    <button data-effect="fade">淡化</button>
+                    <button data-effect="dissolve">溶解</button>
+                </div>
+            </div>
+
+            <!-- 电台 -->
+            <div class="setting-group">
+                <label>背景音乐</label>
+                <div class="radio-toggle-row">
+                    <label>电台开关</label>
+                    <div class="switch" id="radioToggle"></div>
+                    <span class="switch-label" id="radioToggleLabel">关闭</span>
+                </div>
+                <div style="margin-top:10px;">
+                    <div class="radio-group" id="radioGroup">
+                        <div class="radio-item active" data-station="piano">
+                            <span class="dot-indicator"></span>
+                            <div class="radio-info">
+                                <div class="radio-name">Whisperings · 钢琴独奏</div>
+                                <div class="radio-desc">24小时不间断钢琴独奏，旋律优美宁静</div>
+                            </div>
+                            <span class="radio-status">● 就绪</span>
+                        </div>
+                        <div class="radio-item" data-station="groove">
+                            <span class="dot-indicator"></span>
+                            <div class="radio-info">
+                                <div class="radio-name">SomaFM · Groove Salad</div>
+                                <div class="radio-desc">缓拍氛围电子乐，经典放松之选</div>
+                            </div>
+                            <span class="radio-status">● 就绪</span>
+                        </div>
+                        <div class="radio-item" data-station="chilltrax">
+                            <span class="dot-indicator"></span>
+                            <div class="radio-info">
+                                <div class="radio-name">Chilltrax · 弛放电子</div>
+                                <div class="radio-desc">全球驰放音乐频道，无商业广告</div>
+                            </div>
+                            <span class="radio-status">● 就绪</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="settings-close" id="settingsClose">关闭设置</button>
+        </div>
+    </div>
+
+    <!-- ===== 音频 ===== -->
+    <audio id="radioPlayer" style="display:none;"></audio>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  配置
+            // ============================================================
+            const BASE_URL = 'https://bing.npanuhin.me';
+            const COUNTRY = 'CN';
+            const LANG = 'zh';
+            const STORAGE_KEY = 'bing_wallpaper_prefs';
+            const MAX_DOTS = 20;
+            const ANIM_DURATION = 650; // ms
+            const MAX_CACHE_SIZE = 18; // 图片解码缓存上限（张）
+
+            const RADIO_STATIONS = {
+                piano: {
+                    name: 'Whisperings · 钢琴独奏',
+                    url: 'http://pianosolo.streamguys.net/live',
+                    desc: '24小时不间断钢琴独奏，旋律优美宁静'
+                },
+                groove: {
+                    name: 'SomaFM · Groove Salad',
+                    url: 'https://ice5.somafm.com/groovesalad-128-mp3',
+                    desc: '缓拍氛围电子乐，经典放松之选'
+                },
+                chilltrax: {
+                    name: 'Chilltrax · 弛放电子',
+                    url: 'https://streamssl.chilltrax.com/',
+                    desc: '全球驰放音乐频道，无商业广告'
+                }
+            };
+
+            // ============================================================
+            //  DOM
+            // ============================================================
+            const track = document.getElementById('track');
+            const counter = document.getElementById('counter');
+            const titleEl = document.getElementById('title');
+            const dotsEl = document.getElementById('dots');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const toggleAuto = document.getElementById('toggleAuto');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsOverlay = document.getElementById('settingsOverlay');
+            const settingsClose = document.getElementById('settingsClose');
+            const intervalSlider = document.getElementById('intervalSlider');
+            const intervalDisplay = document.getElementById('intervalDisplay');
+            const effectOptions = document.getElementById('effectOptions');
+            const loadFill = document.getElementById('loadFill');
+            const hint = document.getElementById('hint');
+            const controls = document.getElementById('controls');
+            const yearSelect = document.getElementById('yearSelect');
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const radioPlayer = document.getElementById('radioPlayer');
+            const radioToggle = document.getElementById('radioToggle');
+            const radioToggleLabel = document.getElementById('radioToggleLabel');
+            const radioGroup = document.getElementById('radioGroup');
+
+            // ============================================================
+            //  状态
+            // ============================================================
+            let allImages = [];
+            let filteredImages = [];
+            let currentIndex = 0;
+            let autoTimer = null;
+            let isAuto = true;
+            let intervalSec = 5.0;
+            let currentEffect = 'slide';
+            let isAnimating = false;
+            let pendingTarget = null;
+            let currentYear = 'all';
+            let searchQuery = '';
+            let pageVisible = true;
+            let loadedCount = 0;
+
+            // 电台
+            let radioEnabled = false;
+            let currentStation = 'piano';
+
+            // ---------- 虚拟轮播核心 ----------
+            const SLIDE_COUNT = 3;
+            let slideElements = [];
+            let slideData = [];
+
+            // ============================================================
+            //  图片加载层：LRU 缓存 + 请求去重 + 提前解码
+            //  （这是性能优化的核心：避免重复请求 / 重复解码 / 内存无上限增长）
+            // ============================================================
+            const imgCache = new Map();      // url -> HTMLImageElement（已解码）
+            const pendingLoads = new Map();  // url -> Promise（进行中的加载）
+
+            function touchCache(url) {
+                const v = imgCache.get(url);
+                if (v === undefined) return;
+                imgCache.delete(url);
+                imgCache.set(url, v);
+            }
+
+            function trimCache() {
+                while (imgCache.size > MAX_CACHE_SIZE) {
+                    const oldest = imgCache.keys().next().value;
+                    imgCache.delete(oldest);
+                }
+            }
+
+            function preloadImage(url) {
+                if (!url) return Promise.resolve(null);
+
+                const cached = imgCache.get(url);
+                if (cached) { touchCache(url); return Promise.resolve(cached); }
+
+                const pending = pendingLoads.get(url);
+                if (pending) return pending;
+
+                const p = new Promise((resolve) => {
+                    const image = new Image();
+                    image.decoding = 'async';
+
+                    const finish = () => {
+                        pendingLoads.delete(url);
+                        imgCache.set(url, image);
+                        trimCache();
+                        resolve(image);
+                    };
+
+                    image.onload = () => {
+                        let d = null;
+                        try { d = typeof image.decode === 'function' ? image.decode() : null; } catch (_) { d = null; }
+                        if (d && typeof d.then === 'function') d.then(finish, finish);
+                        else finish();
+                    };
+                    image.onerror = () => {
+                        pendingLoads.delete(url);
+                        resolve(null);
+                    };
+                    image.src = url;
+                });
+
+                pendingLoads.set(url, p);
+                return p;
+            }
+
+            // ============================================================
+            //  设置持久化
+            // ============================================================
+            function saveSettings() {
+                const prefs = {
+                    year: currentYear,
+                    search: searchQuery,
+                    interval: intervalSec,
+                    effect: currentEffect,
+                    auto: isAuto,
+                    radio: radioEnabled,
+                    station: currentStation
+                };
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch (_) {}
+            }
+
+            function loadSettings() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return null;
+                    return JSON.parse(raw);
+                } catch (_) { return null; }
+            }
+
+            function applySettings(prefs) {
+                if (!prefs) return;
+                if (prefs.year) { yearSelect.value = prefs.year;
+                    currentYear = prefs.year; }
+                if (prefs.search !== undefined) { searchInput.value = prefs.search || '';
+                    searchQuery = prefs.search || ''; }
+                if (prefs.interval) {
+                    intervalSec = prefs.interval;
+                    intervalSlider.value = intervalSec;
+                    intervalDisplay.textContent = intervalSec.toFixed(1) + ' 秒';
+                }
+                if (prefs.effect) {
+                    currentEffect = prefs.effect;
+                    effectOptions.querySelectorAll('button').forEach(b =>
+                        b.classList.toggle('active', b.dataset.effect === currentEffect)
+                    );
+                }
+                if (prefs.auto !== undefined) {
+                    isAuto = prefs.auto;
+                    toggleAuto.classList.toggle('active', isAuto);
+                }
+                if (prefs.radio !== undefined) radioEnabled = prefs.radio;
+                if (prefs.station) currentStation = prefs.station;
+            }
+
+            // ============================================================
+            //  电台
+            // ============================================================
+            function updateRadioUI() {
+                radioToggle.classList.toggle('active', radioEnabled);
+                radioToggleLabel.textContent = radioEnabled ? '开启' : '关闭';
+                radioToggleLabel.className = 'switch-label' + (radioEnabled ? ' on' : '');
+
+                radioGroup.querySelectorAll('.radio-item').forEach(item => {
+                    const st = item.dataset.station;
+                    const isActive = st === currentStation && radioEnabled;
+                    item.classList.toggle('active', isActive);
+                    const status = item.querySelector('.radio-status');
+                    if (isActive) {
+                        status.textContent = '▶ 播放中';
+                        status.style.color = 'rgba(100, 220, 150, 0.6)';
+                    } else if (st === currentStation) {
+                        status.textContent = '● 已选';
+                        status.style.color = 'rgba(255,255,255,0.2)';
+                    } else {
+                        status.textContent = '● 就绪';
+                        status.style.color = 'rgba(255,255,255,0.15)';
+                    }
+                });
+
+                if (radioEnabled) {
+                    const st = RADIO_STATIONS[currentStation];
+                    if (st) {
+                        radioPlayer.src = st.url;
+                        radioPlayer.load();
+                        radioPlayer.play().catch(() => {});
+                    }
+                } else {
+                    radioPlayer.pause();
+                    radioPlayer.src = '';
+                }
+                saveSettings();
+            }
+
+            function toggleRadio() { radioEnabled = !radioEnabled;
+                updateRadioUI(); }
+
+            function selectStation(id) {
+                if (id === currentStation) return;
+                currentStation = id;
+                if (radioEnabled) {
+                    const st = RADIO_STATIONS[id];
+                    if (st) {
+                        radioPlayer.src = st.url;
+                        radioPlayer.load();
+                        radioPlayer.play().catch(() => {});
+                    }
+                }
+                updateRadioUI();
+                saveSettings();
+            }
+
+            // ============================================================
+            //  数据加载
+            // ============================================================
+            async function fetchBingData(year) {
+                const cacheKey = `bing_archive_${year}`;
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        if (Array.isArray(data) && data.length) return data;
+                    } catch (_) {}
+                }
+
+                const url = year === 'all' ?
+                    `${BASE_URL}/${COUNTRY}-${LANG}.json` :
+                    `${BASE_URL}/${COUNTRY}-${LANG}.${year}.json`;
+
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const raw = await resp.json();
+
+                let items = [];
+                if (Array.isArray(raw)) items = raw;
+                else if (raw && typeof raw === 'object') {
+                    if (Array.isArray(raw.images)) items = raw.images;
+                    else if (Array.isArray(raw.imageList)) items = raw.imageList;
+                    else if (Array.isArray(raw.value)) items = raw.value;
+                    else if (Array.isArray(raw.data)) items = raw.data;
+                    else if (Array.isArray(raw.results)) items = raw.results;
+                    else if (Array.isArray(raw.photos)) items = raw.photos;
+                    else {
+                        if (raw.date || raw.url) items = [raw];
+                        else {
+                            for (const k of Object.keys(raw)) {
+                                const v = raw[k];
+                                if (typeof v === 'string' && v.startsWith('http'))
+                                    items.push({ date: k, url: v });
+                                else if (v && typeof v === 'object' && (v.url || v.contentUrl))
+                                    items.push({ date: k, url: v.url || v.contentUrl || '' });
+                            }
+                        }
+                    }
+                }
+                if (!items || !items.length) throw new Error('未找到图片数据');
+
+                const processed = items
+                    .map(item => ({
+                        date: item.date || '',
+                        url: item.url || item.contentUrl || item.imageUrl || '',
+                        title: item.title || item.copyright || item.name || item.date || ''
+                    }))
+                    .filter(item => item.url);
+
+                if (!processed.length) throw new Error('处理后没有有效的图片');
+                try { localStorage.setItem(cacheKey, JSON.stringify(processed)); } catch (_) {}
+                return processed;
+            }
+
+            // ============================================================
+            //  筛选 & 打乱
+            // ============================================================
+            function filterImages(images, year, search) {
+                let result = images;
+                if (year !== 'all') {
+                    result = result.filter(item => item.date && item.date.startsWith(year));
+                }
+                if (search.trim()) {
+                    const q = search.trim();
+                    result = result.filter(item => item.date && item.date.includes(q));
+                }
+                return result;
+            }
+
+            function shuffleArray(arr) {
+                const a = arr.slice();
+                for (let i = a.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [a[i], a[j]] = [a[j], a[i]];
+                }
+                return a;
+            }
+
+            // ============================================================
+            //  创建 3 个 slide（DOM 只创建一次，之后复用）
+            // ============================================================
+            function createSlides() {
+                track.textContent = '';
+                slideElements = [];
+                slideData.length = 0;
+
+                const frag = document.createDocumentFragment();
+                for (let i = 0; i < SLIDE_COUNT; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'slide';
+
+                    const img = document.createElement('img');
+                    img.alt = 'Bing 壁纸';
+                    img.decoding = 'async';
+                    img.draggable = false;
+
+                    const ph = document.createElement('div');
+                    ph.className = 'placeholder';
+
+                    div.appendChild(img);
+                    div.appendChild(ph);
+
+                    // 缓存引用，避免每次 querySelector
+                    div.__img = img;
+                    div.__ph = ph;
+
+                    frag.appendChild(div);
+                    slideElements.push(div);
+                    slideData.push(null);
+                }
+                track.appendChild(frag);
+
+                track.style.transition = 'none';
+                track.style.transform = 'translateX(-100%)';
+
+                resetDots();
+            }
+
+            // ============================================================
+            //  更新 slide 内容
+            // ============================================================
+            function updateSlideContent(slideEl, dataIdx) {
+                const img = slideEl.__img;
+                const ph = slideEl.__ph;
+                if (!img) return;
+
+                // 无效索引：清空
+                if (dataIdx === null || dataIdx < 0 || dataIdx >= filteredImages.length) {
+                    if (img.dataset.src) {
+                        img.removeAttribute('src');
+                        delete img.dataset.src;
+                    }
+                    img.classList.remove('loaded');
+                    img.style.display = 'none';
+                    slideEl.style.background = '#2a2e36';
+                    if (ph) ph.textContent = '';
+                    return;
+                }
+
+                const item = filteredImages[dataIdx];
+                if (!item || !item.url) {
+                    if (img.dataset.src) {
+                        img.removeAttribute('src');
+                        delete img.dataset.src;
+                    }
+                    img.classList.remove('loaded');
+                    img.style.display = 'none';
+                    slideEl.style.background = '#2a2e36';
+                    if (ph) ph.textContent = '';
+                    return;
+                }
+
+                // 已经是这张图，跳过
+                if (img.dataset.src === item.url && img.classList.contains('loaded')) return;
+
+                img.dataset.src = item.url;
+                img.classList.remove('loaded');
+                img.style.display = 'block';
+                slideEl.style.background = '';
+                if (ph) ph.textContent = '';
+
+                // 命中缓存 —— 同步落地，零延迟
+                if (imgCache.has(item.url)) {
+                    touchCache(item.url);
+                    img.src = item.url;
+                    img.classList.add('loaded');
+                    return;
+                }
+
+                // 未命中：立即发起请求，浏览器会与预加载合并
+                img.src = item.url;
+
+                preloadImage(item.url).then((ok) => {
+                    // 期间已经切到别的图了，丢弃结果
+                    if (img.dataset.src !== item.url) return;
+                    if (!ok) {
+                        img.style.display = 'none';
+                        if (ph) ph.textContent = '·';
+                        return;
+                    }
+                    img.classList.add('loaded');
+                    loadedCount++;
+                    scheduleProgressUpdate();
+                });
+            }
+
+            // ============================================================
+            //  刷新所有 slide
+            // ============================================================
+            function refreshAllSlides() {
+                for (let i = 0; i < SLIDE_COUNT; i++) {
+                    const dataIdx = slideData[i];
+                    if (dataIdx !== null && dataIdx >= 0 && dataIdx < filteredImages.length) {
+                        updateSlideContent(slideElements[i], dataIdx);
+                    } else {
+                        updateSlideContent(slideElements[i], null);
+                    }
+                }
+            }
+
+            // ============================================================
+            //  预加载（去重由 preloadImage 内部保证，不重复建 Image 对象）
+            // ============================================================
+            function prefetchNearby(centerIdx) {
+                const n = filteredImages.length;
+                if (n < 2) return;
+                const offsets = [-2, -1, 1, 2];
+                for (let k = 0; k < offsets.length; k++) {
+                    const idx = (centerIdx + offsets[k] + n) % n;
+                    const item = filteredImages[idx];
+                    if (item && item.url) preloadImage(item.url);
+                }
+            }
+
+            // ============================================================
+            //  强制重置动画状态（用于手动操作）
+            // ============================================================
+            function forceResetAnimation() {
+                if (isAnimating) {
+                    isAnimating = false;
+                    pendingTarget = null;
+                    track.style.transition = 'none';
+                    track.style.transform = 'translateX(-100%)';
+                    for (const el of slideElements) {
+                        el.style.transition = 'none';
+                        el.style.opacity = '1';
+                        el.style.transform = 'scale(1)';
+                    }
+                }
+            }
+
+            // ============================================================
+            //  切换（下一张 / 上一张）—— 动画逻辑保持原样
+            // ============================================================
+            function goTo(targetIdx, effect = currentEffect, fromUser = false) {
+                if (fromUser) {
+                    forceResetAnimation();
+                }
+
+                if (isAnimating) {
+                    pendingTarget = targetIdx;
+                    return;
+                }
+                if (filteredImages.length === 0) return;
+                if (targetIdx < 0) targetIdx = filteredImages.length - 1;
+                if (targetIdx >= filteredImages.length) {
+                    if (isAuto) {
+                        stopAuto();
+                        toggleAuto.classList.remove('active');
+                        isAuto = false;
+                        titleEl.textContent = '已浏览全部 · 点击下一张重新开始';
+                        updateDots();
+                        saveSettings();
+                        return;
+                    } else {
+                        targetIdx = 0;
+                    }
+                }
+                if (targetIdx === currentIndex) return;
+
+                isAnimating = true;
+                const fromIdx = currentIndex;
+                const toIdx = targetIdx;
+
+                let direction = 1;
+                if (toIdx > fromIdx) direction = 1;
+                else if (toIdx < fromIdx) direction = -1;
+                else { isAnimating = false; return; }
+
+                const prevIdx = (toIdx - 1 + filteredImages.length) % filteredImages.length;
+                const nextIdx = (toIdx + 1) % filteredImages.length;
+                slideData[0] = prevIdx;
+                slideData[1] = toIdx;
+                slideData[2] = nextIdx;
+
+                for (let i = 0; i < SLIDE_COUNT; i++) {
+                    const dataIdx = slideData[i];
+                    if (dataIdx !== null) {
+                        const el = slideElements[i];
+                        const img = el.__img;
+                        const item = filteredImages[dataIdx];
+                        if (item && item.url && img && img.dataset.src !== item.url) {
+                            updateSlideContent(el, dataIdx);
+                        }
+                    }
+                }
+
+                currentIndex = toIdx;
+                updateInfo();
+                updateDots();
+
+                const targetTransform = `translateX(-${(1 + direction) * 100}%)`;
+                track.style.transition = `transform ${ANIM_DURATION}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+                track.style.transform = targetTransform;
+
+                if (effect === 'fade' || effect === 'dissolve') {
+                    const centerEl = slideElements[1];
+                    const targetEl = slideElements[direction === 1 ? 2 : 0];
+                    if (centerEl) centerEl.style.transition = `opacity ${ANIM_DURATION * 0.6}ms ease`;
+                    if (targetEl) targetEl.style.transition = `opacity ${ANIM_DURATION * 0.6}ms ease`;
+                    if (centerEl) centerEl.style.opacity = '0';
+                    if (targetEl) targetEl.style.opacity = '1';
+                    if (effect === 'dissolve') {
+                        if (centerEl) centerEl.style.transition =
+                            `opacity ${ANIM_DURATION * 0.6}ms ease, transform ${ANIM_DURATION * 0.6}ms ease`;
+                        if (centerEl) centerEl.style.transform = 'scale(1.04)';
+                        if (targetEl) targetEl.style.transition =
+                            `opacity ${ANIM_DURATION * 0.6}ms ease, transform ${ANIM_DURATION * 0.6}ms ease`;
+                        if (targetEl) targetEl.style.transform = 'scale(1)';
+                    }
+                }
+
+                // 超时保护
+                const timeoutId = setTimeout(() => {
+                    if (isAnimating) {
+                        forceResetAnimation();
+                    }
+                }, ANIM_DURATION + 200);
+
+                setTimeout(() => {
+                    clearTimeout(timeoutId);
+                    track.style.transition = 'none';
+                    track.style.transform = 'translateX(-100%)';
+                    for (const el of slideElements) {
+                        el.style.transition = 'none';
+                        el.style.opacity = '1';
+                        el.style.transform = 'scale(1)';
+                    }
+                    isAnimating = false;
+                    if (pendingTarget !== null) {
+                        const next = pendingTarget;
+                        pendingTarget = null;
+                        goTo(next, effect, false);
+                    }
+                }, ANIM_DURATION + 50);
+
+                prefetchNearby(toIdx);
+            }
+
+            function next() {
+                if (filteredImages.length === 0) return;
+                const target = (currentIndex + 1) % filteredImages.length;
+                goTo(target, currentEffect, true);
+            }
+
+            function prev() {
+                if (filteredImages.length === 0) return;
+                const target = (currentIndex - 1 + filteredImages.length) % filteredImages.length;
+                goTo(target, currentEffect, true);
+            }
+
+            // ============================================================
+            //  UI 更新
+            // ============================================================
+            let lastCounterText = '';
+            let lastTitleText = '';
+            function updateInfo() {
+                if (filteredImages.length === 0) {
+                    if (lastCounterText !== '0 / 0') {
+                        counter.textContent = '0 / 0';
+                        lastCounterText = '0 / 0';
+                    }
+                    return;
+                }
+                const ct = `${currentIndex + 1} / ${filteredImages.length}`;
+                if (ct !== lastCounterText) {
+                    counter.textContent = ct;
+                    lastCounterText = ct;
+                }
+                const item = filteredImages[currentIndex];
+                const tt = (item && item.date) ?
+                    (item.date + '  ·  ' + filteredImages.length + ' 张') :
+                    (filteredImages.length + ' 张 · 随机浏览');
+                if (tt !== lastTitleText) {
+                    titleEl.textContent = tt;
+                    lastTitleText = tt;
+                }
+            }
+
+            // Dots：DOM 复用，只切 class
+            let dotEls = [];
+            function resetDots() {
+                dotsEl.textContent = '';
+                dotEls = [];
+            }
+            function updateDots() {
+                const total = filteredImages.length;
+                if (total === 0) {
+                    if (dotEls.length) resetDots();
+                    return;
+                }
+                const count = Math.min(MAX_DOTS, total);
+
+                if (dotEls.length !== count) {
+                    resetDots();
+                    const frag = document.createDocumentFragment();
+                    for (let i = 0; i < count; i++) {
+                        const dot = document.createElement('span');
+                        dot.className = 'dot';
+                        frag.appendChild(dot);
+                        dotEls.push(dot);
+                    }
+                    dotsEl.appendChild(frag);
+                }
+
+                let start = 0;
+                if (total > MAX_DOTS) {
+                    start = Math.max(0, Math.min(total - MAX_DOTS, currentIndex - Math.floor(MAX_DOTS / 2)));
+                }
+                for (let i = 0; i < count; i++) {
+                    dotEls[i].classList.toggle('active', i + start === currentIndex);
+                }
+            }
+
+            // 进度条：rAF 节流，避免每张图加载都触发布局
+            let progressRaf = null;
+            function scheduleProgressUpdate() {
+                if (progressRaf) return;
+                progressRaf = requestAnimationFrame(() => {
+                    progressRaf = null;
+                    updateLoadProgress();
+                });
+            }
+
+            function updateLoadProgress() {
+                const total = filteredImages.length;
+                if (total === 0) { loadFill.style.width = '100%'; return; }
+                const pct = Math.min(100, Math.round((loadedCount / total) * 100));
+                loadFill.style.width = pct + '%';
+                if (pct >= 100) {
+                    setTimeout(() => { loadFill.style.opacity = '0'; }, 500);
+                }
+            }
+
+            // ============================================================
+            //  自动播放
+            // ============================================================
+            function startAuto() {
+                stopAuto();
+                if (!isAuto || !pageVisible || filteredImages.length < 2) return;
+                autoTimer = setInterval(next, intervalSec * 1000);
+            }
+
+            function stopAuto() {
+                if (autoTimer) { clearInterval(autoTimer);
+                    autoTimer = null; }
+            }
+
+            function toggleAutoPlay() {
+                isAuto = !isAuto;
+                toggleAuto.classList.toggle('active', isAuto);
+                if (isAuto && pageVisible) startAuto();
+                else stopAuto();
+                saveSettings();
+            }
+
+            // ============================================================
+            //  渲染流程（init / reset 共用）
+            // ============================================================
+            async function render() {
+                stopAuto();
+                forceResetAnimation();
+                imgCache.clear();
+                pendingLoads.clear();
+                loadedCount = 0;
+                loadFill.style.opacity = '1';
+                loadFill.style.width = '0%';
+
+                const year = yearSelect.value;
+                const search = searchInput.value.trim();
+                currentYear = year;
+                searchQuery = search;
+
+                let rawData;
+                try {
+                    rawData = await fetchBingData(year);
+                } catch (e) {
+                    lastTitleText = '';
+                    titleEl.textContent = '加载失败: ' + e.message;
+                    return;
+                }
+                if (!rawData || rawData.length === 0) {
+                    lastTitleText = '';
+                    titleEl.textContent = '没有找到图片';
+                    return;
+                }
+
+                allImages = rawData;
+                const filtered = filterImages(allImages, year, search);
+                if (filtered.length === 0) {
+                    lastTitleText = '';
+                    titleEl.textContent = '没有匹配的图片';
+                    return;
+                }
+
+                filteredImages = shuffleArray(filtered);
+                currentIndex = 0;
+                loadedCount = 0;
+
+                createSlides();
+
+                const n = filteredImages.length;
+                slideData[0] = (0 - 1 + n) % n;
+                slideData[1] = 0;
+                slideData[2] = (0 + 1) % n;
+
+                refreshAllSlides();
+                updateInfo();
+                updateDots();
+                prefetchNearby(0);
+
+                track.style.transition = 'none';
+                track.style.transform = 'translateX(-100%)';
+
+                if (isAuto && pageVisible) startAuto();
+                saveSettings();
+            }
+
+            // ============================================================
+            //  设置面板
+            // ============================================================
+            function openSettings() {
+                settingsOverlay.classList.add('open');
+                intervalSlider.value = intervalSec;
+                intervalDisplay.textContent = intervalSec.toFixed(1) + ' 秒';
+                effectOptions.querySelectorAll('button').forEach(b =>
+                    b.classList.toggle('active', b.dataset.effect === currentEffect)
+                );
+                yearSelect.value = currentYear;
+                searchInput.value = searchQuery;
+                updateRadioUI();
+            }
+
+            function closeSettings() { settingsOverlay.classList.remove('open'); }
+
+            // ============================================================
+            //  页面可见性
+            // ============================================================
+            function handleVisibilityChange() {
+                pageVisible = !document.hidden;
+                if (pageVisible && isAuto) startAuto();
+                else stopAuto();
+                if (radioEnabled) {
+                    if (pageVisible) radioPlayer.play().catch(() => {});
+                    else radioPlayer.pause();
+                }
+            }
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+
+            // ============================================================
+            //  防抖工具
+            // ============================================================
+            function debounce(func, wait) {
+                let timer;
+                return function(...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // ============================================================
+            //  初始化
+            // ============================================================
+            async function init() {
+                const prefs = loadSettings();
+                if (prefs) applySettings(prefs);
+                updateRadioUI();
+
+                await render();
+
+                // ---- 事件绑定 ----
+                prevBtn.addEventListener('click', () => {
+                    forceResetAnimation();
+                    if (isAuto && pageVisible) { stopAuto();
+                        startAuto(); }
+                    prev();
+                });
+                nextBtn.addEventListener('click', () => {
+                    forceResetAnimation();
+                    if (isAuto && pageVisible) { stopAuto();
+                        startAuto(); }
+                    next();
+                });
+                toggleAuto.addEventListener('click', toggleAutoPlay);
+
+                settingsBtn.addEventListener('click', openSettings);
+                settingsClose.addEventListener('click', closeSettings);
+                settingsOverlay.addEventListener('click', (e) => {
+                    if (e.target === settingsOverlay) closeSettings();
+                });
+
+                const debouncedSaveAndRestart = debounce(() => {
+                    if (isAuto && pageVisible) { stopAuto();
+                        startAuto(); }
+                    saveSettings();
+                }, 200);
+
+                intervalSlider.addEventListener('input', (e) => {
+                    const val = parseFloat(e.target.value);
+                    intervalDisplay.textContent = val.toFixed(1) + ' 秒';
+                    intervalSec = val;
+                    debouncedSaveAndRestart();
+                });
+
+                effectOptions.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const effect = btn.dataset.effect;
+                    if (!effect) return;
+                    currentEffect = effect;
+                    effectOptions.querySelectorAll('button').forEach(b =>
+                        b.classList.toggle('active', b === btn)
+                    );
+                    saveSettings();
+                });
+
+                yearSelect.addEventListener('change', () => {
+                    render();
+                    closeSettings();
+                });
+
+                searchBtn.addEventListener('click', () => {
+                    render();
+                    closeSettings();
+                });
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') searchBtn.click();
+                });
+
+                radioToggle.addEventListener('click', toggleRadio);
+                radioGroup.addEventListener('click', (e) => {
+                    const item = e.target.closest('.radio-item');
+                    if (!item) return;
+                    const st = item.dataset.station;
+                    if (st) selectStation(st);
+                });
+
+                document.addEventListener('keydown', (e) => {
+                    if (settingsOverlay.classList.contains('open')) {
+                        if (e.key === 'Escape') closeSettings();
+                        return;
+                    }
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        forceResetAnimation();
+                        if (isAuto && pageVisible) { stopAuto();
+                            startAuto(); }
+                        prev();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        forceResetAnimation();
+                        if (isAuto && pageVisible) { stopAuto();
+                            startAuto(); }
+                        next();
+                    } else if (e.key === ' ' || e.key === 'Space') {
+                        e.preventDefault();
+                        toggleAutoPlay();
+                    } else if (e.key === 't' || e.key === 'T') {
+                        controls.classList.toggle('hidden');
+                    } else if (e.key === 's' || e.key === 'S') {
+                        openSettings();
+                    }
+                });
+
+                setTimeout(() => { hint.style.opacity = '0'; }, 5000);
+                setTimeout(() => { loadFill.style.opacity = '0'; }, 3000);
+            }
+
+            window.addEventListener('beforeunload', () => {
+                radioPlayer.pause();
+                radioPlayer.src = '';
+                stopAuto();
+                imgCache.clear();
+                pendingLoads.clear();
+            });
+
+            init();
+        })();
+    </script>
+</body>
+</html>
